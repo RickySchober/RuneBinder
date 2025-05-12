@@ -1,17 +1,19 @@
 //
-//  RuneBinder2App.swift
-//  RuneBinder2
+//  RuneBinderApp.swift
+//  RuneBinder
 //
-//  Created by Ricky Schober on 5/16/23.
+//  Created by Ricky Schober on 5/2/23.
 //
 
 import SwiftUI
 
 @main
 struct RuneBinder2App: App {
+    @StateObject var game = RuneBinderViewModel()
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            //MainMenuView()
+            ContentView().environmentObject(game) //must pass viewmodel as environment object
         }
     }
 }
