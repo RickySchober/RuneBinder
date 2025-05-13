@@ -18,7 +18,7 @@ struct RuneBinderGame{
     private (set) var player: Player = Player(currentHealth: 50, maxHealth: 80)
     private (set) var enemies: [Enemy] = [] //Array containing the enemies in the current encounter will be in index 0-3 based on position
     private (set) var primaryTarget: Enemy? = nil //Each spell cast requires selecting an enemy as a target
-    private (set) var targets: [Enemy] = [Enemy(pos: 1)] //Runes that modify targeting will add additional enemies to list of targets
+    private (set) var targets: [Enemy] = [Enemy(pos: 1), Enemy(pos: 2), Enemy(pos: 3), Enemy(pos: 4)] //Runes that modify targeting will add additional enemies to list of targets
     private (set) var validSpell: Bool = false
     //Array represents the relative occurence of letters in words in the dictionary
     //numbers represent the % of its occurence and correlate with A-Z
