@@ -7,7 +7,7 @@
 
 import SwiftUI
 class RuneBinderViewModel: ObservableObject {
-    @Published private var model: RuneBinderGame = createRuneBinderGame()
+    @Published private var model: RuneBinderGame = RuneBinderGame()
     
     var grid: Array<Rune>{
         model.grid
@@ -28,7 +28,7 @@ class RuneBinderViewModel: ObservableObject {
         model.primaryTarget
     }
     var enemies: Array<Enemy>{
-        model.targets
+        model.enemies
     }
     var spellRuneSize: Double{
         model.spellRuneSize()
@@ -36,19 +36,16 @@ class RuneBinderViewModel: ObservableObject {
     func selectRune(rune: Rune){
         model.selectRune(rune: rune)
         model.checkSpellValid()
+        objectWillChange.send()
     }
     func castSpell(){
         model.castSpell()
         model.checkSpellValid()
+        model.enemyTurn()
+        objectWillChange.send()
     }
     func selectEnemy(enemy: Enemy){
         model.changeTarget(enemy: enemy)
-    }
-    
-    func startNewArmyGame(resourceAbundance: Int, enemyLevel: Int){
-        model = RuneBinderViewModel.createRuneBinderGame()
-    }
-    private static func createRuneBinderGame() -> RuneBinderGame {  
-        return RuneBinderGame()
+        objectWillChange.send()
     }
 }

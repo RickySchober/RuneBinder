@@ -51,39 +51,96 @@ struct RuneView: View{
     var body: some View {
         GeometryReader(content: { geometry in
             ZStack{
+                Rectangle()
+                    .fill((rune.enchant==nil) ? Color.brown : rune.enchant!.color)
+                    .opacity(0.8)
                 Image("Rune1")
                     .resizable()
                     .renderingMode(Image.TemplateRenderingMode.original)
+                    .frame(width: geometry.size.width*0.9, height: geometry.size.height*0.9)
                 Rectangle()
                     .fill((rune.enchant==nil) ? Color.yellow : rune.enchant!.color)
                     .opacity(0.2)
                 Text(String(rune.letter))
                     .font(Font.system(size:(CGFloat)(0.5*min(geometry.size.width,geometry.size.height))))
                     .multilineTextAlignment(.center)
+                VStack{
+                    Spacer()
+                    HStack{
+                        Spacer()
+                        Text(String(rune.power))
+                            .font(Font.system(size:(CGFloat)(0.2*min(geometry.size.width,geometry.size.height))))
+                            .multilineTextAlignment(.center)
+                            .padding([.bottom, .trailing], 0.1*geometry.size.width)
+                    }
+                }
             }
             .matchedGeometryEffect(id: rune.id, in: namespace)
             .onTapGesture{
+                SoundManager.shared.playSoundEffect(named: "click")
                 withAnimation(.easeInOut(duration: 0.2)){
                     viewModel.selectRune(rune: rune)
                 }
             }
             // .onLongPressGesture(perform: viewModel.) provide description of rune effects on hold
         })
-        .frame(minWidth: screenWidth*0.05, idealWidth: screenWidth*0.20, maxWidth: screenWidth*0.20,minHeight: screenWidth*0.05, idealHeight: screenWidth*0.20, maxHeight: screenWidth*0.20)
+        .frame(minWidth: screenWidth*0.05, maxWidth: screenWidth*0.20,minHeight: screenWidth*0.05, maxHeight: screenWidth*0.20)
     }
 }
 struct EnemyView: View{
     @EnvironmentObject var viewModel: RuneBinderViewModel
     var enemy: Enemy
+    
+    var healthRatio: CGFloat {
+        CGFloat(enemy.currentHealth) / CGFloat(enemy.maxHealth)
+       }
     var body: some View{
-        Image(enemy.image)
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .frame(width: screenWidth*0.18, height: screenWidth*0.18)
-            .clipped()
-            .onTapGesture{ viewModel.selectEnemy(enemy: enemy)
+        VStack(spacing: 0){
+            Image(enemy.image)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: screenWidth*0.18, height: screenWidth*0.18)
+                .clipped()
+                .onTapGesture{ viewModel.selectEnemy(enemy: enemy)
+                }
+            ZStack(alignment: .leading) { //HP bar
+                Rectangle()
+                    .frame(height: screenHeight*0.0075)
+                    .foregroundColor(.gray.opacity(0.3))
+                    .cornerRadius(3)
+                
+                Rectangle()
+                    .frame(width: screenWidth*0.13*healthRatio, height: screenHeight*0.0075) // 50 is total width
+                    .foregroundColor(.red)
+                    .cornerRadius(3)
+                
+                Text("\(enemy.currentHealth)/\(enemy.maxHealth)")
+                    .font(.caption2)
+                    .foregroundColor(.white)
+                    .frame(width: screenWidth*0.13, height: screenHeight*0.02)
+                    .minimumScaleFactor(0.5)
             }
-            //.renderingMode(Image.TemplateRenderingMode.original)
+            .frame(width: 50)
+            HStack(){
+                if(enemy.bleedDamage != 0){
+                    ZStack(alignment: .bottom){
+                        Image("bleed 1")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .clipped()
+                            .padding(0)
+                            .frame(width: screenWidth*0.04, height: screenWidth*0.04, alignment: .topLeading)
+                        Text("\(enemy.bleedDamage)")
+                            .font(.caption2)
+                            .foregroundColor(.white)
+                            .frame(width: screenWidth*0.04, height: screenWidth*0.04, alignment: .bottomTrailing)
+                    }
+                    .frame(width: screenWidth*0.04, height: screenWidth*0.04)
+                }
+            }
+            .frame(alignment: .leading)
+        }
+        .transition(.asymmetric(insertion: .identity , removal: .opacity)) //animates insertion and deletion of view
     }
 }
 struct RuneGrid: View{
@@ -133,22 +190,13 @@ struct EnemyListView: View {
     var body: some View {
         HStack(alignment: .bottom, spacing: -10) {
             ForEach(self.viewModel.enemies, id: \.id) { enemy in
-                VStack {
-                    EnemyView(enemy: enemy)
-                    Text("HP: \(enemy.currentHealth)/\(enemy.maxHealth)")
-                        .font(.caption)
-                        .foregroundColor(.white)
-                    /*if let status = enemy.bleeds[0].dmg {
-                        Text(status)
-                            .font(.caption2)
-                            .foregroundColor(.cyan)
-                    }*/
-                }
-                .padding(0)
-                .background((viewModel.target?.id == enemy.id ) ? Color.red.opacity(0.3) : Color.clear)
-                .cornerRadius(10)
+                EnemyView(enemy: enemy)
+                    .padding(0)
+                    .background((viewModel.target?.id == enemy.id ) ? Color.red.opacity(0.3) : Color.clear)
+                    .cornerRadius(10)
             }
         }
+        .animation(.default, value: viewModel.enemies)
     }
 }
 struct PlayerInfoView: View {
@@ -156,6 +204,11 @@ struct PlayerInfoView: View {
 
     var body: some View {
         VStack {
+            Image("player")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: screenWidth*0.18, height: screenWidth*0.18)
+                .clipped()
             Text("Player HP: \(viewModel.player.currentHealth)/\(viewModel.player.maxHealth)")
                 .foregroundColor(.green)
             Text("Spell Power: \(viewModel.spellPower)")
@@ -172,16 +225,17 @@ struct CombatView: View {
         HStack(alignment: .bottom) {
             // Player on the left
             PlayerInfoView()
-                .frame(width: screenWidth * 0.3, alignment: .leading)
                 .padding()
                 .background(Color.gray.opacity(0.2))
                 .cornerRadius(10)
 
             Spacer()
+                .padding()
 
             // Enemies on the right
             EnemyListView()
         }
+        .frame(width: screenWidth, height: screenHeight*0.7-screenWidth*1.05)
         .padding(0)
         .background(Color.black.opacity(0.2))
         .cornerRadius(12)

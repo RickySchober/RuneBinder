@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MainMenuView: View {
     @State private var isPresentingStart = false
+    @EnvironmentObject var viewRouter: ViewRouter
     var body: some View {
         Button(action:{
             isPresentingStart = true
@@ -24,10 +25,15 @@ struct MainMenuView: View {
 
 struct StartView: View{
     @Binding var isSheetPresented: Bool
+    @EnvironmentObject var viewRouter: ViewRouter
     var body: some View {
         Button(action:{
         }, label: {Text("Continue")
                 .font(.system(size: 60.0))
+                .onTapGesture {
+                    SoundManager.shared.playBackgroundMusic(named: "soundtrack")
+                    viewRouter.currentScreen = .combat
+                }
         })
         NavigationLink("New Game",destination: ContentView())
         Button(action:{

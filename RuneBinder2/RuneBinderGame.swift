@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 import SwiftUI
-struct RuneBinderGame{
+class RuneBinderGame{
     private (set) var grid: Array<Rune>
     private (set) var enchantQueue: Array<Rune>
     private var gridSize: Int = 16
@@ -18,22 +18,20 @@ struct RuneBinderGame{
     private (set) var player: Player = Player(currentHealth: 50, maxHealth: 80)
     private (set) var enemies: [Enemy] = [] //Array containing the enemies in the current encounter will be in index 0-3 based on position
     private (set) var primaryTarget: Enemy? = nil //Each spell cast requires selecting an enemy as a target
-    private (set) var targets: [Enemy] = [Enemy(pos: 1), Enemy(pos: 2), Enemy(pos: 3), Enemy(pos: 4)] //Runes that modify targeting will add additional enemies to list of targets
+    private (set) var targets: [Enemy] = [] //Runes that modify targeting will add additional enemies to list of targets
     private (set) var validSpell: Bool = false
     //Array represents the relative occurence of letters in words in the dictionary
     //numbers represent the % of its occurence and correlate with A-Z
     private let letterOccurence: Array<Double> = [7.8, 2.0, 4.0, 3.8, 11, 1.4, 3.0, 2.3, 8.6, 0.21, 0.97, 5.3, 2.7, 7.2,
                                                   6.1, 2.8, 0.19, 7.3, 8.7, 6.7, 3.3, 1.0, 0.91, 0.27, 1.6, 0.44]
-    private var dictionary: Array<String>
+    
     init(){
         grid = []
         spell = []
-        dictionary = []
         enchantQueue = []
         spellBook = [VampiricStrike.self, Empower.self, Revitalize.self]
         enemies = generateEnemies()
         print(enemies.count)
-        //dictionary = readCSV()
         fillGrid()
     }
     //A function that generates the array of encounters on game start up
@@ -43,14 +41,14 @@ struct RuneBinderGame{
     func getEnemies() -> [Enemy]{
         return enemies
     }
-    mutating func changeHealth(num:Int){
+    func changeHealth(num:Int){
         if(player.currentHealth+num>player.maxHealth){ player.currentHealth = player.maxHealth }
         else{ player.currentHealth += num }
     }
-    mutating func changeSpellPower(num:Int){
+    func changeSpellPower(num:Int){
         spellPower += num
     }
-    mutating func addTarget(enemy:Enemy){
+    func addTarget(enemy:Enemy){
         var targetFound: Bool = false
         for target in targets{
             if(target == enemy){
@@ -62,28 +60,11 @@ struct RuneBinderGame{
             targets.append(enemy)
         }
     }
-    mutating func changeTarget(enemy:Enemy){
+    func changeTarget(enemy:Enemy){
         primaryTarget = enemy;
     }
     func generateEnemies() -> [Enemy]{
-        return [Goblin(pos: 1),Enemy(pos: 2)]
-    }
-    /* Function reads from the local CSV file in the applications documents folder and saves it as an array of strings
-       Because I am using simultaor right now had to manually go into the filepath and add it to this specific version (iphone 14 pro)
-     */
-    func readCSV() -> Array<String> {
-        let fileExtension = URL(fileURLWithPath: "out.csv").pathExtension
-        let fileName = URL(fileURLWithPath: "out.csv").deletingPathExtension().lastPathComponent
-        let fileURL = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-        let inputFile = fileURL.appendingPathComponent(fileName).appendingPathExtension(fileExtension)
-        do {
-            let savedFile = try String(contentsOf: inputFile)
-            return savedFile.components(separatedBy: "\n") //Each new line is a word so they seperate by \n
-        }
-        catch {
-            print("read has failed")
-            return []
-        }
+        return [Goblin(pos: 1), Enemy(pos: 2), Enemy(pos: 3), Enemy(pos: 4)]
     }
     func generateRune(enchant: Enchantment?) -> Rune{
         let temp =  Double.random(in: 0..<100)
@@ -101,7 +82,7 @@ struct RuneBinderGame{
         
         return Rune(l: "a", p: 1, e: nil)
     }
-    mutating func fillGrid(){
+    func fillGrid(){
         var i = 0
         while(grid.count<gridSize){
             grid.append(generateRune(enchant: nil))
@@ -117,7 +98,7 @@ struct RuneBinderGame{
         return temp
     }
     func spellRuneSize() -> Double {
-        if(spell.count<=4){ return 0.24}
+        if(spell.count<=4){ return 0.20}
         let len: Double = Double(spell.count)
         let temp: Double = 0.97-(0.01*Double(spell.count%4))
         return (temp/len)
@@ -125,7 +106,7 @@ struct RuneBinderGame{
     /* Using IOSs built in dictionary to check if word is valid. This removes the need to struggle with reading in a file to
      reference. Word must also be at least length 4
      */
-    mutating func checkSpellValid(){
+    func checkSpellValid(){
         let word = buildSpell()
         if(word.count < 4){
             validSpell = false
@@ -138,24 +119,17 @@ struct RuneBinderGame{
             validSpell = (misspelledRange.location == NSNotFound)
         }
     }
-    
-   /* mutating func checkSpellValid(){
-        let word = buildSpell()
-        var low  = 0
-        var high = dictionary.count
-        print(word)
-        while(low <= high){
-            let mid = (low+high)/2
-            if(dictionary[mid].caseInsensitiveCompare(word) == .orderedSame){ print("gottem")
-                return validSpell = true  }
-            else if(dictionary[mid].caseInsensitiveCompare(word) == .orderedAscending){  low = mid+1  }
-            else{  high = mid-1  }
+    func enemyTurn(){
+        for enemy in enemies {
+            let choice: Action = enemy.chooseAction(game: self)
+            choice.utilizeEffect(game: self)
+            player.currentHealth -= choice.damage
+            print(player.currentHealth)
         }
-        validSpell = false
-    }*/
+    }
     /*Since the effects of enchantments must be applied in a specific order this function creates an ordered list of all enchantments
     in the current spell. This is only needed to be run when there is both a valid target and word*/
-    mutating func queueEnchants(){
+    func queueEnchants(){
         enchantQueue.removeAll()
         for rune in grid{
             if(spell.contains(rune)&&rune.enchant != nil){
@@ -170,7 +144,7 @@ struct RuneBinderGame{
             }
         }
     }
-    mutating func castSpell(){
+    func castSpell(){
         //change grid size if surge letters used
         if(primaryTarget==nil){//select target warning
             print("no enemy targeted")
@@ -179,7 +153,7 @@ struct RuneBinderGame{
             spellPower = 0
             addTarget(enemy: primaryTarget!) //must add primary target to list of targets before resolving spell effects
             queueEnchants()
-            for i in (0...gridSize-1){
+            for i in (0...gridSize-1){ //Replace used letters in grid
                 if(spell.contains(grid[i])){
                     spellPower += grid[i].power
                     let rng = Int.random(in: 0...(spellBook.count-1))
@@ -187,15 +161,27 @@ struct RuneBinderGame{
                 }
             }
             for rune in enchantQueue{
-                rune.enchant?.utilizeEffect(game: &self)
+                rune.enchant?.utilizeEffect(game: self)
+            }
+            for target in targets {
+                target.currentHealth -= spellPower
+                if(target.currentHealth<=0){
+                    SoundManager.shared.playSoundEffect(named: target.deathSound)
+                }
+                else{
+                    SoundManager.shared.playSoundEffect(named: target.hitSound)
+                }
+            }
+            withAnimation{
+                enemies.removeAll { $0.currentHealth <= 0 }
             }
             enchantQueue.removeAll()
             spell.removeAll()
-            //targets.removeAll()
+            targets.removeAll()
             primaryTarget = nil
         }
     }
-    mutating func selectRune(rune:Rune){
+    func selectRune(rune:Rune){
         if(!spell.contains(rune)){
             spell.append(rune)
             spellPower += rune.power

@@ -29,7 +29,8 @@ class Enchantment{
      Priority 0: spell power effects
      Priority 1: enemy targeting effects
      Priority 2: leech, block, debuffs or anything effected by targets and spell power
-     Priority 3: unimportant effects or things that modify board such as surge and purify
+     Priority 3: unmodifiable effects
+     Priority 4: post damage effects that modify grid (surge purify)
      */
     var priority: Int
     var color: Color
@@ -38,7 +39,7 @@ class Enchantment{
         color = Color.yellow
     }
     
-    func utilizeEffect(game: inout RuneBinderGame){
+    func utilizeEffect(game: RuneBinderGame){
     }
    
 }
@@ -50,7 +51,7 @@ class Empower: Enchantment{
         priority = 2
         color = Color.blue
     }
-    override func utilizeEffect(game: inout RuneBinderGame){
+    override func utilizeEffect(game: RuneBinderGame){
         game.changeSpellPower(num: 1)
     }
 }
@@ -62,7 +63,7 @@ class Revitalize: Enchantment{
         priority = 2
         color = Color.green
     }
-    override func utilizeEffect(game: inout RuneBinderGame){
+    override func utilizeEffect(game: RuneBinderGame){
         game.changeHealth(num: 5)
     }
 }
@@ -74,7 +75,7 @@ class Cleave: Enchantment{
         priority = 1
         color = Color.gray
     }
-    override func utilizeEffect(game: inout RuneBinderGame){
+    override func utilizeEffect(game: RuneBinderGame){
         if(game.primaryTarget!.position+1<game.enemies.count){ //ensure valid index
             game.addTarget(enemy:game.enemies[game.primaryTarget!.position+1]);
         }
@@ -91,7 +92,7 @@ class VampiricStrike: Enchantment{
         priority = 2
         color = Color.red
     }
-    override func utilizeEffect(game: inout RuneBinderGame){
+    override func utilizeEffect(game: RuneBinderGame){
         game.changeHealth(num: game.getSpellPower())
     }
 }
@@ -103,7 +104,7 @@ class SerratedStrike: Enchantment{
         priority = 2
         color = Color.red
     }
-    override func utilizeEffect(game: inout RuneBinderGame){
+    override func utilizeEffect(game: RuneBinderGame){
         for target in game.targets{
             target.bleeds.append(Bleeds(turns: 3, dmg: 1))
         }

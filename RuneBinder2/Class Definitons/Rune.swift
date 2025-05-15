@@ -13,6 +13,11 @@ class Rune: Identifiable, Equatable{
     var power: Int
     let id: UUID
     var enchant: Enchantment?
+    var lock: Bool = false
+    var scorch: Bool = false
+    var weaken: Bool = false
+    var rot: Bool = false
+    
     init(l: Character, p: Int, e: Enchantment?){
         letter = l
         power = p
