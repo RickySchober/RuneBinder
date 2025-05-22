@@ -6,17 +6,16 @@
 //
 //Runes have a location on the grid but may also be used for spelling
 //there position in the word is represented by an integer if this int is -1 not in word
-
 import Foundation
 class Rune: Identifiable, Equatable{
     var letter: Character
     var power: Int
     let id: UUID
     var enchant: Enchantment?
-    var lock: Bool = false
-    var scorch: Bool = false
-    var weaken: Bool = false
-    var rot: Bool = false
+    var lock: Int = 0
+    var scorch: Int = 0
+    var weaken: Int = 0
+    var rot: Int = 0
     
     init(l: Character, p: Int, e: Enchantment?){
         letter = l

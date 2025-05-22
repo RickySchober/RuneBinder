@@ -34,9 +34,11 @@ class Enchantment{
      */
     var priority: Int
     var color: Color
+    var description: String
     required init() {
         priority = 3
         color = Color.yellow
+        description = "Enchantment: Increases spell power of rune by 1"
     }
     
     func utilizeEffect(game: RuneBinderGame){

@@ -8,10 +8,16 @@ struct RootView: View {
         switch viewRouter.currentScreen {
         case .mainMenu:
             MainMenuView()
-        case .levelSelect:
-            ContentView()
+        case .map:
+            MapView(map: viewModel.map)
         case .combat:
             ContentView() // your current combat screen
+        case .event:
+            EventView()
+        case .shop:
+            ShopView()
+        case .settings:
+            SettingsView()
         }
     }
 }

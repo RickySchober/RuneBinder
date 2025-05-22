@@ -26,7 +26,7 @@ class Enemy: Equatable, Identifiable{
     var bleeds: [Bleeds]
     let hitSound = "goblinhit"
     let deathSound = "goblindeath"
-    var image = "goblin2"
+    var image = "Rune2"
     var id: UUID
     var actions: [Action]
     var bleedDamage: Int {
@@ -47,12 +47,19 @@ class Enemy: Equatable, Identifiable{
     }
     //Determines which action to take bassed on enemies selection algorithm
     func chooseAction(game: RuneBinderGame) -> Action{
-        return actions[Int.random(in: 0...actions.count)]
+        return actions[Int.random(in: 0...actions.count-1)]
     }
 }
 class Goblin: Enemy{
     override init(pos: Int) {
         super.init(pos: pos)
-        image = "Rune2"
+        image = "goblin2"
+    }
+}
+class ChainBearer: Enemy{
+    override init(pos: Int) {
+        super.init(pos: pos)
+        image = "chainbearer"
+        actions = [Action(dmg: 5, lck: 2, wek: 2)]
     }
 }

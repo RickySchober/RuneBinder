@@ -16,77 +16,42 @@ public var screenHeight: CGFloat {
 
 struct ContentView: View {
     @EnvironmentObject var viewModel: RuneBinderViewModel //Environment objects can be shared among all views
+    @EnvironmentObject var viewRouter: ViewRouter
     @Namespace private var runesNamespace //Used to animate between views
     var body: some View {
-        VStack(spacing:0){
-            CombatView()
-                .frame(width: screenWidth, height: screenHeight*0.9-screenWidth*1.05)
-                .background(.blue)
-            RuneGrid(namespace: runesNamespace)
-                .background(.yellow)
-            SpellView(namespace: runesNamespace)
-                .frame(width: screenWidth, height: screenWidth*0.20) //Reserve this space for view regardless of adjusted size
-                .background(.green)
-            Button(action:{
-                viewModel.validSpell ? self.viewModel.castSpell() : print("your bad")
-            }, label: {Text("Cast Spell")
-                    .font(.system(size: 60.0))
-            })
-            .background(viewModel.validSpell ? Color.gray : Color.yellow )
-            .frame(width: screenWidth, height: screenHeight*0.1, alignment: .center)
-            .scaledToFill()
+        ZStack(){
+            VStack(spacing:0){
+                CombatView()
+                    .frame(width: screenWidth, height: screenHeight*0.9-screenWidth*1.05)
+                    .background(.blue)
+                RuneGrid(namespace: runesNamespace)
+                    .background(.yellow)
+                SpellView(namespace: runesNamespace)
+                    .frame(width: screenWidth, height: screenWidth*0.20) //Reserve this space for view regardless of adjusted size
+                    .background(.green)
+                Button(action:{
+                    viewModel.validSpell ? self.viewModel.castSpell() : print("your bad")
+                }, label: {Text("Cast Spell")
+                        .font(.system(size: 60.0))
+                })
+                .background(viewModel.validSpell ? Color.gray : Color.yellow )
+                .frame(width: screenWidth, height: screenHeight*0.1, alignment: .center)
+                .scaledToFill()
+            }
+            .edgesIgnoringSafeArea(.top)
+            //.frame(width: screenWidth, height: screenHeight)
+            .background(Color.red.opacity(0.3))
+            //.animation(.easeOut)
+            VictoryOverlay() {
+                viewRouter.currentScreen = .map
+            }
+            .offset(y: viewModel.victory ? 0 : UIScreen.main.bounds.height)
+            .animation(.easeOut(duration: 0.5), value: viewModel.victory)
         }
-        .edgesIgnoringSafeArea(.top)
-        //.frame(width: screenWidth, height: screenHeight)
-        .background(Color.red.opacity(0.3))
-        //.animation(.easeOut)
     }
 }
 
 
-struct RuneView: View{
-    @EnvironmentObject var viewModel: RuneBinderViewModel
-    var rune: Rune
-    var namespace: Namespace.ID
-    var body: some View {
-        GeometryReader(content: { geometry in
-            ZStack{
-                Rectangle()
-                    .fill((rune.enchant==nil) ? Color.brown : rune.enchant!.color)
-                    .opacity(0.8)
-                Image("Rune1")
-                    .resizable()
-                    .renderingMode(Image.TemplateRenderingMode.original)
-                    .frame(width: geometry.size.width*0.9, height: geometry.size.height*0.9)
-                Rectangle()
-                    .fill((rune.enchant==nil) ? Color.yellow : rune.enchant!.color)
-                    .opacity(0.2)
-                Text(String(rune.letter))
-                    .font(Font.system(size:(CGFloat)(0.5*min(geometry.size.width,geometry.size.height))))
-                    .multilineTextAlignment(.center)
-                VStack{
-                    Spacer()
-                    HStack{
-                        Spacer()
-                        Text(String(rune.power))
-                            .font(Font.system(size:(CGFloat)(0.2*min(geometry.size.width,geometry.size.height))))
-                            .multilineTextAlignment(.center)
-                            .padding([.bottom, .trailing], 0.1*geometry.size.width)
-                    }
-                }
-            }
-            .matchedGeometryEffect(id: rune.id, in: namespace)
-            .onTapGesture{
-                SoundManager.shared.playSoundEffect(named: "click")
-                withAnimation(.easeInOut(duration: 0.2)){
-                    viewModel.selectRune(rune: rune)
-                }
-            }
-            // .onLongPressGesture(perform: viewModel.) provide description of rune effects on hold
-        })
-        .frame(minWidth: screenWidth*0.05, maxWidth: screenWidth*0.20,minHeight: screenWidth*0.05, maxHeight: screenWidth*0.20)
-    }
-}
 struct EnemyView: View{
     @EnvironmentObject var viewModel: RuneBinderViewModel
     var enemy: Enemy
@@ -120,20 +85,23 @@ struct EnemyView: View{
                     .frame(width: screenWidth*0.13, height: screenHeight*0.02)
                     .minimumScaleFactor(0.5)
             }
-            .frame(width: 50)
+            .frame(width: screenWidth*0.18)
             HStack(){
                 if(enemy.bleedDamage != 0){
                     ZStack(alignment: .bottom){
-                        Image("bleed 1")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .clipped()
-                            .padding(0)
-                            .frame(width: screenWidth*0.04, height: screenWidth*0.04, alignment: .topLeading)
-                        Text("\(enemy.bleedDamage)")
-                            .font(.caption2)
-                            .foregroundColor(.white)
-                            .frame(width: screenWidth*0.04, height: screenWidth*0.04, alignment: .bottomTrailing)
+                        GeometryReader{ geometry in
+                            Image("bleed 1")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .clipped()
+                                .padding(0)
+                            Text("\(enemy.bleedDamage)")
+                                .font(.caption2)
+                                .foregroundColor(.white)
+                                .position(x: 0.8*geometry.size.width, y: 0.8*geometry.size.height)
+                                .font(Font.system(size:(CGFloat)(0.2*min(geometry.size.width,geometry.size.height))))
+                                .padding([.bottom, .trailing], 1)
+                        }
                     }
                     .frame(width: screenWidth*0.04, height: screenWidth*0.04)
                 }
@@ -143,8 +111,12 @@ struct EnemyView: View{
         .transition(.asymmetric(insertion: .identity , removal: .opacity)) //animates insertion and deletion of view
     }
 }
+
 struct RuneGrid: View{
     @EnvironmentObject var viewModel: RuneBinderViewModel
+    @State private var showTooltip: Bool = false
+    @State private var tooltipRune: Rune? = nil
+    @State private var tooltipPosition: CGPoint = .zero
     var namespace: Namespace.ID
     var body: some View {
         let columns = [
@@ -158,7 +130,9 @@ struct RuneGrid: View{
                 if(!viewModel.spell.contains(runes)){
                     RuneView(rune: runes, namespace: namespace)
                         .aspectRatio(contentMode: .fit)
-
+                        .anchorPreference(key: RunePositionPreferenceKey.self, value: .center) {
+                                [runes.id: $0]
+                            }
                 }
                 else{
                     Rectangle()
@@ -169,8 +143,92 @@ struct RuneGrid: View{
             }
         }
         .frame(width: screenWidth*0.8, height: screenWidth*0.8)
+        .overlayPreferenceValue(RunePositionPreferenceKey.self) { preferences in
+            GeometryReader { geo in
+                ForEach(viewModel.grid) { rune in
+                    if let anchor = preferences[rune.id], rune.id == viewModel.selectedRune?.id {
+                        let point = geo[anchor]
+                        RuneTooltipView(rune: rune)
+                            .position(smartTooltipPosition(from: point, in: geo.size))
+                            .transition(.opacity)
+                    }
+                }
+            }
+        }
     }
 }
+
+func smartTooltipPosition(from point: CGPoint, in containerSize: CGSize) -> CGPoint {
+    let tooltipWidth: CGFloat = 120
+    let tooltipHeight: CGFloat = 80
+    let padding: CGFloat = 10
+
+    var x = point.x + tooltipWidth / 2 + padding
+    var y = point.y
+
+    if x + tooltipWidth / 2 > containerSize.width {
+        x = point.x - tooltipWidth / 2 - padding
+    }
+
+    if y + tooltipHeight / 2 > containerSize.height {
+        y = containerSize.height - tooltipHeight / 2 - padding
+    } else if y - tooltipHeight / 2 < 0 {
+        y = tooltipHeight / 2 + padding
+    }
+
+    return CGPoint(x: x, y: y)
+}
+
+
+struct RunePositionPreferenceKey: PreferenceKey {
+    static var defaultValue: [UUID: Anchor<CGPoint>] = [:]
+    
+    static func reduce(value: inout [UUID: Anchor<CGPoint>], nextValue: () -> [UUID: Anchor<CGPoint>]) {
+        value.merge(nextValue(), uniquingKeysWith: { $1 })
+    }
+}
+
+
+struct RuneTooltipView: View {
+    var rune: Rune
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            // Enchantment description
+            if let enchant = rune.enchant {
+                Text(enchant.description)
+                    .font(.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            // Debuffs
+            if rune.lock > 0 {
+                Text("🔒 Locked: Cannot be selected.")
+                    .font(.caption)
+            }
+            if rune.scorch > 0 {
+                Text("🔥 Scorch: Deals damage over time.")
+                    .font(.caption)
+            }
+            if rune.weaken > 0 {
+                Text("🌀 Weaken: Reduces effectiveness.")
+                    .font(.caption)
+            }
+            if rune.rot > 0 {
+                Text("💀 Rot: Spreads to nearby runes.")
+                    .font(.caption)
+            }
+        }
+        .padding(10)
+        .background(Color.black.opacity(0.85))
+        .cornerRadius(10)
+        .foregroundColor(.white)
+        .frame(maxWidth: 200)
+        .shadow(radius: 5)
+    }
+}
+
+
 struct SpellView: View{
     @EnvironmentObject var viewModel: RuneBinderViewModel
     var namespace: Namespace.ID
@@ -202,6 +260,9 @@ struct EnemyListView: View {
 struct PlayerInfoView: View {
     @EnvironmentObject var viewModel: RuneBinderViewModel
 
+    var healthRatio: CGFloat {
+        CGFloat(viewModel.player.currentHealth) / CGFloat(viewModel.player.maxHealth)
+       }
     var body: some View {
         VStack {
             Image("player")
@@ -209,13 +270,24 @@ struct PlayerInfoView: View {
                 .aspectRatio(contentMode: .fit)
                 .frame(width: screenWidth*0.18, height: screenWidth*0.18)
                 .clipped()
-            Text("Player HP: \(viewModel.player.currentHealth)/\(viewModel.player.maxHealth)")
-                .foregroundColor(.green)
-            Text("Spell Power: \(viewModel.spellPower)")
-                .foregroundColor(.purple)
-            /*Text(viewModel.isPlayerTurn ? "Your Turn" : "Enemy Turn")
-                .font(.headline)
-                .foregroundColor(viewModel.isPlayerTurn ? .yellow : .orange)*/
+            ZStack(alignment: .leading) { //HP bar
+                Rectangle()
+                    .frame(height: screenHeight*0.0075)
+                    .foregroundColor(.gray.opacity(0.3))
+                    .cornerRadius(3)
+                
+                Rectangle()
+                    .frame(width: screenWidth*0.13*healthRatio, height: screenHeight*0.0075) // 50 is total width
+                    .foregroundColor(.red)
+                    .cornerRadius(3)
+                
+                Text("\(viewModel.player.currentHealth)/\(viewModel.player.maxHealth)")
+                    .font(.caption2)
+                    .foregroundColor(.white)
+                    .frame(width: screenWidth*0.13, height: screenHeight*0.02)
+                    .minimumScaleFactor(0.5)
+            }
+            .frame(width: screenWidth*0.18)
         }
     }
 }
@@ -239,6 +311,31 @@ struct CombatView: View {
         .padding(0)
         .background(Color.black.opacity(0.2))
         .cornerRadius(12)
+    }
+}
+
+struct VictoryOverlay: View {
+    @EnvironmentObject var viewModel: RuneBinderViewModel
+    let onContinue: () -> Void
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("Victory")
+                .font(.largeTitle)
+                .bold()
+                .foregroundColor(.white)
+
+            Button("Continue", action: onContinue)
+                .font(.headline)
+                .padding()
+                .background(Color.white.opacity(0.2))
+                .cornerRadius(10)
+                .foregroundColor(.white)
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Color.black.opacity(0.8))
+        .cornerRadius(20)
+        .padding()
     }
 }
 

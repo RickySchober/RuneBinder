@@ -9,8 +9,11 @@ import SwiftUI
 
 enum GameScreen {
     case mainMenu
-    case levelSelect
+    case map
     case combat
+    case event
+    case shop
+    case settings
 }
 
 class ViewRouter: ObservableObject {

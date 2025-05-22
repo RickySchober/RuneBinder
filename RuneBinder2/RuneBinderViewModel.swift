@@ -33,6 +33,19 @@ class RuneBinderViewModel: ObservableObject {
     var spellRuneSize: Double{
         model.spellRuneSize()
     }
+    var map: [[MapNode]]{
+        model.map
+    }
+    var victory: Bool{
+        model.victory
+    }
+    var selectedRune: Rune?{
+        model.selectedRune
+    }
+    func hoverRune(rune: Rune?){
+        model.hoverRune(rune: rune)
+        objectWillChange.send()
+    }
     func selectRune(rune: Rune){
         model.selectRune(rune: rune)
         model.checkSpellValid()
@@ -42,10 +55,15 @@ class RuneBinderViewModel: ObservableObject {
         model.castSpell()
         model.checkSpellValid()
         model.enemyTurn()
+        model.cleanUp()
         objectWillChange.send()
     }
     func selectEnemy(enemy: Enemy){
         model.changeTarget(enemy: enemy)
+        objectWillChange.send()
+    }
+    func selectNode(node: MapNode){
+        model.selectNode(node: node)
         objectWillChange.send()
     }
 }

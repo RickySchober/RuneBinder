@@ -35,7 +35,14 @@ struct StartView: View{
                     viewRouter.currentScreen = .combat
                 }
         })
-        NavigationLink("New Game",destination: ContentView())
+        Button(action:{
+        }, label: {Text("New Game")
+                .font(.system(size: 60.0))
+                .onTapGesture {
+                    SoundManager.shared.playBackgroundMusic(named: "soundtrack")
+                    viewRouter.currentScreen = .map
+                }
+        })
         Button(action:{
             isSheetPresented.toggle()
         }, label: {Text("Back")
