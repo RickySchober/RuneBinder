@@ -60,6 +60,6 @@ class ChainBearer: Enemy{
     override init(pos: Int) {
         super.init(pos: pos)
         image = "chainbearer"
-        actions = [Action(dmg: 5, lck: 2, wek: 2)]
+        actions = [Action(dmg: 5, deb: [Debuff(type: .lock, value: 1), Debuff(type: .lock, value: 1), Debuff(type: .weak, value: 1)])]
     }
 }

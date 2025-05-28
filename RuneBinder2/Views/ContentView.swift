@@ -194,29 +194,16 @@ struct RuneTooltipView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            // Enchantment description
             if let enchant = rune.enchant {
                 Text(enchant.description)
                     .font(.subheadline)
                     .fixedSize(horizontal: false, vertical: true)
             }
-
-            // Debuffs
-            if rune.lock > 0 {
-                Text("🔒 Locked: Cannot be selected.")
-                    .font(.caption)
+            if(rune.debuff != nil){
+                Text(rune.debuff!.text)
             }
-            if rune.scorch > 0 {
-                Text("🔥 Scorch: Deals damage over time.")
-                    .font(.caption)
-            }
-            if rune.weaken > 0 {
-                Text("🌀 Weaken: Reduces effectiveness.")
-                    .font(.caption)
-            }
-            if rune.rot > 0 {
-                Text("💀 Rot: Spreads to nearby runes.")
-                    .font(.caption)
+            else{
+                Text("Basic \(String(rune.letter)) rune")
             }
         }
         .padding(10)
@@ -227,7 +214,6 @@ struct RuneTooltipView: View {
         .shadow(radius: 5)
     }
 }
-
 
 struct SpellView: View{
     @EnvironmentObject var viewModel: RuneBinderViewModel
@@ -250,7 +236,7 @@ struct EnemyListView: View {
             ForEach(self.viewModel.enemies, id: \.id) { enemy in
                 EnemyView(enemy: enemy)
                     .padding(0)
-                    .background((viewModel.target?.id == enemy.id ) ? Color.red.opacity(0.3) : Color.clear)
+                    .background((viewModel.targets.contains(enemy)) ? Color.red.opacity(0.3) : Color.clear)
                     .cornerRadius(10)
             }
         }

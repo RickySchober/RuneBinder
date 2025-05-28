@@ -27,6 +27,9 @@ class RuneBinderViewModel: ObservableObject {
     var target: Enemy?{
         model.primaryTarget
     }
+    var targets: [Enemy]{
+        model.targets
+    }
     var enemies: Array<Enemy>{
         model.enemies
     }

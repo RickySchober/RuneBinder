@@ -29,65 +29,20 @@ struct RuneView: View{
                 Text(String(rune.letter))
                     .font(Font.system(size:(CGFloat)(0.5*min(geometry.size.width,geometry.size.height))))
                     .multilineTextAlignment(.center)
-                Text(String(rune.weaken == 0 ? rune.power : 0))
+                Text(String(rune.debuff?.type != .weak ? rune.power : 0))
                     .foregroundColor(.white)
                     .position(x: 0.8*geometry.size.width, y: 0.8*geometry.size.height)
                     .font(Font.system(size:(CGFloat)(0.2*min(geometry.size.width,geometry.size.height))))
                     .padding([.bottom, .trailing], 1)
-                if(rune.rot > 0){
-                    Image("rot")
+                if(rune.debuff != nil){
+                    Image(rune.debuff!.image)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .clipped()
                         .padding(0)
                         .frame(width: geometry.size.width*0.2, height: geometry.size.height*0.2)
                         .position(x: 0.15*geometry.size.width, y: 0.15*geometry.size.height)
-                    Text("\(rune.rot)")
-                        .font(.caption2)
-                        .foregroundColor(.black)
-                        .position(x: 0.2*geometry.size.width, y: 0.2*geometry.size.height)
-                        .font(Font.system(size:(CGFloat)(0.2*min(geometry.size.width,geometry.size.height))))
-                        .padding([.bottom, .trailing], 1)
-                }
-                if(rune.lock > 0){
-                    Image("chain")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .clipped()
-                        .padding(0)
-                        .frame(width: geometry.size.width*0.2, height: geometry.size.height*0.2)
-                        .position(x: 0.15*geometry.size.width, y: 0.15*geometry.size.height)
-                    Text("\(rune.lock)")
-                        .font(.caption2)
-                        .foregroundColor(.black)
-                        .position(x: 0.2*geometry.size.width, y: 0.2*geometry.size.height)
-                        .font(Font.system(size:(CGFloat)(0.2*min(geometry.size.width,geometry.size.height))))
-                        .padding([.bottom, .trailing], 1)
-                }
-                if(rune.scorch > 0){
-                    Image("fire")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .clipped()
-                        .padding(0)
-                        .frame(width: geometry.size.width*0.2, height: geometry.size.height*0.2)
-                        .position(x: 0.15*geometry.size.width, y: 0.15*geometry.size.height)
-                    Text("\(rune.scorch)")
-                        .font(.caption2)
-                        .foregroundColor(.black)
-                        .position(x: 0.2*geometry.size.width, y: 0.2*geometry.size.height)
-                        .font(Font.system(size:(CGFloat)(0.2*min(geometry.size.width,geometry.size.height))))
-                        .padding([.bottom, .trailing], 1)
-                }
-                if(rune.weaken > 0){
-                    Image("weak")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .clipped()
-                        .padding(0)
-                        .frame(width: geometry.size.width*0.2, height: geometry.size.height*0.2)
-                        .position(x: 0.15*geometry.size.width, y: 0.15*geometry.size.height)
-                    Text("\(rune.weaken)")
+                    Text("\(rune.debuff!.value)")
                         .font(.caption2)
                         .foregroundColor(.black)
                         .position(x: 0.2*geometry.size.width, y: 0.2*geometry.size.height)
@@ -119,7 +74,7 @@ struct RuneView: View{
                     .onEnded {
                         hoverWorkItem?.cancel()
                         hoverWorkItem = nil
-                        if rune.lock != 0 {
+                        if rune.debuff?.type == .lock  {
                             SoundManager.shared.playSoundEffect(named: "click")
                             withAnimation {
                                 locked += 1

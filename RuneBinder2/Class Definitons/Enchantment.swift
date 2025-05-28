@@ -52,9 +52,11 @@ class Empower: Enchantment{
         super.init()
         priority = 2
         color = Color.blue
+        description = "Empower: Increases spell power of rune by 1"
     }
     override func utilizeEffect(game: RuneBinderGame){
         game.changeSpellPower(num: 1)
+        
     }
 }
 class Revitalize: Enchantment{
@@ -64,9 +66,51 @@ class Revitalize: Enchantment{
         super.init()
         priority = 2
         color = Color.green
+        description = "Revitalize: Heal up to 5 hitpoints"
     }
     override func utilizeEffect(game: RuneBinderGame){
         game.changeHealth(num: 5)
+    }
+}
+class Ward: Enchantment{
+    var rarity = rarity.uncommon
+    var type = type.preservation
+    required init() {
+        super.init()
+        priority = 2
+        color = Color.green
+        description = "Ward: Block up to 10 hitpoints"
+    }
+    override func utilizeEffect(game: RuneBinderGame){
+        game.changeHealth(num: 5)
+    }
+}
+class Purify: Enchantment{
+    var rarity = rarity.uncommon
+    var type = type.preservation
+    required init() {
+        super.init()
+        priority = 2
+        color = Color.green
+        description = "Purify: Before casting emove up to 2 rune debuffs"
+    }
+    override func utilizeEffect(game: RuneBinderGame){
+        game.changeHealth(num: 5)
+    }
+}
+class CleansingWave: Enchantment{
+    var rarity = rarity.uncommon
+    var type = type.preservation
+    required init() {
+        super.init()
+        priority = 2
+        color = Color.green
+        description = "Cleansing Wave: Before casting remove all rune debuffs"
+    }
+    override func utilizeEffect(game: RuneBinderGame){
+        for rune in game.grid{
+            rune.debuff = nil
+        }
     }
 }
 class Cleave: Enchantment{
@@ -76,6 +120,7 @@ class Cleave: Enchantment{
         super.init()
         priority = 1
         color = Color.gray
+        description = "Cleave: hits enemies on either side of target but halves spell power"
     }
     override func utilizeEffect(game: RuneBinderGame){
         if(game.primaryTarget!.position+1<game.enemies.count){ //ensure valid index
@@ -93,6 +138,7 @@ class VampiricStrike: Enchantment{
         super.init()
         priority = 2
         color = Color.red
+        description = "Vampiric Strike: heal based on damage done"
     }
     override func utilizeEffect(game: RuneBinderGame){
         game.changeHealth(num: game.getSpellPower())
@@ -105,6 +151,7 @@ class SerratedStrike: Enchantment{
         super.init()
         priority = 2
         color = Color.red
+        description = "Serrated Strike: apply 3 bleed to all enemies hit"
     }
     override func utilizeEffect(game: RuneBinderGame){
         for target in game.targets{

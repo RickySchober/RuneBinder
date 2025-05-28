@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 import SwiftUI
+
 class RuneBinderGame{
     //Spell Vars
     private (set) var grid: Array<Rune> = []
@@ -71,6 +72,7 @@ class RuneBinderGame{
     }
     func changeTarget(enemy:Enemy){
         primaryTarget = enemy;
+        targets = [enemy]
     }
     func generateMap(numLayers: Int, minNodes: Int, maxNodes: Int) -> [[MapNode]] {
         var map: [[MapNode]] = []
@@ -219,38 +221,24 @@ class RuneBinderGame{
     func applyRuneDebuffs(atk: Action){
         var debuffable: Int = 0
         for rune in grid{
-            if(rune.enchant == nil && rune.rot == 0 && rune.scorch == 0 && rune.lock == 0 && rune.weaken == 0){
+            if(rune.debuff == nil){
                 debuffable += 1
             }
         }
         print(debuffable)
-        for _ in 0..<atk.lock{
-            var rand = Int.random(in: 0..<debuffable-1)
+        for i in 0..<atk.debuffs.count{
+            var rand = Int.random(in: 0..<debuffable-1) //assign the randth valid rune to be debuffed
             for rune in grid{
-                if(rune.enchant == nil && rune.rot == 0 && rune.scorch == 0 && rune.lock == 0 && rune.weaken == 0){
+                if(rune.debuff == nil && rand > 0){
                     rand -= 1
                 }
                 if(rand == 0){
-                    rune.lock += 1
+                    rune.debuff = atk.debuffs[i]
                     debuffable -= 1
                     break
                 }
             }
         }
-        for _ in 0..<atk.weaken{
-            var rand = Int.random(in: 0..<debuffable-1)
-            for rune in grid{
-                if(rune.enchant == nil && rune.rot == 0 && rune.scorch == 0 && rune.lock == 0 && rune.weaken == 0){
-                    rand -= 1
-                }
-                if(rand == 0){
-                    rune.weaken += 1
-                    debuffable -= 1
-                    break
-                }
-            }
-        }
-        
     }
     /*Since the effects of enchantments must be applied in a specific order this function creates an ordered list of all enchantments
     in the current spell. This is only needed to be run when there is both a valid target and word*/
@@ -280,7 +268,7 @@ class RuneBinderGame{
             queueEnchants()
             for i in (0...gridSize-1){ //Replace used letters in grid
                 if(spell.contains(grid[i])){
-                    if(grid[i].weaken == 0){
+                    if(grid[i].debuff == nil || grid[i].debuff?.type != .weak){
                         spellPower += grid[i].power
                     }
                     let rng = Int.random(in: 0...(spellBook.count-1))
@@ -306,6 +294,31 @@ class RuneBinderGame{
             spell.removeAll()
             targets.removeAll()
             primaryTarget = nil
+        }
+    }
+    //Triggers all active rune debuffs
+    func runeDebuffs(){
+        for i in (0...gridSize-1){
+            switch grid[i].debuff?.type{
+            case .none:
+                break
+            case .some(.lock):
+                grid[i].debuff?.value -= 1
+                if(grid[i].debuff!.value <= 0){
+                    grid[i].debuff = nil
+                }
+            case .some(.scorch):
+                player.currentHealth -= grid[i].debuff!.value
+                grid[i] = generateRune(enchant: nil)
+            case .some(.rot):
+                player.currentHealth -= grid[i].debuff!.value
+                grid[i].debuff?.value += 1
+            case .some(.weak):
+                grid[i].debuff?.value -= 1
+                if(grid[i].debuff!.value <= 0){
+                    grid[i].debuff = nil
+                }
+            }
         }
     }
     func selectRune(rune:Rune){
