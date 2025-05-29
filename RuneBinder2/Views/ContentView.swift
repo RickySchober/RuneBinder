@@ -75,7 +75,7 @@ struct EnemyView: View{
                     .cornerRadius(3)
                 
                 Rectangle()
-                    .frame(width: screenWidth*0.13*healthRatio, height: screenHeight*0.0075) // 50 is total width
+                    .frame(width: max(0, screenWidth*0.13*healthRatio), height: screenHeight*0.0075) // 50 is total width
                     .foregroundColor(.red)
                     .cornerRadius(3)
                 
@@ -263,14 +263,14 @@ struct PlayerInfoView: View {
                     .cornerRadius(3)
                 
                 Rectangle()
-                    .frame(width: screenWidth*0.13*healthRatio, height: screenHeight*0.0075) // 50 is total width
+                    .frame(width: screenWidth*0.18*healthRatio, height: screenHeight*0.0075) // 50 is total width
                     .foregroundColor(.red)
                     .cornerRadius(3)
                 
                 Text("\(viewModel.player.currentHealth)/\(viewModel.player.maxHealth)")
                     .font(.caption2)
                     .foregroundColor(.white)
-                    .frame(width: screenWidth*0.13, height: screenHeight*0.02)
+                    .frame(width: screenWidth*0.18, height: screenHeight*0.02)
                     .minimumScaleFactor(0.5)
             }
             .frame(width: screenWidth*0.18)
@@ -302,6 +302,7 @@ struct CombatView: View {
 
 struct VictoryOverlay: View {
     @EnvironmentObject var viewModel: RuneBinderViewModel
+    @EnvironmentObject var viewRouter: ViewRouter
     let onContinue: () -> Void
     var body: some View {
         VStack(spacing: 20) {
@@ -309,7 +310,19 @@ struct VictoryOverlay: View {
                 .font(.largeTitle)
                 .bold()
                 .foregroundColor(.white)
-
+            HStack(spacing: 15){
+                ForEach(viewModel.rewardEnchants.indices, id: \.self) { index in
+                    let enchant = viewModel.rewardEnchants[index].init()
+                    Text(enchant.description)
+                        .padding()
+                        .background(enchant.color.opacity(0.8))
+                        .cornerRadius(10)
+                        .onTapGesture {
+                            viewModel.selectReward(enchant: viewModel.rewardEnchants[index])
+                            viewRouter.currentScreen = .map
+                        }
+                }
+            }
             Button("Continue", action: onContinue)
                 .font(.headline)
                 .padding()

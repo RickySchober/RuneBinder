@@ -12,7 +12,12 @@
  */
 import Foundation
 import SwiftUI
-class Enchantment{
+
+class Enchantment: Equatable{
+    static func == (lhs: Enchantment, rhs: Enchantment) -> Bool {
+        return lhs.description == rhs.description
+    }
+    
     enum rarity{
         case uncommon
         case rare

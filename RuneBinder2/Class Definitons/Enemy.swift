@@ -56,6 +56,56 @@ class Goblin: Enemy{
         image = "goblin2"
     }
 }
+class PoisonShroom: Enemy{
+    override init(pos: Int) {
+        super.init(pos: pos)
+        image = "shroom"
+        actions = [
+            Action(dmg: 5),
+            Action(dmg: 1, deb: [Debuff(type: .rot, value: 1),Debuff(type: .rot, value: 1)]),
+        ]
+    }
+}
+class RabidWolf: Enemy{
+    var track: Int = 0
+    override init(pos: Int) {
+        super.init(pos: pos)
+        image = "wolf"
+        actions = [
+            Action(dmg: 3),
+            Action(dmg: 4),
+            Action(dmg: 5),
+            Action(dmg: 6),
+        ]
+    }
+    override func chooseAction(game: RuneBinderGame) -> Action{
+        track += 1
+        if(track > actions.count){
+            track = 0
+        }
+        return actions[track]
+    }
+}
+class TorchBearer: Enemy{
+    override init(pos: Int) {
+        super.init(pos: pos)
+        image = "torchbearer"
+        actions = [
+            Action(dmg: 7),
+            Action(dmg: 0, deb: [Debuff(type: .scorch, value: 1),Debuff(type: .scorch, value: 1)]),
+        ]
+    }
+}
+class Tree: Enemy{
+    override init(pos: Int) {
+        super.init(pos: pos)
+        image = "tree"
+        actions = [
+            Action(dmg: 8),
+            Action(dmg: 0, deb: [Debuff(type: .rot, value: 5),Debuff(type: .scorch, value: 5)]),
+        ]
+    }
+}
 class ChainBearer: Enemy{
     override init(pos: Int) {
         super.init(pos: pos)
@@ -63,3 +113,4 @@ class ChainBearer: Enemy{
         actions = [Action(dmg: 5, deb: [Debuff(type: .lock, value: 1), Debuff(type: .lock, value: 1), Debuff(type: .weak, value: 1)])]
     }
 }
+//Biome ideas Phonetic Forest, Glyph Mines, Ancient Archive, Citadel

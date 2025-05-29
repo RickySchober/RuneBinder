@@ -15,10 +15,15 @@ class RuneBinderGame{
     private (set) var enchantQueue: Array<Rune> = []
     private var gridSize: Int = 16
     private (set) var spell: Array<Rune> = []
-    private var spellBook: Array<Enchantment.Type> //List of known enchantments
     private var spellPower: Int = 0
     private (set) var validSpell: Bool = false
     private (set) var selectedRune: Rune? = nil
+    
+    private var spellLibrary: Array<Enchantment.Type> //List of possible enchants to encounter during run
+    private (set) var rewardEnchants: Array<Enchantment.Type> = [] //List of known enchantments
+    private var spellBook: [Enchantment] = []//List of aquired enchants
+
+
     
     private (set) var player: Player = Player(currentHealth: 50, maxHealth: 80)
     private (set) var enemies: [Enemy] = [] //Array containing the enemies in the current encounter will be in index 0-3 based on position
@@ -36,7 +41,7 @@ class RuneBinderGame{
     private let letterOccurence: Array<Double> = [7.8, 2.0, 4.0, 3.8, 11, 1.4, 3.0, 2.3, 8.6, 0.21, 0.97, 5.3, 2.7, 7.2,
                                                   6.1, 2.8, 0.19, 7.3, 8.7, 6.7, 3.3, 1.0, 0.91, 0.27, 1.6, 0.44]
     init(){
-        spellBook = [VampiricStrike.self, Empower.self, Revitalize.self]
+        spellLibrary = [VampiricStrike.self, Empower.self, Revitalize.self, Ward.self, Cleave.self, CleansingWave.self, SerratedStrike.self, Purify.self]
         map = generateMap(numLayers: 10, minNodes: 3, maxNodes: 5)
         print(enemies.count)
         fillGrid()
@@ -271,8 +276,13 @@ class RuneBinderGame{
                     if(grid[i].debuff == nil || grid[i].debuff?.type != .weak){
                         spellPower += grid[i].power
                     }
-                    let rng = Int.random(in: 0...(spellBook.count-1))
-                    grid[i] = generateRune(enchant: spellBook[rng].init())
+                    if(spellBook.count>0){
+                        let rng = Int.random(in: 0...(spellBook.count-1))
+                        grid[i] = generateRune(enchant: spellBook[rng])
+                    }
+                    else{
+                        grid[i] = generateRune(enchant: nil)
+                    }
                 }
             }
             for rune in enchantQueue{
@@ -356,16 +366,33 @@ class RuneBinderGame{
     }
     
     func generateCombat(){
-        enemies = [ChainBearer(pos: 1), ChainBearer(pos: 2), Goblin(pos: 3), Goblin(pos: 4)]
+        if let encounter = EncounterPool.shared.getRandomEncounter(forZone: .Forest, difficulty: 1) {
+            for enemy in encounter.enemies {
+                enemy.init()
+            }
+            enemies = encounter.enemies
+        }
     }
     func generateEvent(){
         
+    }
+    func generateEnchantRewards(){
+        for _ in (0..<3){
+            var rand = Int.random(in: (0..<spellLibrary.count))
+            rewardEnchants.append(spellLibrary[rand])
+        }
+    }
+    func addEnchant(enchant: Enchantment.Type){
+        spellBook.append(enchant.init())
+        rewardEnchants = []
+        victory = false
     }
     //This functions handles clean up actions involved during combat 
     func cleanUp(){
         if enemies.isEmpty{
             withAnimation(){
                 victory = true
+                generateEnchantRewards()
             }
         }
         if player.currentHealth <= 0{

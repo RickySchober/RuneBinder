@@ -36,6 +36,9 @@ class RuneBinderViewModel: ObservableObject {
     var spellRuneSize: Double{
         model.spellRuneSize()
     }
+    var rewardEnchants: [Enchantment.Type]{
+        model.rewardEnchants
+    }
     var map: [[MapNode]]{
         model.map
     }
@@ -57,6 +60,7 @@ class RuneBinderViewModel: ObservableObject {
     func castSpell(){
         model.castSpell()
         model.checkSpellValid()
+        model.runeDebuffs()
         model.enemyTurn()
         model.cleanUp()
         objectWillChange.send()
@@ -67,6 +71,10 @@ class RuneBinderViewModel: ObservableObject {
     }
     func selectNode(node: MapNode){
         model.selectNode(node: node)
+        objectWillChange.send()
+    }
+    func selectReward(enchant: Enchantment.Type){
+        model.addEnchant(enchant: enchant)
         objectWillChange.send()
     }
 }
