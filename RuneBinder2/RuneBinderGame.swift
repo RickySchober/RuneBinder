@@ -97,29 +97,28 @@ class RuneBinderGame{
             }
             
         }
-        print(map)
         //Adds connections between layers of node depending on relative size of this layer and next layer
         for layer in 0..<(numLayers - 1) {
-            let posScale = (map[layer+1].count-1)/(map[layer].count-1)
-            
             if(map[layer+1].count > map[layer].count){ //Next row bigger
-                let extraPaths = map[layer+1].count - map[layer].count //Randomly assign extra paths
+                let extraPaths = map[layer+1].count - map[layer].count //Randomly assign extra paths to nodes default path
                 for _ in 0..<extraPaths{
                     var randPos = Int.random(in: 0..<map[layer].count)
-                    while(!map[layer][randPos].nextNodes.isEmpty){
+                    while(!map[layer][randPos].nextNodes.isEmpty){ //Random unchosen starting node
                         randPos = Int.random(in: 0..<map[layer].count)
                     }
                     map[layer][randPos].nextNodes = [map[layer+1][map[layer][randPos].position*(map[layer+1].count-1)/(map[layer].count-1)]]
                 }
                 for i in 0..<map[layer].count {
-                    var defPos = map[layer+1][map[layer][i].position*(map[layer+1].count-1)/(map[layer].count-1)]
-                    if(map[layer][i].position>0 && !map[layer][i-1].nextNodes.contains(map[layer+1][map[layer][i].position*(map[layer+1].count-1)/(map[layer].count-1)-1])){
-                        map[layer][i].nextNodes.append(map[layer+1][map[layer][i].position*(map[layer+1].count-1)/(map[layer].count-1)-1])
-                    }
-                    else if(map[layer][i].position>0 && map[layer][i-1].nextNodes.contains(defPos)){
+                    let defPos = map[layer+1][map[layer][i].position*(map[layer+1].count-1)/(map[layer].count-1)] //Default next node
+                    if(map[layer][i].position>0 && map[layer][i-1].nextNodes.contains(defPos)){ //Default position taken by previous node use next node
+                        //print("Default position taken using next for index  \(layer), \(i)")
                         map[layer][i].nextNodes.append(map[layer+1][map[layer][i].position*(map[layer+1].count-1)/(map[layer].count-1)+1])
                     }
-                    else if(map[layer][i].nextNodes.contains(defPos)){
+                    else if(map[layer][i].position>0 && !map[layer][i-1].nextNodes.contains(map[layer+1][map[layer][i].position*(map[layer+1].count-1)/(map[layer].count-1)-1])){
+                        //Previous node hasn't used default position take theirs
+                        map[layer][i].nextNodes.append(map[layer+1][map[layer][i].position*(map[layer+1].count-1)/(map[layer].count-1)-1])
+                    }
+                    else if(map[layer][i].nextNodes.contains(defPos)){ //If nodes was randomly chosen to have extra path add path before or after default
                         if(map[layer][i].position == map[layer].count-1){
                             map[layer][i].nextNodes.append(map[layer+1][map[layer][i].position*(map[layer+1].count-1)/(map[layer].count-1)-1])
                         }
@@ -127,22 +126,32 @@ class RuneBinderGame{
                             map[layer][i].nextNodes.append(map[layer+1][map[layer][i].position*(map[layer+1].count-1)/(map[layer].count-1)+1])
                         }
                     }
-                    else{
-                        map[layer][i].nextNodes.append(map[layer+1][map[layer][i].position*(map[layer+1].count-1)/(map[layer].count-1)])
+                    else{ //default case
+                        map[layer][i].nextNodes.append(defPos)
                     }
                     
                 }
             }
             else if(map[layer+1].count < map[layer].count){ //Next row smaller
-                for node in map[layer] {
-                    node.nextNodes = [map[layer+1][node.position*(map[layer+1].count-1)/(map[layer].count-1)]]
+                let direction = Int.random(in: 0..<2)
+                if(direction == 0){ //Bias Right
+                    for node in map[layer] {
+                        node.nextNodes = [map[layer+1][node.position*(map[layer+1].count-1)/(map[layer].count-1)]]
+                    }
+                }
+                else{ //Bias Right
+                    for node in map[layer] {
+                        let proportion = Double(node.position) / Double(map[layer].count - 1)
+                        let targetIndex = Int(round(proportion * Double(map[layer+1].count - 1)))
+                        node.nextNodes = [map[layer+1][targetIndex]]
+                    }
                 }
             }
             else{ //Same size
+                let extraPath = Int.random(in: 0..<map[layer].count) //give random node extra path
                 for node in map[layer] {
-                    let connections = Int.random(in: 1...4)
                     node.nextNodes.append(map[layer+1][node.position])
-                    if connections == 4{
+                    if node == map[layer][extraPath]{
                         if(node.position==0){
                             node.nextNodes.append(map[layer+1][node.position+1])
                         }
