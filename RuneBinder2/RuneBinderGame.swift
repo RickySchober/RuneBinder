@@ -271,18 +271,23 @@ class RuneBinderGame{
             spellPower = 0
             addTarget(enemy: primaryTarget!) //must add primary target to list of targets before resolving spell effects
             queueEnchants()
+            var enchantCount: Int = 0
             for i in (0...gridSize-1){ //Replace used letters in grid
                 if(spell.contains(grid[i])){
                     if(grid[i].debuff == nil || grid[i].debuff?.type != .weak){
                         spellPower += grid[i].power
                     }
-                    if(spellBook.count>0){
+                    if(spellBook.count>0 && enchantCount < 4){
                         let rng = Int.random(in: 0...(spellBook.count-1))
                         grid[i] = generateRune(enchant: spellBook[rng])
+                        enchantCount += 1
                     }
                     else{
                         grid[i] = generateRune(enchant: nil)
                     }
+                }
+                else if(grid[i].enchant != nil){
+                    enchantCount += 1
                 }
             }
             for rune in enchantQueue{
@@ -367,10 +372,7 @@ class RuneBinderGame{
     
     func generateCombat(){
         if let encounter = EncounterPool.shared.getRandomEncounter(forZone: .Forest, difficulty: 1) {
-            for enemy in encounter.enemies {
-                enemy.init()
-            }
-            enemies = encounter.enemies
+            enemies = encounter.generateEnemies()
         }
     }
     func generateEvent(){

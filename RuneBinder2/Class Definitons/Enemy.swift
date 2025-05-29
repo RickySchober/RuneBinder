@@ -38,8 +38,8 @@ class Enemy: Equatable, Identifiable{
     }
     
     init(pos: Int){
-        maxHealth = 20
-        currentHealth = maxHealth/2
+        maxHealth = 15
+        currentHealth = maxHealth
         position = pos
         bleeds = [Bleeds(turns: 2, dmg: 2)]
         actions = [Action(dmg: 1)]
@@ -80,7 +80,7 @@ class RabidWolf: Enemy{
     }
     override func chooseAction(game: RuneBinderGame) -> Action{
         track += 1
-        if(track > actions.count){
+        if(track > actions.count-1){
             track = 0
         }
         return actions[track]
