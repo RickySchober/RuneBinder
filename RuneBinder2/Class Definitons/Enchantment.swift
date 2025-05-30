@@ -13,7 +13,7 @@
 import Foundation
 import SwiftUI
 
-class Enchantment: Equatable{
+class Enchantment: Equatable, Identifiable{
     static func == (lhs: Enchantment, rhs: Enchantment) -> Bool {
         return lhs.description == rhs.description
     }
@@ -40,6 +40,7 @@ class Enchantment: Equatable{
     var priority: Int
     var color: Color
     var description: String
+    var id = UUID()
     required init() {
         priority = 3
         color = Color.yellow

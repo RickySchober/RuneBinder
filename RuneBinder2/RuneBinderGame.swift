@@ -21,8 +21,9 @@ class RuneBinderGame{
     
     private var spellLibrary: Array<Enchantment.Type> //List of possible enchants to encounter during run
     private (set) var rewardEnchants: Array<Enchantment.Type> = [] //List of known enchantments
-    private var spellBook: [Enchantment] = []//List of aquired enchants
-
+    private var spellBook: [Enchantment] = [Empower(), Revitalize(), Ward(), Cleave(),Empower(), Revitalize(), Ward(), Cleave(),Empower(), Revitalize(), Ward(), Cleave()]//List of aquired enchants
+    private (set) var spellDeck: [Enchantment]//List of undrawn enchants
+    private var maxEnchants: Int = 5
 
     
     private (set) var player: Player = Player(currentHealth: 50, maxHealth: 80)
@@ -42,9 +43,10 @@ class RuneBinderGame{
                                                   6.1, 2.8, 0.19, 7.3, 8.7, 6.7, 3.3, 1.0, 0.91, 0.27, 1.6, 0.44]
     init(){
         spellLibrary = [VampiricStrike.self, Empower.self, Revitalize.self, Ward.self, Cleave.self, CleansingWave.self, SerratedStrike.self, Purify.self]
+        spellDeck = spellBook
         map = generateMap(numLayers: 10, minNodes: 3, maxNodes: 5)
         print(enemies.count)
-        fillGrid()
+        shuffleGrid()
     }
     //A function that generates the array of encounters on game start up
     func getSpellPower() -> Int{
@@ -185,12 +187,55 @@ class RuneBinderGame{
         
         return Rune(l: "a", p: 1, e: nil)
     }
-    func fillGrid(){
-        var i = 0
-        while(grid.count<gridSize){
-            grid.append(generateRune(enchant: nil))
-            i = i + 1
+    //Replaces grid with new letters drawing new enchantments from the deck
+    func shuffleGrid(){
+        spell.removeAll()
+        for i in (0..<gridSize){
+            if(grid.count<=i){
+                grid.append(generateRune(enchant: nil))
+            }
+            else{
+                grid[i] = generateRune(enchant: nil)
+            }
         }
+        
+        var enchantIndices: [Int] = []
+        for _ in (0..<min(maxEnchants, spellBook.count)){
+            var rand = Int.random(in: 0..<gridSize)
+            while(enchantIndices.contains(rand)){
+                rand = Int.random(in: 0..<gridSize)
+            }
+            enchantIndices.append(rand)
+        }
+        for index in enchantIndices {
+            grid[index].enchant = drawEnchant()
+        }
+    }
+    //Draws an enchantment at random from the deck reshuffling it if deck is empty.
+    //Casting flag handles case were enchantments currently in the spell being cast should still be reshuffled
+    func drawEnchant(casting: Bool = false) -> Enchantment?{
+        if(spellBook.count==0){ return nil }
+        if(spellDeck.isEmpty){ //Reshuffle all enchantments not on the grid
+            spellDeck = spellBook
+            for rune in grid{
+                if(rune.enchant != nil && !(casting && spell.contains(rune))){
+                    spellDeck.remove(at: spellDeck.firstIndex(of: rune.enchant!)!)
+                }
+            }
+        }
+        let rand = Int.random(in: 0..<spellDeck.count)
+        let enchant = spellDeck[rand]
+        spellDeck.remove(at: rand)
+        if(spellDeck.isEmpty){ //Reshuffle all enchantments not on the grid
+            spellDeck = spellBook
+            for rune in grid{
+                if(rune.enchant != nil && (!casting || !spell.contains(rune))){
+                    spellDeck.remove(at: spellDeck.firstIndex(of: rune.enchant!)!)
+                }
+            }
+        }
+        return enchant
+        
     }
     //Helper Function For CheckValidSpell that builds a string from the runes
     func buildSpell() -> String {
@@ -280,25 +325,18 @@ class RuneBinderGame{
             spellPower = 0
             addTarget(enemy: primaryTarget!) //must add primary target to list of targets before resolving spell effects
             queueEnchants()
-            var enchantCount: Int = 0
-            for i in (0...gridSize-1){ //Replace used letters in grid
-                if(spell.contains(grid[i])){
-                    if(grid[i].debuff == nil || grid[i].debuff?.type != .weak){
-                        spellPower += grid[i].power
-                    }
-                    if(spellBook.count>0 && enchantCount < 4){
-                        let rng = Int.random(in: 0...(spellBook.count-1))
-                        grid[i] = generateRune(enchant: spellBook[rng])
-                        enchantCount += 1
-                    }
-                    else{
-                        grid[i] = generateRune(enchant: nil)
+            var enchantCount: Int = 0 //Number of un-used enchants on grid
+            for rune in grid{ //count power and enchants
+                if(spell.contains(rune)){
+                    if(rune.debuff == nil || rune.debuff?.type != .weak){
+                        spellPower += rune.power
                     }
                 }
-                else if(grid[i].enchant != nil){
+                else if(rune.enchant != nil){
                     enchantCount += 1
                 }
             }
+            print("spell power of \(spellPower) enchant count of \(enchantCount)")
             for rune in enchantQueue{
                 rune.enchant?.utilizeEffect(game: self)
             }
@@ -315,11 +353,28 @@ class RuneBinderGame{
                 enemies.removeAll { $0.currentHealth <= 0 }
             }
             enchantQueue.removeAll()
-            spell.removeAll()
             targets.removeAll()
             primaryTarget = nil
+            for i in (0...gridSize-1){ //Replace used letters in grid
+                if(spell.contains(grid[i])){
+                    if(enchantCount < min(spellBook.count, maxEnchants)){
+                        let rng = Int.random(in: 0...(spellBook.count-1))
+                        grid[i] = generateRune(enchant: drawEnchant(casting: true))
+                        enchantCount += 1
+                        print("gimme enchant")
+                    }
+                    else{
+                        grid[i] = generateRune(enchant: nil)
+                    }
+                }
+                else if(grid[i].enchant != nil){
+                    enchantCount += 1
+                }
+            }
+            spell.removeAll()
         }
     }
+    
     //Triggers all active rune debuffs
     func runeDebuffs(){
         for i in (0...gridSize-1){
@@ -366,6 +421,8 @@ class RuneBinderGame{
         switch node.type{
         case .combat:
             generateCombat()
+            spellDeck = spellBook //Reset deck
+            shuffleGrid() //Reset grid
         case .elite:
             return
         case .event:

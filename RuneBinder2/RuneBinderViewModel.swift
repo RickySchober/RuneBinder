@@ -48,6 +48,9 @@ class RuneBinderViewModel: ObservableObject {
     var selectedRune: Rune?{
         model.selectedRune
     }
+    var spellDeck: [Enchantment]{
+        model.spellDeck
+    }
     func hoverRune(rune: Rune?){
         model.hoverRune(rune: rune)
         objectWillChange.send()
@@ -75,6 +78,10 @@ class RuneBinderViewModel: ObservableObject {
     }
     func selectReward(enchant: Enchantment.Type){
         model.addEnchant(enchant: enchant)
+        objectWillChange.send()
+    }
+    func shuffleGrid(){
+        model.shuffleGrid()
         objectWillChange.send()
     }
 }

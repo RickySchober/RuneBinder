@@ -18,6 +18,7 @@ struct ContentView: View {
     @EnvironmentObject var viewModel: RuneBinderViewModel //Environment objects can be shared among all views
     @EnvironmentObject var viewRouter: ViewRouter
     @Namespace private var runesNamespace //Used to animate between views
+    @State private var deckViewer: Bool = false
     var body: some View {
         ZStack(){
             VStack(spacing:0){
@@ -29,11 +30,23 @@ struct ContentView: View {
                 SpellView(namespace: runesNamespace)
                     .frame(width: screenWidth, height: screenWidth*0.20) //Reserve this space for view regardless of adjusted size
                     .background(.green)
-                Button(action:{
-                    viewModel.validSpell ? self.viewModel.castSpell() : print("your bad")
-                }, label: {Text("Cast Spell")
-                        .font(.system(size: 60.0))
-                })
+                HStack(){
+                    Button(action:{
+                        viewModel.validSpell ? self.viewModel.castSpell() : print("your bad")
+                    }, label: {Text("Cast Spell")
+                            .font(.system(size: 40.0))
+                    })
+                    Button(action:{
+                     self.viewModel.shuffleGrid()
+                    }, label: {Text("Scramble")
+                            .font(.system(size: 40.0))
+                    })
+                    Button(action:{
+                     deckViewer = true
+                    }, label: {Text("Deck")
+                            .font(.system(size: 40.0))
+                    })
+                }
                 .background(viewModel.validSpell ? Color.gray : Color.yellow )
                 .frame(width: screenWidth, height: screenHeight*0.1, alignment: .center)
                 .scaledToFill()
@@ -47,6 +60,12 @@ struct ContentView: View {
             }
             .offset(y: viewModel.victory ? 0 : UIScreen.main.bounds.height)
             .animation(.easeOut(duration: 0.5), value: viewModel.victory)
+            EnchantmentGridView(enchantments: viewModel.spellDeck)
+            .offset(y: deckViewer ? 0 : UIScreen.main.bounds.height)
+            .animation(.easeOut(duration: 0.5), value: deckViewer)
+        }
+        .onTapGesture {
+            deckViewer = false
         }
     }
 }
