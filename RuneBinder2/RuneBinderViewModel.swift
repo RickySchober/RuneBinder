@@ -25,10 +25,17 @@ class RuneBinderViewModel: ObservableObject {
         model.player
     }
     var target: Enemy?{
-        model.primaryTarget
+        if(model.primaryTarget==nil){
+            return nil
+        }
+        return model.enemies[model.primaryTarget!]
     }
     var targets: [Enemy]{
-        model.targets
+        var temp: [Enemy] = []
+        for target in model.targets{
+            temp.append(model.enemies[target])
+        }
+        return temp
     }
     var enemies: Array<Enemy>{
         model.enemies
@@ -60,12 +67,16 @@ class RuneBinderViewModel: ObservableObject {
         model.checkSpellValid()
         objectWillChange.send()
     }
-    func castSpell(){
-        model.castSpell()
-        model.checkSpellValid()
+    func playerTurnEnd(){
         model.runeDebuffs()
         model.enemyTurn()
         model.cleanUp()
+        objectWillChange.send()
+
+    }
+    func castSpell(){
+        model.castSpell()
+        model.checkSpellValid()
         objectWillChange.send()
     }
     func selectEnemy(enemy: Enemy){
@@ -82,6 +93,7 @@ class RuneBinderViewModel: ObservableObject {
     }
     func shuffleGrid(){
         model.shuffleGrid()
+        playerTurnEnd()
         objectWillChange.send()
     }
 }

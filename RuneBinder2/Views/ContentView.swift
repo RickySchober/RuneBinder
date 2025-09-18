@@ -80,16 +80,9 @@ struct EnemyView: View{
        }
     var body: some View{
         VStack(spacing: 0){
-            Image(enemy.image)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: screenWidth*0.18, height: screenWidth*0.18)
-                .clipped()
-                .onTapGesture{ viewModel.selectEnemy(enemy: enemy)
-                }
             ZStack(alignment: .leading) { //HP bar
                 Rectangle()
-                    .frame(height: screenHeight*0.0075)
+                    .frame(width: screenWidth*0.13, height: screenHeight*0.0075)
                     .foregroundColor(.gray.opacity(0.3))
                     .cornerRadius(3)
                 
@@ -126,6 +119,13 @@ struct EnemyView: View{
                 }
             }
             .frame(alignment: .leading)
+            Image(enemy.image)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: screenWidth*0.18, height: screenWidth*0.18)
+                .clipped()
+                .onTapGesture{ viewModel.selectEnemy(enemy: enemy)
+                }
         }
         .transition(.asymmetric(insertion: .identity , removal: .opacity)) //animates insertion and deletion of view
     }
@@ -268,13 +268,32 @@ struct PlayerInfoView: View {
     var healthRatio: CGFloat {
         CGFloat(viewModel.player.currentHealth) / CGFloat(viewModel.player.maxHealth)
        }
+    var blockRatio: CGFloat {
+        CGFloat(viewModel.player.block) / CGFloat(viewModel.player.maxHealth)
+    }
     var body: some View {
         VStack {
-            Image("player")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: screenWidth*0.18, height: screenWidth*0.18)
-                .clipped()
+            if(viewModel.player.block>0){
+                ZStack(alignment: .leading) { //Block bar
+                    Rectangle()
+                        .frame(height: screenHeight*0.0075)
+                        .foregroundColor(.gray.opacity(0.3))
+                        .cornerRadius(3)
+                    
+                    Rectangle()
+                        .frame(width: screenWidth*0.18*min(1 ,blockRatio), height: screenHeight*0.0075) // 50 is total width
+                        .foregroundColor(.blue)
+                        .cornerRadius(3)
+                    
+                    Text("\(viewModel.player.block)")
+                        .font(.caption2)
+                        .foregroundColor(.white)
+                        .frame(width: screenWidth*0.18, height: screenHeight*0.02)
+                        .minimumScaleFactor(0.5)
+                }
+                .frame(width: screenWidth*0.18)
+                .padding(0)
+            }
             ZStack(alignment: .leading) { //HP bar
                 Rectangle()
                     .frame(height: screenHeight*0.0075)
@@ -293,29 +312,45 @@ struct PlayerInfoView: View {
                     .minimumScaleFactor(0.5)
             }
             .frame(width: screenWidth*0.18)
+            .padding(0)
+            Image("player")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: screenWidth*0.18, height: screenWidth*0.18)
+                .clipped()
         }
     }
 }
 
 struct CombatView: View {
     var body: some View {
-        HStack(alignment: .bottom) {
-            // Player on the left
-            PlayerInfoView()
-                .padding()
-                .background(Color.gray.opacity(0.2))
-                .cornerRadius(10)
-
-            Spacer()
-                .padding()
-
-            // Enemies on the right
-            EnemyListView()
+        ZStack(){
+            Image("forest_bg1")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .clipped()
+            VStack(){
+                Spacer()
+                HStack(alignment: .bottom) {
+                    // Player on the left
+                    PlayerInfoView()
+                        .padding()
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(10)
+                    
+                    Spacer()
+                        .padding()
+                    
+                    // Enemies on the right
+                    EnemyListView()
+                }
+                .frame(width: screenWidth)
+                .padding(0)
+                .background(Color.black.opacity(0.2))
+                .cornerRadius(12)
+            }
+            .frame(minHeight: screenHeight*0.9-screenWidth*1.05)
         }
-        .frame(width: screenWidth, height: screenHeight*0.7-screenWidth*1.05)
-        .padding(0)
-        .background(Color.black.opacity(0.2))
-        .cornerRadius(12)
     }
 }
 

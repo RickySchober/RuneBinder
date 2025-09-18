@@ -26,11 +26,11 @@ class RuneBinderGame{
     private var maxEnchants: Int = 5
 
     
-    private (set) var player: Player = Player(currentHealth: 50, maxHealth: 80)
+    var player: Player = Player(currentHealth: 50, maxHealth: 80)
     private (set) var enemies: [Enemy] = [] //Array containing the enemies in the current encounter will be in index 0-3 based on position
-    private (set) var primaryTarget: Enemy? = nil //Each spell cast requires selecting an enemy as a target
-    private (set) var targets: [Enemy] = [] //Runes that modify targeting will add additional enemies to list of targets
-    
+    private (set) var primaryTarget: Int? = nil //Each spell cast requires selecting an enemy as a target
+    private (set) var targets: [Int] = [] //Runes that modify targeting will add additional enemies to list of targets
+    private (set) var enemyLimit: Int = 4 //Maximum number of enemies in a given encounter
     //Map
     private (set) var map: [[MapNode]] = [[]]
     
@@ -55,6 +55,9 @@ class RuneBinderGame{
     func getEnemies() -> [Enemy]{
         return enemies
     }
+    func addEnemies(newEnemies: [Enemy], pos: Int){
+        enemies.insert(contentsOf: newEnemies[..<min(newEnemies.count, enemyLimit-enemies.count)], at: pos)
+    }
     func changeHealth(num:Int){
         if(player.currentHealth+num>player.maxHealth){ player.currentHealth = player.maxHealth }
         else{ player.currentHealth += num }
@@ -66,20 +69,14 @@ class RuneBinderGame{
         selectedRune = rune
     }
     func addTarget(enemy:Enemy){
-        var targetFound: Bool = false
-        for target in targets{
-            if(target == enemy){
-                targetFound = true
-                break
-            }
-        }
-        if(!targetFound){
-            targets.append(enemy)
+        let index = enemies.firstIndex(of: enemy)
+        if(index != nil && !targets.contains(index!)){
+            targets.append(index!)
         }
     }
     func changeTarget(enemy:Enemy){
-        primaryTarget = enemy;
-        targets = [enemy]
+        primaryTarget = enemies.firstIndex(of: enemy);
+        targets = [primaryTarget!]
     }
     func generateMap(numLayers: Int, minNodes: Int, maxNodes: Int) -> [[MapNode]] {
         var map: [[MapNode]] = []
@@ -271,13 +268,27 @@ class RuneBinderGame{
         for enemy in enemies {
             let choice: Action = enemy.chooseAction(game: self)
             choice.utilizeEffect(game: self)
-            player.currentHealth -= choice.damage
+            if(player.block > 0){
+                if(choice.damage > player.block){
+                    player.currentHealth -= choice.damage + player.block
+                    player.block = 0
+                }
+                else{
+                    player.block -= choice.damage
+                }
+            }
+            else{
+                player.currentHealth -= choice.damage
+            }
             applyRuneDebuffs(atk: choice)
             print(player.currentHealth)
         }
     }
     //Applies debuffs of an enemy attack to random runes that are not enchanted or debuffed
     func applyRuneDebuffs(atk: Action){
+        if(player.nullify>0){
+            player.nullify -= 1
+        }
         var debuffable: Int = 0
         for rune in grid{
             if(rune.debuff == nil){
@@ -323,7 +334,7 @@ class RuneBinderGame{
         }
         else{
             spellPower = 0
-            addTarget(enemy: primaryTarget!) //must add primary target to list of targets before resolving spell effects
+            addTarget(enemy: enemies[primaryTarget!]) //must add primary target to list of targets before resolving spell effects
             queueEnchants()
             var enchantCount: Int = 0 //Number of un-used enchants on grid
             for rune in grid{ //count power and enchants
@@ -341,12 +352,12 @@ class RuneBinderGame{
                 rune.enchant?.utilizeEffect(game: self)
             }
             for target in targets {
-                target.currentHealth -= spellPower
-                if(target.currentHealth<=0){
-                    SoundManager.shared.playSoundEffect(named: target.deathSound)
+                enemies[target].currentHealth -= spellPower
+                if(enemies[target].currentHealth<=0){
+                    SoundManager.shared.playSoundEffect(named: enemies[target].deathSound)
                 }
                 else{
-                    SoundManager.shared.playSoundEffect(named: target.hitSound)
+                    SoundManager.shared.playSoundEffect(named: enemies[target].hitSound)
                 }
             }
             withAnimation{
@@ -468,6 +479,7 @@ class RuneBinderGame{
                 defeat = true
             }
         }
+        player.block = 0
     }
 }
 

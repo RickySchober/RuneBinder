@@ -7,8 +7,23 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B612A09D2DDBD1050030D805 /* ShopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B612A09C2DDBD1050030D805 /* ShopView.swift */; };
+		B612A09F2DDBD1120030D805 /* EventView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B612A09E2DDBD1120030D805 /* EventView.swift */; };
+		B612A0A12DDBD25D0030D805 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B612A0A02DDBD25D0030D805 /* SettingsView.swift */; };
 		B643D25B2A9C295900D99896 /* MainMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B643D25A2A9C295900D99896 /* MainMenuView.swift */; };
 		B64FAD692A21774400348998 /* Enemy.swift in Sources */ = {isa = PBXBuildFile; fileRef = B64FAD682A21774400348998 /* Enemy.swift */; };
+		B6654CBF2DD3F3B500B33E2C /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6654CBE2DD3F3B500B33E2C /* RootView.swift */; };
+		B6654CC52DD53ACA00B33E2C /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6654CC42DD53ACA00B33E2C /* SoundManager.swift */; };
+		B6654CC82DD53B4000B33E2C /* click.wav in Resources */ = {isa = PBXBuildFile; fileRef = B6654CC72DD53B4000B33E2C /* click.wav */; };
+		B6654CCA2DD53D5D00B33E2C /* soundtrack.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = B6654CC92DD53D5D00B33E2C /* soundtrack.mp3 */; };
+		B6654CCF2DD53F4E00B33E2C /* goblindeath.wav in Resources */ = {isa = PBXBuildFile; fileRef = B6654CCB2DD53F4D00B33E2C /* goblindeath.wav */; };
+		B6654CD02DD53F4E00B33E2C /* humanoidhit.wav in Resources */ = {isa = PBXBuildFile; fileRef = B6654CCC2DD53F4D00B33E2C /* humanoidhit.wav */; };
+		B6654CD12DD53F4E00B33E2C /* goblinhit.wav in Resources */ = {isa = PBXBuildFile; fileRef = B6654CCD2DD53F4D00B33E2C /* goblinhit.wav */; };
+		B6654CD22DD53F4E00B33E2C /* humanoiddeath.wav in Resources */ = {isa = PBXBuildFile; fileRef = B6654CCE2DD53F4E00B33E2C /* humanoiddeath.wav */; };
+		B6654CD42DD5620700B33E2C /* Action.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6654CD32DD5620700B33E2C /* Action.swift */; };
+		B6654CD62DD59FD100B33E2C /* Node.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6654CD52DD59FD100B33E2C /* Node.swift */; };
+		B6654CDA2DD7F06200B33E2C /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6654CD92DD7F06200B33E2C /* MapView.swift */; };
+		B689C6722E78EB1300AA786E /* Relic.swift in Sources */ = {isa = PBXBuildFile; fileRef = B689C6712E78EB1300AA786E /* Relic.swift */; };
 		B6A92FF52A147B8E00AEF4E7 /* RuneBinder2App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6A92FF42A147B8E00AEF4E7 /* RuneBinder2App.swift */; };
 		B6A92FF72A147B8E00AEF4E7 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6A92FF62A147B8E00AEF4E7 /* ContentView.swift */; };
 		B6A92FF92A147B9200AEF4E7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B6A92FF82A147B9200AEF4E7 /* Assets.xcassets */; };
@@ -16,13 +31,32 @@
 		B6A930052A147C2900AEF4E7 /* RuneBinderGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6A930042A147C2900AEF4E7 /* RuneBinderGame.swift */; };
 		B6A930072A147C4100AEF4E7 /* RuneBinderViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6A930062A147C4000AEF4E7 /* RuneBinderViewModel.swift */; };
 		B6A930092A147C6200AEF4E7 /* Rune.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6A930082A147C6200AEF4E7 /* Rune.swift */; };
+		B6AFAFDA2DDE68F900F06F34 /* RuneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6AFAFD92DDE68F900F06F34 /* RuneView.swift */; };
+		B6AFAFDC2DE8FEAB00F06F34 /* EnemyEncounters.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6AFAFDB2DE8FEAB00F06F34 /* EnemyEncounters.swift */; };
+		B6AFAFE32DE9093300F06F34 /* ForestEncounters.json in Resources */ = {isa = PBXBuildFile; fileRef = B6AFAFE22DE9093300F06F34 /* ForestEncounters.json */; };
+		B6AFAFE52DE959BB00F06F34 /* EnchantGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6AFAFE42DE959BB00F06F34 /* EnchantGrid.swift */; };
 		B6D1D24D2A1B0B24001A16BD /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6D1D24C2A1B0B24001A16BD /* Player.swift */; };
 		B6D1D24F2A1B0B6A001A16BD /* Enchantment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6D1D24E2A1B0B6A001A16BD /* Enchantment.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B612A09C2DDBD1050030D805 /* ShopView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopView.swift; sourceTree = "<group>"; };
+		B612A09E2DDBD1120030D805 /* EventView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventView.swift; sourceTree = "<group>"; };
+		B612A0A02DDBD25D0030D805 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B643D25A2A9C295900D99896 /* MainMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenuView.swift; sourceTree = "<group>"; };
 		B64FAD682A21774400348998 /* Enemy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Enemy.swift; sourceTree = "<group>"; };
+		B6654CBE2DD3F3B500B33E2C /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		B6654CC42DD53ACA00B33E2C /* SoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundManager.swift; sourceTree = "<group>"; };
+		B6654CC72DD53B4000B33E2C /* click.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = click.wav; sourceTree = "<group>"; };
+		B6654CC92DD53D5D00B33E2C /* soundtrack.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = soundtrack.mp3; sourceTree = "<group>"; };
+		B6654CCB2DD53F4D00B33E2C /* goblindeath.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = goblindeath.wav; sourceTree = "<group>"; };
+		B6654CCC2DD53F4D00B33E2C /* humanoidhit.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = humanoidhit.wav; sourceTree = "<group>"; };
+		B6654CCD2DD53F4D00B33E2C /* goblinhit.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = goblinhit.wav; sourceTree = "<group>"; };
+		B6654CCE2DD53F4E00B33E2C /* humanoiddeath.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = humanoiddeath.wav; sourceTree = "<group>"; };
+		B6654CD32DD5620700B33E2C /* Action.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Action.swift; sourceTree = "<group>"; };
+		B6654CD52DD59FD100B33E2C /* Node.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Node.swift; sourceTree = "<group>"; };
+		B6654CD92DD7F06200B33E2C /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
+		B689C6712E78EB1300AA786E /* Relic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Relic.swift; sourceTree = "<group>"; };
 		B6A92FF12A147B8E00AEF4E7 /* RuneBinder2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RuneBinder2.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6A92FF42A147B8E00AEF4E7 /* RuneBinder2App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuneBinder2App.swift; sourceTree = "<group>"; };
 		B6A92FF62A147B8E00AEF4E7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -31,6 +65,10 @@
 		B6A930042A147C2900AEF4E7 /* RuneBinderGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuneBinderGame.swift; sourceTree = "<group>"; };
 		B6A930062A147C4000AEF4E7 /* RuneBinderViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuneBinderViewModel.swift; sourceTree = "<group>"; };
 		B6A930082A147C6200AEF4E7 /* Rune.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rune.swift; sourceTree = "<group>"; };
+		B6AFAFD92DDE68F900F06F34 /* RuneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuneView.swift; sourceTree = "<group>"; };
+		B6AFAFDB2DE8FEAB00F06F34 /* EnemyEncounters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnemyEncounters.swift; sourceTree = "<group>"; };
+		B6AFAFE22DE9093300F06F34 /* ForestEncounters.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ForestEncounters.json; sourceTree = "<group>"; };
+		B6AFAFE42DE959BB00F06F34 /* EnchantGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnchantGrid.swift; sourceTree = "<group>"; };
 		B6D1D24C2A1B0B24001A16BD /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		B6D1D24E2A1B0B6A001A16BD /* Enchantment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Enchantment.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -46,6 +84,46 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B6654CC22DD5392400B33E2C /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				B643D25A2A9C295900D99896 /* MainMenuView.swift */,
+				B6654CBE2DD3F3B500B33E2C /* RootView.swift */,
+				B612A0A02DDBD25D0030D805 /* SettingsView.swift */,
+				B612A09C2DDBD1050030D805 /* ShopView.swift */,
+				B612A09E2DDBD1120030D805 /* EventView.swift */,
+				B6A92FF62A147B8E00AEF4E7 /* ContentView.swift */,
+				B6AFAFE42DE959BB00F06F34 /* EnchantGrid.swift */,
+				B6AFAFD92DDE68F900F06F34 /* RuneView.swift */,
+				B6654CD92DD7F06200B33E2C /* MapView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		B6654CC32DD539DC00B33E2C /* Class Definitons */ = {
+			isa = PBXGroup;
+			children = (
+				B6654CD52DD59FD100B33E2C /* Node.swift */,
+				B64FAD682A21774400348998 /* Enemy.swift */,
+				B6AFAFDB2DE8FEAB00F06F34 /* EnemyEncounters.swift */,
+				B6654CD32DD5620700B33E2C /* Action.swift */,
+				B6D1D24E2A1B0B6A001A16BD /* Enchantment.swift */,
+				B6D1D24C2A1B0B24001A16BD /* Player.swift */,
+				B6A930082A147C6200AEF4E7 /* Rune.swift */,
+				B689C6712E78EB1300AA786E /* Relic.swift */,
+			);
+			path = "Class Definitons";
+			sourceTree = "<group>";
+		};
+		B6654CC62DD53B1700B33E2C /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B6AFAFDF2DE9071F00F06F34 /* Storage */,
+				B6AFAFDD2DE906E800F06F34 /* Sound Effects */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		B6A92FE82A147B8E00AEF4E7 = {
 			isa = PBXGroup;
 			children = (
@@ -65,15 +143,13 @@
 		B6A92FF32A147B8E00AEF4E7 /* RuneBinder2 */ = {
 			isa = PBXGroup;
 			children = (
-				B64FAD682A21774400348998 /* Enemy.swift */,
-				B6D1D24E2A1B0B6A001A16BD /* Enchantment.swift */,
-				B6D1D24C2A1B0B24001A16BD /* Player.swift */,
+				B6654CC62DD53B1700B33E2C /* Resources */,
+				B6654CC32DD539DC00B33E2C /* Class Definitons */,
+				B6654CC22DD5392400B33E2C /* Views */,
 				B6A92FF42A147B8E00AEF4E7 /* RuneBinder2App.swift */,
-				B643D25A2A9C295900D99896 /* MainMenuView.swift */,
-				B6A92FF62A147B8E00AEF4E7 /* ContentView.swift */,
 				B6A930042A147C2900AEF4E7 /* RuneBinderGame.swift */,
+				B6654CC42DD53ACA00B33E2C /* SoundManager.swift */,
 				B6A930062A147C4000AEF4E7 /* RuneBinderViewModel.swift */,
-				B6A930082A147C6200AEF4E7 /* Rune.swift */,
 				B6A92FF82A147B9200AEF4E7 /* Assets.xcassets */,
 				B6A92FFA2A147B9200AEF4E7 /* Preview Content */,
 			);
@@ -86,6 +162,27 @@
 				B6A92FFB2A147B9200AEF4E7 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		B6AFAFDD2DE906E800F06F34 /* Sound Effects */ = {
+			isa = PBXGroup;
+			children = (
+				B6654CC92DD53D5D00B33E2C /* soundtrack.mp3 */,
+				B6654CC72DD53B4000B33E2C /* click.wav */,
+				B6654CCB2DD53F4D00B33E2C /* goblindeath.wav */,
+				B6654CCD2DD53F4D00B33E2C /* goblinhit.wav */,
+				B6654CCE2DD53F4E00B33E2C /* humanoiddeath.wav */,
+				B6654CCC2DD53F4D00B33E2C /* humanoidhit.wav */,
+			);
+			path = "Sound Effects";
+			sourceTree = "<group>";
+		};
+		B6AFAFDF2DE9071F00F06F34 /* Storage */ = {
+			isa = PBXGroup;
+			children = (
+				B6AFAFE22DE9093300F06F34 /* ForestEncounters.json */,
+			);
+			path = Storage;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -146,8 +243,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B6654CD22DD53F4E00B33E2C /* humanoiddeath.wav in Resources */,
+				B6654CC82DD53B4000B33E2C /* click.wav in Resources */,
+				B6654CD12DD53F4E00B33E2C /* goblinhit.wav in Resources */,
 				B6A92FFC2A147B9200AEF4E7 /* Preview Assets.xcassets in Resources */,
+				B6654CCA2DD53D5D00B33E2C /* soundtrack.mp3 in Resources */,
+				B6654CD02DD53F4E00B33E2C /* humanoidhit.wav in Resources */,
 				B6A92FF92A147B9200AEF4E7 /* Assets.xcassets in Resources */,
+				B6AFAFE32DE9093300F06F34 /* ForestEncounters.json in Resources */,
+				B6654CCF2DD53F4E00B33E2C /* goblindeath.wav in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -158,14 +262,26 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B689C6722E78EB1300AA786E /* Relic.swift in Sources */,
 				B6D1D24F2A1B0B6A001A16BD /* Enchantment.swift in Sources */,
+				B6654CD42DD5620700B33E2C /* Action.swift in Sources */,
 				B6A92FF72A147B8E00AEF4E7 /* ContentView.swift in Sources */,
+				B612A09D2DDBD1050030D805 /* ShopView.swift in Sources */,
+				B6AFAFDC2DE8FEAB00F06F34 /* EnemyEncounters.swift in Sources */,
+				B6AFAFDA2DDE68F900F06F34 /* RuneView.swift in Sources */,
 				B6A930092A147C6200AEF4E7 /* Rune.swift in Sources */,
+				B612A0A12DDBD25D0030D805 /* SettingsView.swift in Sources */,
 				B643D25B2A9C295900D99896 /* MainMenuView.swift in Sources */,
+				B6654CD62DD59FD100B33E2C /* Node.swift in Sources */,
+				B612A09F2DDBD1120030D805 /* EventView.swift in Sources */,
+				B6654CBF2DD3F3B500B33E2C /* RootView.swift in Sources */,
+				B6654CDA2DD7F06200B33E2C /* MapView.swift in Sources */,
 				B6A930052A147C2900AEF4E7 /* RuneBinderGame.swift in Sources */,
 				B64FAD692A21774400348998 /* Enemy.swift in Sources */,
+				B6AFAFE52DE959BB00F06F34 /* EnchantGrid.swift in Sources */,
 				B6A930072A147C4100AEF4E7 /* RuneBinderViewModel.swift in Sources */,
 				B6D1D24D2A1B0B24001A16BD /* Player.swift in Sources */,
+				B6654CC52DD53ACA00B33E2C /* SoundManager.swift in Sources */,
 				B6A92FF52A147B8E00AEF4E7 /* RuneBinder2App.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

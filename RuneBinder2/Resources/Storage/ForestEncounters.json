@@ -1,64 +1,79 @@
 [
-  {
+    {
+      "enemies": [
+        { "type": "WolfPackLeader"}
+      ],
+      "difficulty": 2,
+      "zone": "Forest"
+    },
+    {
+      "enemies": [
+        { "type": "MultiplyingMycospawn"}
+      ],
+      "difficulty": 1,
+      "zone": "Forest"
+    },
+
+    {
     "enemies": [
-      { "type": "PoisonShroom", "position": 0 }
-    ],
-    "difficulty": 1,
-    "zone": "Forest"
-  },
-  {
-    "enemies": [
-      { "type": "Goblin", "position": 0 },
-      { "type": "Goblin", "position": 1 }
-    ],
-    "difficulty": 1,
-    "zone": "Forest"
-  },
-  {
-    "enemies": [
-      { "type": "RabidWolf", "position": 0 },
-      { "type": "Goblin", "position": 1 }
-    ],
-    "difficulty": 1,
-    "zone": "Forest"
-  },
-  {
-    "enemies": [
-      { "type": "TorchBearer", "position": 0 }
-    ],
-    "difficulty": 1,
-    "zone": "Forest"
-  },
-  {
-    "enemies": [
-      { "type": "PoisonShroom", "position": 0 },
-      { "type": "PoisonShroom", "position": 1 }
+      { "type": "PoisonShroom"}
     ],
     "difficulty": 2,
     "zone": "Forest"
-  },
-  {
+    },
+    {
     "enemies": [
-      { "type": "TorchBearer", "position": 0 },
-      { "type": "Goblin", "position": 1 }
+      { "type": "Goblin"},
+      { "type": "Goblin" }
     ],
     "difficulty": 2,
     "zone": "Forest"
-  },
-  {
+    },
+    {
     "enemies": [
-      { "type": "RabidWolf", "position": 0 },
-      { "type": "RabidWolf", "position": 1 },
-      { "type": "Goblin", "position": 2 }
+      { "type": "RabidWolf" },
+      { "type": "Goblin" }
     ],
     "difficulty": 2,
     "zone": "Forest"
-  },
-  {
+    },
+    {
     "enemies": [
-      { "type": "Tree", "position": 0 }
+      { "type": "TorchBearer" }
     ],
     "difficulty": 2,
     "zone": "Forest"
-  }
+    },
+    {
+    "enemies": [
+      { "type": "PoisonShroom" },
+      { "type": "PoisonShroom" }
+    ],
+    "difficulty": 2,
+    "zone": "Forest"
+    },
+    {
+    "enemies": [
+      { "type": "TorchBearer" },
+      { "type": "Goblin" }
+    ],
+    "difficulty": 2,
+    "zone": "Forest"
+    },
+    {
+    "enemies": [
+      { "type": "RabidWolf" },
+      { "type": "RabidWolf" },
+      { "type": "Goblin" }
+    ],
+    "difficulty": 2,
+    "zone": "Forest"
+    },
+    {
+    "enemies": [
+      { "type": "Tree" }
+    ],
+    "difficulty": 2,
+    "zone": "Forest"
+    }
 ]
