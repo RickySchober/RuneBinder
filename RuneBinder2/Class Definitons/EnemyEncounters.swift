@@ -1,7 +1,7 @@
 import Foundation
 
 struct EnemyEncounter {
-    let enemyFactories: [(Int) -> Enemy]
+    let enemyFactories: [() -> Enemy]
     let difficulty: Int
     let zone: Zone
 
@@ -11,14 +11,13 @@ struct EnemyEncounter {
     }
 
     func generateEnemies() -> [Enemy] {
-        enemyFactories.enumerated().map { $1($0) }
+        enemyFactories.map { $0() }
     }
 }
 
 struct EnemyEncounterData: Codable {
     struct EnemyData: Codable {
         let type: String
-        let position: Int
     }
 
     let enemies: [EnemyData]
@@ -26,12 +25,14 @@ struct EnemyEncounterData: Codable {
     let zone: String
 }
 
-let enemyFactory: [String: (Int) -> Enemy] = [
-    "PoisonShroom": { PoisonShroom(pos: $0) },
-    "Goblin": { Goblin(pos: $0) },
-    "RabidWolf": { RabidWolf(pos: $0) },
-    "TorchBearer": { TorchBearer(pos: $0) },
-    "Tree": { Tree(pos: $0) }
+let enemyFactory: [String: () -> Enemy] = [
+    "PoisonShroom": { PoisonShroom() },
+    "Goblin": { Goblin() },
+    "RabidWolf": { RabidWolf() },
+    "TorchBearer": { TorchBearer() },
+    "Tree": { Tree() },
+    "MultiplyingMycospawn": { MultiplyingMycospawn() },
+    "WolfPackLeader": { WolfPackLeader() }
 ]
 
 class EncounterPool {
@@ -54,7 +55,7 @@ class EncounterPool {
             self.encounters = decoded.compactMap { data in
                 guard let zone = EnemyEncounter.Zone(rawValue: data.zone) else { return nil }
 
-                let factories: [(Int) -> Enemy] = data.enemies.compactMap { enemy in
+                let factories: [() -> Enemy] = data.enemies.compactMap { enemy in
                     enemyFactory[enemy.type]
                 }
 
