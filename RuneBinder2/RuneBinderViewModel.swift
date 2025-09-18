@@ -19,7 +19,7 @@ class RuneBinderViewModel: ObservableObject {
         model.validSpell
     }
     var spellPower: Int{
-        model.getSpellPower()
+        model.spellPower
     }
     var player: Player{
         model.player
@@ -30,10 +30,12 @@ class RuneBinderViewModel: ObservableObject {
         }
         return model.enemies[model.primaryTarget!]
     }
-    var targets: [Enemy]{
+    var targets: [Enemy]{ //Returns enemies that will be hit for purpose of highlighting
         var temp: [Enemy] = []
-        for target in model.targets{
-            temp.append(model.enemies[target])
+        for i in 0..<model.targets.count{
+            if(model.targets[i]>0.0){ //If enemy is being hit
+                temp.append(model.enemies[1])
+            }
         }
         return temp
     }
@@ -77,10 +79,11 @@ class RuneBinderViewModel: ObservableObject {
     func castSpell(){
         model.castSpell()
         model.checkSpellValid()
+        playerTurnEnd()
         objectWillChange.send()
     }
     func selectEnemy(enemy: Enemy){
-        model.changeTarget(enemy: enemy)
+        model.changeTarget(enemy: enemy, modifier: 1.0)
         objectWillChange.send()
     }
     func selectNode(node: MapNode){

@@ -13,15 +13,16 @@ class RuneBinderGame{
     //Spell Vars
     private (set) var grid: Array<Rune> = []
     private (set) var enchantQueue: Array<Rune> = []
-    private var gridSize: Int = 16
+    private (set) var gridSize: Int = 16
     private (set) var spell: Array<Rune> = []
-    private var spellPower: Int = 0
+    private (set) var spellPower: Int = 0
+    private (set) var damageMultiplier: Double = 0.0
     private (set) var validSpell: Bool = false
     private (set) var selectedRune: Rune? = nil
     
     private var spellLibrary: Array<Enchantment.Type> //List of possible enchants to encounter during run
     private (set) var rewardEnchants: Array<Enchantment.Type> = [] //List of known enchantments
-    private var spellBook: [Enchantment] = [Empower(), Revitalize(), Ward(), Cleave(),Empower(), Revitalize(), Ward(), Cleave(),Empower(), Revitalize(), Ward(), Cleave()]//List of aquired enchants
+    private var spellBook: [Enchantment] = [Lob(), Engulf(), Enlarge(), Gatling(), Shotgun(), Aspire(), Eliminate(), Fortify(), Swarm()]//List of aquired enchants
     private (set) var spellDeck: [Enchantment]//List of undrawn enchants
     private var maxEnchants: Int = 5
 
@@ -29,7 +30,8 @@ class RuneBinderGame{
     var player: Player = Player(currentHealth: 50, maxHealth: 80)
     private (set) var enemies: [Enemy] = [] //Array containing the enemies in the current encounter will be in index 0-3 based on position
     private (set) var primaryTarget: Int? = nil //Each spell cast requires selecting an enemy as a target
-    private (set) var targets: [Int] = [] //Runes that modify targeting will add additional enemies to list of targets
+    private (set) var primaryModifer: Double = 0.0 //The damage modifier to the primary target before additional targets
+    private (set) var targets: [Double] = [0.0, 0.0, 0.0, 0.0] //Runes that modify targeting deal a portion of damage to other enemies
     private (set) var enemyLimit: Int = 4 //Maximum number of enemies in a given encounter
     //Map
     private (set) var map: [[MapNode]] = [[]]
@@ -42,18 +44,13 @@ class RuneBinderGame{
     private let letterOccurence: Array<Double> = [7.8, 2.0, 4.0, 3.8, 11, 1.4, 3.0, 2.3, 8.6, 0.21, 0.97, 5.3, 2.7, 7.2,
                                                   6.1, 2.8, 0.19, 7.3, 8.7, 6.7, 3.3, 1.0, 0.91, 0.27, 1.6, 0.44]
     init(){
-        spellLibrary = [VampiricStrike.self, Empower.self, Revitalize.self, Ward.self, Cleave.self, CleansingWave.self, SerratedStrike.self, Purify.self]
+        spellLibrary = [
+        Empower.self, Revitalize.self, Ward.self, CleansingWave.self, SerratedStrike.self, Purify.self,
+        Shotgun.self, Lob.self, Swarm.self, Shotgun.self, Magnify.self, Enlarge.self
+        ]
         spellDeck = spellBook
         map = generateMap(numLayers: 10, minNodes: 3, maxNodes: 5)
-        print(enemies.count)
         shuffleGrid()
-    }
-    //A function that generates the array of encounters on game start up
-    func getSpellPower() -> Int{
-        return spellPower
-    }
-    func getEnemies() -> [Enemy]{
-        return enemies
     }
     func addEnemies(newEnemies: [Enemy], pos: Int){
         enemies.insert(contentsOf: newEnemies[..<min(newEnemies.count, enemyLimit-enemies.count)], at: pos)
@@ -68,15 +65,20 @@ class RuneBinderGame{
     func hoverRune(rune: Rune?){
         selectedRune = rune
     }
-    func addTarget(enemy:Enemy){
-        let index = enemies.firstIndex(of: enemy)
-        if(index != nil && !targets.contains(index!)){
-            targets.append(index!)
-        }
+    //Modifies damage to additional targets based on damage to main target
+    func addTarget(enemy: Enemy, modifier: Double){
+        targets[enemies.firstIndex(of: enemy)!] += modifier
     }
-    func changeTarget(enemy:Enemy){
-        primaryTarget = enemies.firstIndex(of: enemy);
-        targets = [primaryTarget!]
+    //Changes the primary target
+    func changeTarget(enemy: Enemy, modifier: Double){
+        if(primaryTarget != nil && primaryTarget == enemies.firstIndex(of: enemy)){
+            primaryModifer *= modifier //If new target is same as primary target just change damage modifier
+        }
+        else{
+            primaryTarget = enemies.firstIndex(of: enemy);
+            targets = [Double](repeating: 0.0, count: enemies.count) //When new target selected reset all damage modifiers
+            primaryModifer = modifier
+        }
     }
     func generateMap(numLayers: Int, minNodes: Int, maxNodes: Int) -> [[MapNode]] {
         var map: [[MapNode]] = []
@@ -281,7 +283,6 @@ class RuneBinderGame{
                 player.currentHealth -= choice.damage
             }
             applyRuneDebuffs(atk: choice)
-            print(player.currentHealth)
         }
     }
     //Applies debuffs of an enemy attack to random runes that are not enchanted or debuffed
@@ -295,7 +296,6 @@ class RuneBinderGame{
                 debuffable += 1
             }
         }
-        print(debuffable)
         for i in 0..<atk.debuffs.count{
             var rand = Int.random(in: 0..<debuffable-1) //assign the randth valid rune to be debuffed
             for rune in grid{
@@ -334,7 +334,6 @@ class RuneBinderGame{
         }
         else{
             spellPower = 0
-            addTarget(enemy: enemies[primaryTarget!]) //must add primary target to list of targets before resolving spell effects
             queueEnchants()
             var enchantCount: Int = 0 //Number of un-used enchants on grid
             for rune in grid{ //count power and enchants
@@ -351,13 +350,24 @@ class RuneBinderGame{
             for rune in enchantQueue{
                 rune.enchant?.utilizeEffect(game: self)
             }
-            for target in targets {
-                enemies[target].currentHealth -= spellPower
-                if(enemies[target].currentHealth<=0){
-                    SoundManager.shared.playSoundEffect(named: enemies[target].deathSound)
+            if(targets.max()==0.0){ //If no additional targets just hit primary target
+                enemies[primaryTarget!].currentHealth -= Int(primaryModifer*Double(spellPower))
+                if(enemies[primaryTarget!].currentHealth<=0){
+                    SoundManager.shared.playSoundEffect(named: enemies[primaryTarget!].deathSound)
                 }
                 else{
-                    SoundManager.shared.playSoundEffect(named: enemies[target].hitSound)
+                    SoundManager.shared.playSoundEffect(named: enemies[primaryTarget!].hitSound)
+                }
+            }
+            else{
+                for i in 0..<targets.count {
+                    enemies[i].currentHealth -=  Int(targets[i]*primaryModifer*Double(spellPower))//Deal damage based on targets modifier rounding down
+                    if(enemies[i].currentHealth<=0){
+                        SoundManager.shared.playSoundEffect(named: enemies[i].deathSound)
+                    }
+                    else{
+                        SoundManager.shared.playSoundEffect(named: enemies[i].hitSound)
+                    }
                 }
             }
             withAnimation{

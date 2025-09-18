@@ -19,6 +19,7 @@ class Enchantment: Equatable, Identifiable{
     }
     
     enum rarity{
+        case common //starting deck cards not found in runs
         case uncommon
         case rare
         case legendary
@@ -31,20 +32,20 @@ class Enchantment: Equatable, Identifiable{
     }
     /*Enchantment priority goes from the lowest priority of 0 to highest priority
      enchants of same priority should be able to be used in any order without affecting the outcome
-     Priority 0: spell power effects
-     Priority 1: enemy targeting effects
-     Priority 2: leech, block, debuffs or anything effected by targets and spell power
-     Priority 3: unmodifiable effects
-     Priority 4: post damage effects that modify grid (surge purify)
+     Priority 0: augment spell power effects and unmodifiable effects
+     Priority 1: forced targeting
+     Priority 2: augmented targeting
+     Priority 3: spell power and targeting based effects
+     Priority 4: post damage effects
      */
     var priority: Int
     var color: Color
     var description: String
     var id = UUID()
     required init() {
-        priority = 3
+        priority = 4
         color = Color.yellow
-        description = "Enchantment: Increases spell power of rune by 1"
+        description = "Enchantment: Wow so shiny"
     }
     
     func utilizeEffect(game: RuneBinderGame){
@@ -55,11 +56,11 @@ class Enchantment: Equatable, Identifiable{
     Destruction: modify spell power and enchantments
  */
 class Empower: Enchantment{
-    var rarity = rarity.uncommon
+    var rarity = rarity.common
     var type = type.destruction
     required init() {
         super.init()
-        priority = 2
+        priority = 0
         color = Color.blue
         description = "Empower: Increases spell power of rune by 1"
     }
@@ -73,12 +74,17 @@ class Enlarge: Enchantment{
     var type = type.destruction
     required init() {
         super.init()
-        priority = 2
+        priority = 0
         color = Color.blue
         description = "Enlarge: Increases spell power by 1 for each rune following this one"
     }
     override func utilizeEffect(game: RuneBinderGame){
-        game.changeSpellPower(num: 1)
+        for i in 0..<game.spell.count{
+            if(game.spell[i].enchant == self){
+                game.changeSpellPower(num: game.spell.count-i-1)
+            }
+        }
+        
         
     }
 }
@@ -87,13 +93,20 @@ class Swarm: Enchantment{
     var type = type.destruction
     required init() {
         super.init()
-        priority = 2
+        priority = 0
         color = Color.blue
         description = "Swarm: Increases spell power by 2 for each other letter matching this rune"
     }
     override func utilizeEffect(game: RuneBinderGame){
-        game.changeSpellPower(num: 1)
-        
+        guard let associatedRune = game.spell.first(where: { $0.enchant == self }) else { //Rune should be found otherwise exit
+            return
+        }
+        for rune in game.spell {
+            if rune != associatedRune && rune.letter == associatedRune.letter {
+                game.changeSpellPower(num: 2)
+            }
+        }
+
     }
 }
 class Magnify: Enchantment{
@@ -101,13 +114,16 @@ class Magnify: Enchantment{
     var type = type.destruction
     required init() {
         super.init()
-        priority = 2
+        priority = 0
         color = Color.blue
         description = "Magnify: Double enchanted runes spell power"
     }
     override func utilizeEffect(game: RuneBinderGame){
-        game.changeSpellPower(num: 1)
-        
+        for rune in game.spell{
+            if(rune.enchant == self){
+                game.changeSpellPower(num: rune.power)
+            }
+        }
     }
 }
 class Diversify: Enchantment{
@@ -129,7 +145,7 @@ class Replicate: Enchantment{
     var type = type.destruction
     required init() {
         super.init()
-        priority = 2
+        priority = 4
         color = Color.blue
         description = "Replicate: Draw a temporary copy of an enchantment used in spell (ignoring enchantment limit)"
     }
@@ -143,7 +159,7 @@ class Expidite: Enchantment{
     var type = type.destruction
     required init() {
         super.init()
-        priority = 2
+        priority = 4
         color = Color.blue
         description = "Expidite: Draw an additional enchantment (ignoring enchantment limit)"
     }
@@ -156,7 +172,7 @@ class Restart: Enchantment{
     var type = type.destruction
     required init() {
         super.init()
-        priority = 2
+        priority = 4
         color = Color.blue
         description = "Restart: Reshuffle your enchantment deck before drawing new runes"
     }
@@ -182,7 +198,7 @@ class Rewrite: Enchantment{
     var type = type.destruction
     required init() {
         super.init()
-        priority = 2
+        priority = 4
         color = Color.blue
         description = "Rewrite: Discard up to 3 enchantments from the top of your deck"
     }
@@ -195,7 +211,7 @@ class Master: Enchantment{
     var type = type.destruction
     required init() {
         super.init()
-        priority = 2
+        priority = 4
         color = Color.blue
         description = "Master: Draw an additional enchantment for each other destruction rune used in spell (maximum of 2 ignoring enchantment limit)"
     }
@@ -212,16 +228,16 @@ class Master: Enchantment{
     Preservation: healing, cleansing, ward
  */
 class Revitalize: Enchantment{
-    var rarity = rarity.uncommon
+    var rarity = rarity.common
     var type = type.preservation
     required init() {
         super.init()
-        priority = 2
+        priority = 0
         color = Color.green
-        description = "Revitalize: Heal up to 4 hitpoints"
+        description = "Revitalize: Heal up to 3 hitpoints"
     }
     override func utilizeEffect(game: RuneBinderGame){
-        game.changeHealth(num: 5)
+        game.changeHealth(num: 3)
     }
 }
 class Ward: Enchantment{
@@ -229,12 +245,12 @@ class Ward: Enchantment{
     var type = type.preservation
     required init() {
         super.init()
-        priority = 2
+        priority = 0
         color = Color.green
-        description = "Ward: Gain 10 block"
+        description = "Ward: Gain 5 block"
     }
     override func utilizeEffect(game: RuneBinderGame){
-        game.player.block += 10
+        game.player.block += 5
     }
 }
 class Outlast: Enchantment{
@@ -243,12 +259,12 @@ class Outlast: Enchantment{
     
     required init() {
         super.init()
-        priority = 2
+        priority = 0
         color = Color.green
-        description = "Outlast: Gain 8 block, block is not removed for 1 turn"
+        description = "Outlast: Gain 6 block, block is not removed for 1 turn"
     }
     override func utilizeEffect(game: RuneBinderGame){
-        game.player.block += 8
+        game.player.block += 6
         game.player.outlast += 1
     }
 }
@@ -258,21 +274,21 @@ class Brace: Enchantment{
     
     required init() {
         super.init()
-        priority = 2
+        priority = 0
         color = Color.green
-        description = "Brace: Gain 7 block for each enemy"
+        description = "Brace: Gain 4 block for each enemy"
     }
     override func utilizeEffect(game: RuneBinderGame){
-        game.player.block += 7*game.enemies.count
+        game.player.block += 4*game.enemies.count
     }
 }
 class Deflect: Enchantment{
-    var rarity = rarity.uncommon
+    var rarity = rarity.rare
     var type = type.preservation
     
     required init() {
         super.init()
-        priority = 2
+        priority = 0
         color = Color.green
         description = "Deflect: Gain 9 block, until your next turn damage dealt to your block is reflected back to attackers"
     }
@@ -287,17 +303,16 @@ class Fortify: Enchantment{
     
     required init() {
         super.init()
-        priority = 2
+        priority = 3
         color = Color.green
         description = "Fortify: Gain block equal to twice your spell power"
     }
     override func utilizeEffect(game: RuneBinderGame){
-        game.player.block += 8
-        game.player.outlast += 1
+        game.player.block += game.spellPower * 2
     }
 }
 class Nullify: Enchantment{
-    var rarity = rarity.uncommon
+    var rarity = rarity.common
     var type = type.preservation
     
     required init() {
@@ -338,20 +353,20 @@ class Purify: Enchantment{
     }
 }
 class Ignorance: Enchantment{
-    var rarity = rarity.uncommon
+    var rarity = rarity.rare
     var type = type.preservation
     required init() {
         super.init()
         priority = 2
         color = Color.green
-        description = "Ignorance: ignore all debuff affects"
+        description = "Ignorance: ignore all debuff effects for 1 turn"
     }
     override func utilizeEffect(game: RuneBinderGame){
         game.changeHealth(num: 5)
     }
 }
 class CleansingWave: Enchantment{
-    var rarity = rarity.rare
+    var rarity = rarity.legendary
     var type = type.preservation
     required init() {
         super.init()
@@ -365,58 +380,163 @@ class CleansingWave: Enchantment{
         }
     }
 }
+class Pacifism: Enchantment{
+    var rarity = rarity.legendary
+    var type = type.preservation
+    required init() {
+        super.init()
+        priority = 2
+        color = Color.green
+        description = "Pacifism: "
+    }
+    override func utilizeEffect(game: RuneBinderGame){
+        for rune in game.grid{
+            rune.debuff = nil
+        }
+    }
+}
 /*
-    Manipulation: Change the targeting of the spell often modifying spell power
+    Manipulation: Change the targeting of the spell often modifying damage dealt as a fraction spell power.
+    All manipulation enchantments can be combined to varying effect.
+    Forced targeting sets primary target ignoring user selection (priority 1).
+    Augmented targeting adds additional targets beyond primary (priority 2).
+    Multiple forced targets will use right most one in spell ignoring others.
+    Multiple augments should be compatible with eachother only adding with respect to primary target
  */
-class Cleave: Enchantment{
+class Extend: Enchantment{
     var rarity = rarity.uncommon
     var type = type.destruction
     required init() {
         super.init()
-        priority = 1
+        priority = 2
         color = Color.gray
-        description = "Cleave: hits enemies on either side of target but halves spell power"
+        description = "Extend: splits damage to enemy behind target for x2/3 spell power"
     }
     override func utilizeEffect(game: RuneBinderGame){
         if(game.primaryTarget!+1<game.enemies.count){ //ensure valid index
-            game.addTarget(enemy:game.enemies[game.primaryTarget!+1]);
+            game.addTarget(enemy:game.enemies[game.primaryTarget!+1], modifier: 0.6666);
         }
-        else if(game.primaryTarget!-1>=0){ //ensure valid index
-            game.addTarget(enemy:game.enemies[game.primaryTarget!-1]);
-        }
-        game.changeSpellPower(num: -game.getSpellPower()/2)
+        game.addTarget(enemy: game.enemies[game.primaryTarget!], modifier: 0.6666)
     }
 }
-class Snowball: Enchantment{
-    var rarity = rarity.rare
-    var type = type.manipulation
+class Expand: Enchantment{
+    var rarity = rarity.uncommon
+    var type = type.destruction
     required init() {
         super.init()
-        priority = 1
+        priority = 2
         color = Color.gray
-        description = "Snowball: hits all enemies behind the target increasing spell power as it grows"
+        description = "Extend: splits damage to enemies on either side of target for x1/3 spell power"
     }
     override func utilizeEffect(game: RuneBinderGame){
         if(game.primaryTarget!+1<game.enemies.count){ //ensure valid index
-            game.addTarget(enemy:game.enemies[game.primaryTarget!+1]);
+            game.addTarget(enemy:game.enemies[game.primaryTarget!+1], modifier: 0.3333);
         }
-        else if(game.primaryTarget!-1>=0){ //ensure valid index
-            game.addTarget(enemy:game.enemies[game.primaryTarget!-1]);
+        if(game.primaryTarget!-1<game.enemies.count){ //ensure valid index
+            game.addTarget(enemy:game.enemies[game.primaryTarget!-1], modifier: 0.3333);
         }
-        game.changeSpellPower(num: -game.getSpellPower()/2)
+        game.addTarget(enemy: game.enemies[game.primaryTarget!], modifier: 0.3333)
+    }
+}
+class Engulf: Enchantment{
+    var rarity = rarity.uncommon
+    var type = type.destruction
+    required init() {
+        super.init()
+        priority = 2
+        color = Color.gray
+        description = "Engulf: splits damage to all other enemies for a x1/4 spell power"
+    }
+    override func utilizeEffect(game: RuneBinderGame){
+        for i in 0..<game.enemies.count{
+            game.addTarget(enemy: game.enemies[i], modifier: 0.25)
+        }
+    }
+}
+class Isolate: Enchantment{
+    var rarity = rarity.uncommon
+    var type = type.destruction
+    required init() {
+        super.init()
+        priority = 2
+        color = Color.gray
+        description = "Isolate: hits enemies on either side instead of target for x3/4 of spell power"
+    }
+    override func utilizeEffect(game: RuneBinderGame){
+        if(game.primaryTarget!+1<game.enemies.count){ //ensure valid index
+            game.addTarget(enemy:game.enemies[game.primaryTarget!+1], modifier: 0.75);
+        }
+        if(game.primaryTarget!-1>=0){ //ensure valid index
+            game.addTarget(enemy:game.enemies[game.primaryTarget!-1], modifier: 0.75);
+        }
+        game.addTarget(enemy: game.enemies[game.primaryTarget!], modifier: -game.targets[game.primaryTarget!])
     }
 }
 class Gatling: Enchantment{
+    var rarity = rarity.legendary
+    var type = type.manipulation
+    required init() {
+        super.init()
+        priority = 2
+        color = Color.gray
+        description = "Gatling: splits damage among 5 random targets dealing a x1/4 spell power"
+    }
+    override func utilizeEffect(game: RuneBinderGame){
+        for _ in 0..<5{
+            var rand = Int.random(in: 0..<game.targets.count)
+            game.addTarget(enemy: game.enemies[rand], modifier: 0.25)
+        }
+    }
+}
+class Eliminate: Enchantment{
     var rarity = rarity.rare
     var type = type.manipulation
     required init() {
         super.init()
         priority = 1
         color = Color.gray
-        description = "Gatling: hits a random enemy 5 times dealing a quarter spell power"
+        description = "Eliminate: hits the lowest health enemy ignoring target for x1.5 spell power"
     }
     override func utilizeEffect(game: RuneBinderGame){
-        game.changeSpellPower(num: -game.getSpellPower()/2)
+        var smallest: Enemy = game.enemies[0]
+        for enemy in game.enemies{
+            if(enemy.currentHealth<smallest.currentHealth){
+                smallest = enemy
+            }
+        }
+        game.changeTarget(enemy: smallest, modifier: 1.5)
+    }
+}
+class Aspire: Enchantment{
+    var rarity = rarity.rare
+    var type = type.manipulation
+    required init() {
+        super.init()
+        priority = 1
+        color = Color.gray
+        description = "Aspire: hits the highest health enemy ignoring target for x2 spell power"
+    }
+    override func utilizeEffect(game: RuneBinderGame){
+        var biggest: Enemy = game.enemies[0]
+        for enemy in game.enemies{
+            if(enemy.currentHealth>biggest.currentHealth){
+                biggest = enemy
+            }
+        }
+        game.changeTarget(enemy: biggest, modifier: 2.0)
+    }
+}
+class Randomize: Enchantment{
+    var rarity = rarity.rare
+    var type = type.manipulation
+    required init() {
+        super.init()
+        priority = 1
+        color = Color.gray
+        description = "Randomize: hits a random enemy ignoring target for x2.5 spell power"
+    }
+    override func utilizeEffect(game: RuneBinderGame){
+        game.changeTarget(enemy: game.enemies[Int.random(in:0..<game.enemies.count)], modifier: 2.5)
     }
 }
 class Shotgun: Enchantment{
@@ -426,10 +546,10 @@ class Shotgun: Enchantment{
         super.init()
         priority = 1
         color = Color.gray
-        description = "Shotgun: hits closest enemy for x2 spell power"
+        description = "Shotgun: hits closest enemy ignoring target for x2 spell power"
     }
     override func utilizeEffect(game: RuneBinderGame){
-        game.changeSpellPower(num: -game.getSpellPower()/2)
+        game.changeTarget(enemy: game.enemies[0], modifier: 2.0)
     }
 }
 class Lob: Enchantment{
@@ -439,13 +559,48 @@ class Lob: Enchantment{
         super.init()
         priority = 1
         color = Color.gray
-        description = "Lob: hits furthest enemy for x1.5"
+        description = "Lob: hits furthest enemy ignoring target for x1.5 spell power"
     }
     override func utilizeEffect(game: RuneBinderGame){
-        game.changeSpellPower(num: -game.getSpellPower()/2)
+        game.changeTarget(enemy: game.enemies[game.enemies.count-1], modifier: 1.5)
     }
 }
-
+class Enclose: Enchantment{
+    var rarity = rarity.legendary
+    var type = type.destruction
+    required init() {
+        super.init()
+        priority = 2
+        color = Color.gray
+        description = "Enclose: hits for x2 spell power if one enemy remains and x1/2 spell power otherwise"
+    }
+    override func utilizeEffect(game: RuneBinderGame){
+        if(game.enemies.count>1){
+            for i in 0..<game.targets.count{
+                game.addTarget(enemy: game.enemies[i], modifier: -game.targets[i]/2)
+            }
+        }
+        else{
+            game.addTarget(enemy: game.enemies[game.primaryTarget!], modifier: 2.0)
+        }
+    }
+}
+class Snowball: Enchantment{
+    var rarity = rarity.legendary
+    var type = type.manipulation
+    required init() {
+        super.init()
+        priority = 2
+        color = Color.gray
+        description = "Snowball: also hits all enemies behind the target increasing spell power as it grows"
+    }
+    override func utilizeEffect(game: RuneBinderGame){
+        var inc: Int = 1
+        while(game.primaryTarget! + inc < game.enemies.count){
+            game.addTarget(enemy: game.enemies[game.primaryTarget!+inc], modifier: 0.333*Double(inc))
+        }
+    }
+}
 /*
     Hex: Apply curses debuffing enemies and unique effects
  */
@@ -459,7 +614,6 @@ class VampiricStrike: Enchantment{
         description = "Vampiric Strike: heal based on damage done"
     }
     override func utilizeEffect(game: RuneBinderGame){
-        game.changeHealth(num: game.getSpellPower())
     }
 }
 class SerratedStrike: Enchantment{
@@ -472,8 +626,10 @@ class SerratedStrike: Enchantment{
         description = "Serrated Strike: apply 3 bleed to all enemies hit"
     }
     override func utilizeEffect(game: RuneBinderGame){
-        for target in game.targets{
-            game.enemies[target].bleeds.append(Bleeds(turns: 3, dmg: 1))
+        for i in 0..<game.targets.count{
+            if(game.targets[i]>0.0){ //If enemy is being hit
+                game.enemies[i].bleeds.append(Bleeds(turns: 3, dmg: 1))
+            }
         }
     }
 }
@@ -487,8 +643,10 @@ class Discombobulate: Enchantment{
         description = "Build: up stun power based on damage dealt"
     }
     override func utilizeEffect(game: RuneBinderGame){
-        for target in game.targets{
-            game.enemies[target].bleeds.append(Bleeds(turns: 3, dmg: 1))
+        for i in 0..<game.targets.count{
+            if(game.targets[i]>0.0){ //If enemy is being hit
+                game.enemies[i].bleeds.append(Bleeds(turns: 3, dmg: 1))
+            }
         }
     }
 }
@@ -502,8 +660,10 @@ class Cripple: Enchantment{
         description = "Cripple: apply 1 frail to enemies hit"
     }
     override func utilizeEffect(game: RuneBinderGame){
-        for target in game.targets{
-            game.enemies[target].bleeds.append(Bleeds(turns: 3, dmg: 1))
+        for i in 0..<game.targets.count{
+            if(game.targets[i]>0.0){ //If enemy is being hit
+                game.enemies[i].bleeds.append(Bleeds(turns: 3, dmg: 1))
+            }
         }
     }
 }
@@ -517,8 +677,5 @@ class Pierce: Enchantment{
         description = "Pierce: spell damage ignores enemy block"
     }
     override func utilizeEffect(game: RuneBinderGame){
-        for target in game.targets{
-            game.enemies[target].bleeds.append(Bleeds(turns: 3, dmg: 1))
-        }
     }
 }
