@@ -1,0 +1,79 @@
+[
+    {
+      "enemies": [
+        { "type": "WolfPackLeader"}
+      ],
+      "difficulty": 2,
+      "zone": "Forest"
+    },
+    {
+      "enemies": [
+        { "type": "MultiplyingMycospawn"}
+      ],
+      "difficulty": 1,
+      "zone": "Forest"
+    },
+
+    {
+    "enemies": [
+      { "type": "PoisonShroom"}
+    ],
+    "difficulty": 2,
+    "zone": "Forest"
+    },
+    {
+    "enemies": [
+      { "type": "Goblin"},
+      { "type": "Goblin" }
+    ],
+    "difficulty": 2,
+    "zone": "Forest"
+    },
+    {
+    "enemies": [
+      { "type": "RabidWolf" },
+      { "type": "Goblin" }
+    ],
+    "difficulty": 2,
+    "zone": "Forest"
+    },
+    {
+    "enemies": [
+      { "type": "TorchBearer" }
+    ],
+    "difficulty": 2,
+    "zone": "Forest"
+    },
+    {
+    "enemies": [
+      { "type": "PoisonShroom" },
+      { "type": "PoisonShroom" }
+    ],
+    "difficulty": 2,
+    "zone": "Forest"
+    },
+    {
+    "enemies": [
+      { "type": "TorchBearer" },
+      { "type": "Goblin" }
+    ],
+    "difficulty": 2,
+    "zone": "Forest"
+    },
+    {
+    "enemies": [
+      { "type": "RabidWolf" },
+      { "type": "RabidWolf" },
+      { "type": "Goblin" }
+    ],
+    "difficulty": 2,
+    "zone": "Forest"
+    },
+    {
+    "enemies": [
+      { "type": "Tree" }
+    ],
+    "difficulty": 2,
+    "zone": "Forest"
+    }
+]
