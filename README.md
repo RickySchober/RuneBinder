@@ -1,0 +1,1 @@
+This project is a personal project to develop an IOS app for a roguelike spelling game. The goal of this project is for me to become familiar with SwiftUI MVVM architecture and hopefully publish to the appstore. 
