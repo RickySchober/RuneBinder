@@ -80,7 +80,6 @@ class RuneBinderViewModel: ObservableObject {
         model.castSpell()
         model.checkSpellValid()
         playerTurnEnd()
-        objectWillChange.send()
     }
     func selectEnemy(enemy: Enemy){
         model.changeTarget(enemy: enemy, modifier: 1.0)
@@ -97,6 +96,5 @@ class RuneBinderViewModel: ObservableObject {
     func shuffleGrid(){
         model.shuffleGrid()
         playerTurnEnd()
-        objectWillChange.send()
     }
 }

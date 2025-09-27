@@ -23,13 +23,13 @@ struct ContentView: View {
         ZStack(){
             VStack(spacing:0){
                 CombatView()
-                    .frame(width: screenWidth, height: screenHeight*0.9-screenWidth*1.05)
+                    .frame(width: screenWidth, height: screenHeight*0.9-screenWidth*1.0)
                     .background(.blue)
-                RuneGrid(namespace: runesNamespace)
-                    .background(.yellow)
                 SpellView(namespace: runesNamespace)
                     .frame(width: screenWidth, height: screenWidth*0.20) //Reserve this space for view regardless of adjusted size
                     .background(.green)
+                RuneGrid(namespace: runesNamespace)
+                    .background(.yellow)
                 HStack(){
                     Button(action:{
                         viewModel.validSpell ? self.viewModel.castSpell() : print("your bad")
@@ -49,7 +49,25 @@ struct ContentView: View {
                 }
                 .background(viewModel.validSpell ? Color.gray : Color.yellow )
                 .frame(width: screenWidth, height: screenHeight*0.1, alignment: .center)
-                .scaledToFill()
+                HStack(){
+                    Button(action:{
+                        viewModel.validSpell ? self.viewModel.castSpell() : print("your bad")
+                    }, label: {Text("Cast Spell")
+                            .font(.system(size: 40.0))
+                    })
+                    Button(action:{
+                     self.viewModel.shuffleGrid()
+                    }, label: {Text("Scramble")
+                            .font(.system(size: 40.0))
+                    })
+                    Button(action:{
+                     deckViewer = true
+                    }, label: {Text("Deck")
+                            .font(.system(size: 40.0))
+                    })
+                }
+                .background(viewModel.validSpell ? Color.gray : Color.yellow )
+                .frame(width: screenWidth, height: screenHeight*0.1, alignment: .center)
             }
             .edgesIgnoringSafeArea(.top)
             //.frame(width: screenWidth, height: screenHeight)
@@ -70,67 +88,6 @@ struct ContentView: View {
     }
 }
 
-
-struct EnemyView: View{
-    @EnvironmentObject var viewModel: RuneBinderViewModel
-    var enemy: Enemy
-    
-    var healthRatio: CGFloat {
-        CGFloat(enemy.currentHealth) / CGFloat(enemy.maxHealth)
-       }
-    var body: some View{
-        VStack(spacing: 0){
-            ZStack(alignment: .leading) { //HP bar
-                Rectangle()
-                    .frame(width: screenWidth*0.13, height: screenHeight*0.0075)
-                    .foregroundColor(.gray.opacity(0.3))
-                    .cornerRadius(3)
-                
-                Rectangle()
-                    .frame(width: max(0, screenWidth*0.13*healthRatio), height: screenHeight*0.0075) // 50 is total width
-                    .foregroundColor(.red)
-                    .cornerRadius(3)
-                
-                Text("\(enemy.currentHealth)/\(enemy.maxHealth)")
-                    .font(.caption2)
-                    .foregroundColor(.white)
-                    .frame(width: screenWidth*0.13, height: screenHeight*0.02)
-                    .minimumScaleFactor(0.5)
-            }
-            .frame(width: screenWidth*0.18)
-            HStack(){
-                if(enemy.bleedDamage != 0){
-                    ZStack(alignment: .bottom){
-                        GeometryReader{ geometry in
-                            Image("bleed 1")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .clipped()
-                                .padding(0)
-                            Text("\(enemy.bleedDamage)")
-                                .font(.caption2)
-                                .foregroundColor(.white)
-                                .position(x: 0.8*geometry.size.width, y: 0.8*geometry.size.height)
-                                .font(Font.system(size:(CGFloat)(0.2*min(geometry.size.width,geometry.size.height))))
-                                .padding([.bottom, .trailing], 1)
-                        }
-                    }
-                    .frame(width: screenWidth*0.04, height: screenWidth*0.04)
-                }
-            }
-            .frame(alignment: .leading)
-            Image(enemy.image)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: screenWidth*0.18, height: screenWidth*0.18)
-                .clipped()
-                .onTapGesture{ viewModel.selectEnemy(enemy: enemy)
-                }
-        }
-        .transition(.asymmetric(insertion: .identity , removal: .opacity)) //animates insertion and deletion of view
-    }
-}
-
 struct RuneGrid: View{
     @EnvironmentObject var viewModel: RuneBinderViewModel
     @State private var showTooltip: Bool = false
@@ -145,19 +102,19 @@ struct RuneGrid: View{
             GridItem(.flexible(),spacing: 0)
         ]
         LazyVGrid(columns: columns, spacing: 0 ){//Grid with 4 columns
-            ForEach(self.viewModel.grid){ runes in
+            ForEach(self.viewModel.grid, id: \.id){ runes in
                 if(!viewModel.spell.contains(runes)){
                     RuneView(rune: runes, namespace: namespace)
                         .aspectRatio(contentMode: .fit)
+                        .zIndex(viewModel.selectedRune == runes ? 999 : 0)
                         .anchorPreference(key: RunePositionPreferenceKey.self, value: .center) {
                                 [runes.id: $0]
                             }
                 }
                 else{
-                    Rectangle()
+                    Color.clear
                         .fixedSize(horizontal: true, vertical: true)
                         .frame(width: screenWidth*0.20, height: screenWidth*0.20)
-                        .background(Rectangle().fill(Color.mint))
                 }
             }
         }
@@ -262,94 +219,42 @@ struct EnemyListView: View {
         .animation(.default, value: viewModel.enemies)
     }
 }
-struct PlayerInfoView: View {
-    @EnvironmentObject var viewModel: RuneBinderViewModel
-
-    var healthRatio: CGFloat {
-        CGFloat(viewModel.player.currentHealth) / CGFloat(viewModel.player.maxHealth)
-       }
-    var blockRatio: CGFloat {
-        CGFloat(viewModel.player.block) / CGFloat(viewModel.player.maxHealth)
-    }
-    var body: some View {
-        VStack {
-            if(viewModel.player.block>0){
-                ZStack(alignment: .leading) { //Block bar
-                    Rectangle()
-                        .frame(height: screenHeight*0.0075)
-                        .foregroundColor(.gray.opacity(0.3))
-                        .cornerRadius(3)
-                    
-                    Rectangle()
-                        .frame(width: screenWidth*0.18*min(1 ,blockRatio), height: screenHeight*0.0075) // 50 is total width
-                        .foregroundColor(.blue)
-                        .cornerRadius(3)
-                    
-                    Text("\(viewModel.player.block)")
-                        .font(.caption2)
-                        .foregroundColor(.white)
-                        .frame(width: screenWidth*0.18, height: screenHeight*0.02)
-                        .minimumScaleFactor(0.5)
-                }
-                .frame(width: screenWidth*0.18)
-                .padding(0)
-            }
-            ZStack(alignment: .leading) { //HP bar
-                Rectangle()
-                    .frame(height: screenHeight*0.0075)
-                    .foregroundColor(.gray.opacity(0.3))
-                    .cornerRadius(3)
-                
-                Rectangle()
-                    .frame(width: screenWidth*0.18*healthRatio, height: screenHeight*0.0075) // 50 is total width
-                    .foregroundColor(.red)
-                    .cornerRadius(3)
-                
-                Text("\(viewModel.player.currentHealth)/\(viewModel.player.maxHealth)")
-                    .font(.caption2)
-                    .foregroundColor(.white)
-                    .frame(width: screenWidth*0.18, height: screenHeight*0.02)
-                    .minimumScaleFactor(0.5)
-            }
-            .frame(width: screenWidth*0.18)
-            .padding(0)
-            Image("player")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: screenWidth*0.18, height: screenWidth*0.18)
-                .clipped()
-        }
-    }
-}
 
 struct CombatView: View {
     var body: some View {
-        ZStack(){
+        ZStack {
+            // Background
             Image("forest_bg1")
                 .resizable()
-                .aspectRatio(contentMode: .fill)
-                .clipped()
-            VStack(){
-                Spacer()
-                HStack(alignment: .bottom) {
-                    // Player on the left
-                    PlayerInfoView()
-                        .padding()
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(10)
-                    
-                    Spacer()
-                        .padding()
-                    
-                    // Enemies on the right
-                    EnemyListView()
-                }
+                .aspectRatio(contentMode: .fit)
                 .frame(width: screenWidth)
-                .padding(0)
-                .background(Color.black.opacity(0.2))
-                .cornerRadius(12)
+                .ignoresSafeArea()
+            
+            Rectangle()
+                .fill(
+                    ImagePaint(image: Image("grasstile"),
+                               sourceRect: CGRect(x: 0, y: 0, width: 1, height: 1),
+                               scale: 0.2)
+                )
+                .frame(width: screenWidth*2, height: screenHeight * 0.5)
+                .rotation3DEffect(
+                    .degrees(70),
+                    axis: (x: 1, y: 0, z: 0),
+                    anchor: .bottom
+                )
+                .offset(y: screenHeight * -0.03)
+            // Characters anchored to ground
+            HStack(alignment: .bottom) {
+                // Player on left
+                PlayerView()
+                    .padding(.leading, screenWidth*0.51)
+                    .offset(y: screenHeight*0.09)
+                Spacer()
+                // Enemies on right
+                EnemyListView()
+                    .padding(.trailing, screenWidth*0.51)
+                    .offset(y: screenHeight*0.09)
             }
-            .frame(minHeight: screenHeight*0.9-screenWidth*1.05)
         }
     }
 }

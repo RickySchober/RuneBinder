@@ -33,29 +33,3 @@ class MapNode: Identifiable, Equatable{
             return lhs.id == rhs.id
     }
 }
-/*
-class Combat: MapNode{
-    override init(pos: Int = 1, lay: Int = 1, nodes: [MapNode] = []) {
-        super.init(pos: pos, lay: lay, nodes: nodes)
-        icon = "combat"
-    }
-}
-class Shop: MapNode{
-    override init(pos: Int = 1, lay: Int = 1, nodes: [MapNode] = []) {
-        super.init(pos: pos, lay: lay, nodes: nodes)
-        icon = "shop"
-    }
-}
-class Event: MapNode{
-    override init(pos: Int = 1, lay: Int = 1, nodes: [MapNode] = []) {
-        super.init(pos: pos, lay: lay, nodes: nodes)
-        icon = "event"
-    }
-}
-class Start: MapNode{
-    override init(pos: Int = 1, lay: Int = 1, nodes: [MapNode] = []) {
-        super.init(pos: pos, lay: lay, nodes: nodes)
-        icon = "start"
-    }
-}
-*/

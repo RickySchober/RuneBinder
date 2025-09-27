@@ -13,6 +13,7 @@
 import Foundation
 import SwiftUI
 
+
 class Enchantment: Equatable, Identifiable{
     static func == (lhs: Enchantment, rhs: Enchantment) -> Bool {
         return lhs.description == rhs.description
@@ -24,7 +25,7 @@ class Enchantment: Equatable, Identifiable{
         case rare
         case legendary
     }
-    enum type{
+    enum archetype{
         case hex
         case destruction
         case manipulation
@@ -42,22 +43,34 @@ class Enchantment: Equatable, Identifiable{
     var color: Color
     var description: String
     var id = UUID()
+    var upgraded: Bool
     required init() {
         priority = 4
         color = Color.yellow
         description = "Enchantment: Wow so shiny"
+        upgraded = false
     }
     
     func utilizeEffect(game: RuneBinderGame){
     }
-   
 }
+extension Enchantment { //Converts class into codable struct for storage
+    func toData() -> EnchantmentData {
+        EnchantmentData(
+            id: self.id,
+            enchantName: String(describing: type(of: self)),
+            upgraded: self.upgraded
+        )
+    }
+}
+
+
 /*
     Destruction: modify spell power and enchantments
  */
 class Empower: Enchantment{
     var rarity = rarity.common
-    var type = type.destruction
+    var archetype = archetype.destruction
     required init() {
         super.init()
         priority = 0
@@ -71,7 +84,7 @@ class Empower: Enchantment{
 }
 class Enlarge: Enchantment{
     var rarity = rarity.rare
-    var type = type.destruction
+    var archetype = archetype.destruction
     required init() {
         super.init()
         priority = 0
@@ -90,7 +103,7 @@ class Enlarge: Enchantment{
 }
 class Swarm: Enchantment{
     var rarity = rarity.rare
-    var type = type.destruction
+    var archetype = archetype.destruction
     required init() {
         super.init()
         priority = 0
@@ -111,7 +124,7 @@ class Swarm: Enchantment{
 }
 class Magnify: Enchantment{
     var rarity = rarity.legendary
-    var type = type.destruction
+    var archetype = archetype.destruction
     required init() {
         super.init()
         priority = 0
@@ -128,7 +141,7 @@ class Magnify: Enchantment{
 }
 class Diversify: Enchantment{
     var rarity = rarity.legendary
-    var type = type.destruction
+    var archetype = archetype.destruction
     required init() {
         super.init()
         priority = 2
@@ -142,7 +155,7 @@ class Diversify: Enchantment{
 }
 class Replicate: Enchantment{
     var rarity = rarity.legendary
-    var type = type.destruction
+    var archetype = archetype.destruction
     required init() {
         super.init()
         priority = 4
@@ -156,7 +169,7 @@ class Replicate: Enchantment{
 }
 class Expidite: Enchantment{
     var rarity = rarity.legendary
-    var type = type.destruction
+    var archetype = archetype.destruction
     required init() {
         super.init()
         priority = 4
@@ -169,7 +182,7 @@ class Expidite: Enchantment{
 }
 class Restart: Enchantment{
     var rarity = rarity.legendary
-    var type = type.destruction
+    var archetype = archetype.destruction
     required init() {
         super.init()
         priority = 4
@@ -182,7 +195,7 @@ class Restart: Enchantment{
 }
 class Foresee: Enchantment{
     var rarity = rarity.legendary
-    var type = type.destruction
+    var archetype = archetype.destruction
     required init() {
         super.init()
         priority = 2
@@ -195,7 +208,7 @@ class Foresee: Enchantment{
 }
 class Rewrite: Enchantment{
     var rarity = rarity.legendary
-    var type = type.destruction
+    var archetype = archetype.destruction
     required init() {
         super.init()
         priority = 4
@@ -208,7 +221,7 @@ class Rewrite: Enchantment{
 }
 class Master: Enchantment{
     var rarity = rarity.legendary
-    var type = type.destruction
+    var archetype = archetype.destruction
     required init() {
         super.init()
         priority = 4
@@ -229,7 +242,7 @@ class Master: Enchantment{
  */
 class Revitalize: Enchantment{
     var rarity = rarity.common
-    var type = type.preservation
+    var archetype = archetype.preservation
     required init() {
         super.init()
         priority = 0
@@ -242,7 +255,7 @@ class Revitalize: Enchantment{
 }
 class Ward: Enchantment{
     var rarity = rarity.uncommon
-    var type = type.preservation
+    var archetype = archetype.preservation
     required init() {
         super.init()
         priority = 0
@@ -255,7 +268,7 @@ class Ward: Enchantment{
 }
 class Outlast: Enchantment{
     var rarity = rarity.uncommon
-    var type = type.preservation
+    var archetype = archetype.preservation
     
     required init() {
         super.init()
@@ -270,7 +283,7 @@ class Outlast: Enchantment{
 }
 class Brace: Enchantment{
     var rarity = rarity.uncommon
-    var type = type.preservation
+    var archetype = archetype.preservation
     
     required init() {
         super.init()
@@ -284,7 +297,7 @@ class Brace: Enchantment{
 }
 class Deflect: Enchantment{
     var rarity = rarity.rare
-    var type = type.preservation
+    var archetype = archetype.preservation
     
     required init() {
         super.init()
@@ -299,7 +312,7 @@ class Deflect: Enchantment{
 }
 class Fortify: Enchantment{
     var rarity = rarity.rare
-    var type = type.preservation
+    var archetype = archetype.preservation
     
     required init() {
         super.init()
@@ -313,7 +326,7 @@ class Fortify: Enchantment{
 }
 class Nullify: Enchantment{
     var rarity = rarity.common
-    var type = type.preservation
+    var archetype = archetype.preservation
     
     required init() {
         super.init()
@@ -327,7 +340,7 @@ class Nullify: Enchantment{
 }
 class Purity: Enchantment{
     var rarity = rarity.rare
-    var type = type.preservation
+    var archetype = archetype.preservation
     
     required init() {
         super.init()
@@ -341,7 +354,7 @@ class Purity: Enchantment{
 }
 class Purify: Enchantment{
     var rarity = rarity.uncommon
-    var type = type.preservation
+    var archetype = archetype.preservation
     required init() {
         super.init()
         priority = 2
@@ -354,7 +367,7 @@ class Purify: Enchantment{
 }
 class Ignorance: Enchantment{
     var rarity = rarity.rare
-    var type = type.preservation
+    var archetype = archetype.preservation
     required init() {
         super.init()
         priority = 2
@@ -367,7 +380,7 @@ class Ignorance: Enchantment{
 }
 class CleansingWave: Enchantment{
     var rarity = rarity.legendary
-    var type = type.preservation
+    var archetype = archetype.preservation
     required init() {
         super.init()
         priority = 2
@@ -382,7 +395,7 @@ class CleansingWave: Enchantment{
 }
 class Pacifism: Enchantment{
     var rarity = rarity.legendary
-    var type = type.preservation
+    var archetype = archetype.preservation
     required init() {
         super.init()
         priority = 2
@@ -405,7 +418,7 @@ class Pacifism: Enchantment{
  */
 class Extend: Enchantment{
     var rarity = rarity.uncommon
-    var type = type.destruction
+    var archetype = archetype.destruction
     required init() {
         super.init()
         priority = 2
@@ -421,7 +434,7 @@ class Extend: Enchantment{
 }
 class Expand: Enchantment{
     var rarity = rarity.uncommon
-    var type = type.destruction
+    var archetype = archetype.destruction
     required init() {
         super.init()
         priority = 2
@@ -440,7 +453,7 @@ class Expand: Enchantment{
 }
 class Engulf: Enchantment{
     var rarity = rarity.uncommon
-    var type = type.destruction
+    var archetype = archetype.destruction
     required init() {
         super.init()
         priority = 2
@@ -455,7 +468,7 @@ class Engulf: Enchantment{
 }
 class Isolate: Enchantment{
     var rarity = rarity.uncommon
-    var type = type.destruction
+    var archetype = archetype.destruction
     required init() {
         super.init()
         priority = 2
@@ -474,7 +487,7 @@ class Isolate: Enchantment{
 }
 class Gatling: Enchantment{
     var rarity = rarity.legendary
-    var type = type.manipulation
+    var archetype = archetype.manipulation
     required init() {
         super.init()
         priority = 2
@@ -490,7 +503,7 @@ class Gatling: Enchantment{
 }
 class Eliminate: Enchantment{
     var rarity = rarity.rare
-    var type = type.manipulation
+    var archetype = archetype.manipulation
     required init() {
         super.init()
         priority = 1
@@ -509,7 +522,7 @@ class Eliminate: Enchantment{
 }
 class Aspire: Enchantment{
     var rarity = rarity.rare
-    var type = type.manipulation
+    var archetype = archetype.manipulation
     required init() {
         super.init()
         priority = 1
@@ -528,7 +541,7 @@ class Aspire: Enchantment{
 }
 class Randomize: Enchantment{
     var rarity = rarity.rare
-    var type = type.manipulation
+    var archetype = archetype.manipulation
     required init() {
         super.init()
         priority = 1
@@ -541,7 +554,7 @@ class Randomize: Enchantment{
 }
 class Shotgun: Enchantment{
     var rarity = rarity.rare
-    var type = type.manipulation
+    var archetype = archetype.manipulation
     required init() {
         super.init()
         priority = 1
@@ -554,7 +567,7 @@ class Shotgun: Enchantment{
 }
 class Lob: Enchantment{
     var rarity = rarity.rare
-    var type = type.manipulation
+    var archetype = archetype.manipulation
     required init() {
         super.init()
         priority = 1
@@ -567,7 +580,7 @@ class Lob: Enchantment{
 }
 class Enclose: Enchantment{
     var rarity = rarity.legendary
-    var type = type.destruction
+    var archetype = archetype.destruction
     required init() {
         super.init()
         priority = 2
@@ -587,7 +600,7 @@ class Enclose: Enchantment{
 }
 class Snowball: Enchantment{
     var rarity = rarity.legendary
-    var type = type.manipulation
+    var archetype = archetype.manipulation
     required init() {
         super.init()
         priority = 2
@@ -606,7 +619,7 @@ class Snowball: Enchantment{
  */
 class VampiricStrike: Enchantment{
     var rarity = rarity.rare
-    var type = type.hex
+    var archetype = archetype.hex
     required init() {
         super.init()
         priority = 2
@@ -618,7 +631,7 @@ class VampiricStrike: Enchantment{
 }
 class SerratedStrike: Enchantment{
     var rarity = rarity.uncommon
-    var type = type.hex
+    var archetype = archetype.hex
     required init() {
         super.init()
         priority = 2
@@ -635,7 +648,7 @@ class SerratedStrike: Enchantment{
 }
 class Discombobulate: Enchantment{
     var rarity = rarity.uncommon
-    var type = type.hex
+    var archetype = archetype.hex
     required init() {
         super.init()
         priority = 2
@@ -652,7 +665,7 @@ class Discombobulate: Enchantment{
 }
 class Cripple: Enchantment{
     var rarity = rarity.uncommon
-    var type = type.hex
+    var archetype = archetype.hex
     required init() {
         super.init()
         priority = 2
@@ -669,7 +682,7 @@ class Cripple: Enchantment{
 }
 class Pierce: Enchantment{
     var rarity = rarity.uncommon
-    var type = type.hex
+    var archetype = archetype.hex
     required init() {
         super.init()
         priority = 2

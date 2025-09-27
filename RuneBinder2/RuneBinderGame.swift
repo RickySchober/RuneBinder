@@ -287,8 +287,9 @@ class RuneBinderGame{
     }
     //Applies debuffs of an enemy attack to random runes that are not enchanted or debuffed
     func applyRuneDebuffs(atk: Action){
-        if(player.nullify>0){
+        if(player.nullify>0){ //Negates debuffs from an attack
             player.nullify -= 1
+            return
         }
         var debuffable: Int = 0
         for rune in grid{
@@ -429,7 +430,7 @@ class RuneBinderGame{
         else{
             spell.removeSubrange(spell.firstIndex(of: rune)!..<spell.count) //removes the element and all following
         }
-        
+        selectedRune = rune
     }
     func selectNode(node: MapNode){
         //Change selectable
@@ -479,6 +480,7 @@ class RuneBinderGame{
     //This functions handles clean up actions involved during combat 
     func cleanUp(){
         if enemies.isEmpty{
+            spellDeck = spellBook //Reset deck
             withAnimation(){
                 victory = true
                 generateEnchantRewards()

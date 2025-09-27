@@ -49,47 +49,59 @@ struct RuneView: View{
                         .font(Font.system(size:(CGFloat)(0.2*min(geometry.size.width,geometry.size.height))))
                         .padding([.bottom, .trailing], 1)
                 }
+     
+               /* LinearGradient(colors: [.white.opacity(0.6), .clear],
+                               startPoint: .topLeading,
+                               endPoint: .bottomTrailing)
+                    .blendMode(.screen)*/
+/*
+                case .weak:
+                    Color.blue.opacity(0.3)
+                        .blendMode(.multiply)*/
+/*
+                RadialGradient(colors: [.black.opacity(0.6), .clear],
+                               center: .center, startRadius: 0, endRadius: 60)
+                    .blendMode(.multiply)*/
             }
-            .matchedGeometryEffect(id: rune.id, in: namespace)
-            .modifier(Shake(animatableData: CGFloat(locked)))
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { _ in
-                        if hoverWorkItem == nil {
-                            let workItem = DispatchWorkItem {
-                                viewModel.hoverRune(rune: rune)
-                            }
-                            hoverWorkItem = workItem
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: workItem)
-                        }
-                    }
-                    .onEnded { _ in
-                        hoverWorkItem?.cancel()
-                        hoverWorkItem = nil
-                        viewModel.hoverRune(rune: nil)
-                    }
-            )
-            .simultaneousGesture(
-                TapGesture()
-                    .onEnded {
-                        hoverWorkItem?.cancel()
-                        hoverWorkItem = nil
-                        if rune.debuff?.type == .lock  {
-                            SoundManager.shared.playSoundEffect(named: "click")
-                            withAnimation {
-                                locked += 1
-                            }
-                        } else {
-                            SoundManager.shared.playSoundEffect(named: "click")
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                viewModel.selectRune(rune: rune)
-                            }
-                        }
-                    }
-            )
-
         })
         .frame(minWidth: screenWidth*0.05, maxWidth: screenWidth*0.20,minHeight: screenWidth*0.05, maxHeight: screenWidth*0.20)
+        .modifier(Shake(animatableData: CGFloat(locked)))
+        .matchedGeometryEffect(id: rune.id, in: namespace) //Only gestures can be below matched geometry
+        .gesture( //Must have tapgesture first or it doesn't animate?!?!
+            TapGesture()
+                .onEnded {
+                    hoverWorkItem?.cancel()
+                    hoverWorkItem = nil
+                    if rune.debuff?.type == .lock  {
+                        SoundManager.shared.playSoundEffect(named: "click")
+                        withAnimation {
+                            locked += 1
+                        }
+                    } else {
+                        SoundManager.shared.playSoundEffect(named: "click")
+                        withAnimation(.easeInOut(duration: 0.4)) {
+                            viewModel.selectRune(rune: rune)
+                        }
+                    }
+                }
+        )
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    if hoverWorkItem == nil {
+                        let workItem = DispatchWorkItem {
+                            viewModel.hoverRune(rune: rune)
+                        }
+                        hoverWorkItem = workItem
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: workItem)
+                    }
+                }
+                .onEnded { _ in
+                    hoverWorkItem?.cancel()
+                    hoverWorkItem = nil
+                    viewModel.hoverRune(rune: nil)
+                }
+        )
     }
 }
 

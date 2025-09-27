@@ -47,6 +47,16 @@ class Enemy: Equatable, Identifiable{
         return actions[Int.random(in: 0...actions.count-1)]
     }
 }
+
+extension Enemy { //Converts class into codable struct for storage
+    func toData() -> EnemyData {
+        EnemyData(
+            id: self.id,
+            enemyName: String(describing: type(of: self))
+        )
+    }
+}
+
 class Goblin: Enemy{
     override init() {
         super.init()
