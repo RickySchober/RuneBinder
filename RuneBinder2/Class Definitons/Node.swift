@@ -7,12 +7,8 @@
 
 import Foundation
 
-enum NodeType {
-    case combat
-    case shop
-    case event
-    case elite
-    case rest
+enum NodeType: String, Codable {
+    case combat, shop, elite, event, rest
 }
 
 class MapNode: Identifiable, Equatable{
@@ -31,5 +27,40 @@ class MapNode: Identifiable, Equatable{
     }
     static func == (lhs: MapNode, rhs: MapNode) -> Bool {
             return lhs.id == rhs.id
+    }
+}
+extension MapNode {
+    func toData() -> MapNodeData {
+        MapNodeData(
+            id: self.id,
+            position: self.position,
+            layer: self.layer,
+            icon: self.icon,
+            selectable: self.selectable,
+            type: self.type,
+            nextNodeIDs: self.nextNodes.map { $0.id }
+        )
+    }
+
+    // first pass: create nodes without links
+    static func fromDataArray(_ datas: [MapNodeData]) -> [UUID: MapNode] {
+        var nodes: [UUID: MapNode] = [:]
+        for data in datas {
+            let node = MapNode(pos: data.position,
+                               lay: data.layer,
+                               nodes: [],
+                               tp: data.type)
+            node.id = data.id
+            node.icon = data.icon
+            node.selectable = data.selectable
+            nodes[data.id] = node
+        }
+        // second pass: rebuild edges
+        for data in datas {
+            if let node = nodes[data.id] {
+                node.nextNodes = data.nextNodeIDs.compactMap { nodes[$0] }
+            }
+        }
+        return nodes
     }
 }

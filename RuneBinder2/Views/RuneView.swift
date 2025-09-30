@@ -29,7 +29,7 @@ struct RuneView: View{
                 Text(String(rune.letter))
                     .font(Font.system(size:(CGFloat)(0.5*min(geometry.size.width,geometry.size.height))))
                     .multilineTextAlignment(.center)
-                Text(String(rune.debuff?.type != .weak ? rune.power : 0))
+                Text(String(rune.debuff?.archetype != .weak ? rune.power : 0))
                     .foregroundColor(.white)
                     .position(x: 0.8*geometry.size.width, y: 0.8*geometry.size.height)
                     .font(Font.system(size:(CGFloat)(0.2*min(geometry.size.width,geometry.size.height))))
@@ -72,7 +72,7 @@ struct RuneView: View{
                 .onEnded {
                     hoverWorkItem?.cancel()
                     hoverWorkItem = nil
-                    if rune.debuff?.type == .lock  {
+                    if rune.debuff?.archetype == .lock  {
                         SoundManager.shared.playSoundEffect(named: "click")
                         withAnimation {
                             locked += 1

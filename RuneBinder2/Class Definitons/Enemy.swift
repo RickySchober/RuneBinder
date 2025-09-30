@@ -69,8 +69,8 @@ class GoblinShaman: Enemy{
         image = "goblin2"
         actions = [
             Action(dmg: 4),
-            Action(dmg: 3, deb: [Debuff(type: .weak, value: 1),Debuff(type: .rot, value: 1)]),
-            Action(dmg: 1, deb: [Debuff(type: .weak, value: 3),Debuff(type: .rot, value: 3)]),
+            Action(dmg: 3, deb: [Debuff(archetype: .weak, value: 1),Debuff(archetype: .rot, value: 1)]),
+            Action(dmg: 1, deb: [Debuff(archetype: .weak, value: 3),Debuff(archetype: .rot, value: 3)]),
         ]
     }
 }
@@ -80,7 +80,7 @@ class PoisonShroom: Enemy{
         image = "shroom"
         actions = [
             Action(dmg: 5),
-            Action(dmg: 1, deb: [Debuff(type: .rot, value: 1),Debuff(type: .rot, value: 1)]),
+            Action(dmg: 1, deb: [Debuff(archetype: .rot, value: 1),Debuff(archetype: .rot, value: 1)]),
         ]
     }
 }
@@ -90,7 +90,7 @@ class MultiplyingMycospawn: Enemy{
         image = "shroom"
         actions = [
             Action(dmg: 3),
-            Action(dmg: 1, deb: [Debuff(type: .rot, value: 1)]),
+            Action(dmg: 1, deb: [Debuff(archetype: .rot, value: 1)]),
             SummonAction(nm:"Rapid Reproduction", summons: ["MultiplyingMycospawn"])
         ]
     }
@@ -151,7 +151,7 @@ class TorchBearer: Enemy{
         image = "torchbearer"
         actions = [
             Action(dmg: 7),
-            Action(dmg: 0, deb: [Debuff(type: .scorch, value: 1),Debuff(type: .scorch, value: 1)]),
+            Action(dmg: 0, deb: [Debuff(archetype: .scorch, value: 1),Debuff(archetype: .scorch, value: 1)]),
         ]
     }
 }
@@ -161,7 +161,7 @@ class Tree: Enemy{
         image = "tree"
         actions = [
             Action(dmg: 8),
-            Action(dmg: 0, deb: [Debuff(type: .rot, value: 5),Debuff(type: .scorch, value: 5)]),
+            Action(dmg: 0, deb: [Debuff(archetype: .rot, value: 5),Debuff(archetype: .scorch, value: 5)]),
         ]
     }
 }
@@ -169,7 +169,7 @@ class ChainBearer: Enemy{
     override init() {
         super.init()
         image = "chainbearer"
-        actions = [Action(dmg: 5, deb: [Debuff(type: .lock, value: 1), Debuff(type: .lock, value: 1), Debuff(type: .weak, value: 1)])]
+        actions = [Action(dmg: 5, deb: [Debuff(archetype: .lock, value: 1), Debuff(archetype: .lock, value: 1), Debuff(archetype: .weak, value: 1)])]
     }
 }
 //Biome ideas Phonetic Forest, Glyph Mines, Ancient Archive, Citadel

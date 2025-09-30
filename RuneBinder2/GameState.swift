@@ -14,13 +14,12 @@ import Foundation
  * you leave mid combat the game should be restored to the begginning of the combat.
  */
 struct GameState: Codable {
-    //var grid: [Rune]
-    //var enchantQueue: [Rune]
+    //var grid: [RuneData] //currently no need to store runes as save will load start of combat and generate grid
     var gridSize: Int
-
-    var spellLibrary: [String]          // store type names, reconstruct later
-    var rewardEnchants: [String]
-    var spellBook: [EnchantmentData]    // see Step 2
+    //Even though spellLibrary and rewardEnchants only care about type store full instance to avoid duplicate registries
+    var spellLibrary: [EnchantmentData]
+    var rewardEnchants: [EnchantmentData]
+    var spellBook: [EnchantmentData]
     var spellDeck: [EnchantmentData]
     var maxEnchants: Int
 
@@ -28,7 +27,7 @@ struct GameState: Codable {
     var enemies: [EnemyData]            // Codable version of Enemy
     var enemyLimit: Int
 
-    //var map: [[MapNode]]
+    var map: [MapNodeData]
 
     var victory: Bool
     var defeat: Bool
@@ -45,26 +44,104 @@ struct EnemyData: Codable {
     var enemyName: String       // "Goblin"
 }
 
-typealias EnchantmentFactory = () -> Enchantment
+struct RuneData: Codable {
+    var letter: String
+    var power: Int
+    var id: UUID
+    var enchant: EnchantmentData?
+    var debuff: Debuff?
+}
 
-struct EnchantmentRegistry {
-    private static var factories: [String: EnchantmentFactory] = [:]
-    
-    static func register(_ name: String, factory: @escaping EnchantmentFactory) {
-        factories[name] = factory
+struct MapNodeData: Codable, Identifiable {
+    var id: UUID
+    var position: Int
+    var layer: Int
+    var icon: String
+    var selectable: Bool
+    var type: NodeType?
+    var nextNodeIDs: [UUID]   // references by ID, not object pointers
+}
+
+extension Array where Element == [MapNode] {
+    func toData() -> [MapNodeData] {
+        flatMap { row in row.map { $0.toData() } }
     }
-    
-    static func make(from data: EnchantmentData) -> Enchantment {
-        if let factory = factories[data.enchantName] {
-            let enchant = factory()
-            // restore serializable fields
-            enchant.id = data.id
-            enchant.upgraded = data.upgraded
-            return enchant
-        } else {
-            fatalError("Unable to load enchantment: \(data.enchantName)")
-        }
+}
+
+func rebuildMap(from datas: [MapNodeData]) -> [[MapNode]] {
+    let nodesDict = MapNode.fromDataArray(datas)
+    // group by layer into 2D array
+    let grouped = Dictionary(grouping: nodesDict.values, by: { $0.layer })
+    let maxLayer = grouped.keys.max() ?? 0
+    return (0...maxLayer).map { layer in
+        grouped[layer]?.sorted(by: { $0.position < $1.position }) ?? []
     }
+}
+
+func makeEnchantment(from data: EnchantmentData) -> Enchantment {
+    var newEnchant: Enchantment
+    switch data.enchantName {
+    case "Empower": newEnchant = Empower()
+    case "Enlarge": newEnchant = Enlarge()
+    case "Swarm": newEnchant = Swarm()
+    case "Magnify": newEnchant = Magnify()
+    case "Diversify": newEnchant = Diversify()
+    case "Replicate": newEnchant = Replicate()
+    case "Expidite": newEnchant = Expidite()
+    case "Restart": newEnchant = Restart()
+    case "Foresee": newEnchant = Foresee()
+    case "Rewrite": newEnchant = Rewrite()
+    case "Master": newEnchant = Master()
+
+    case "Revitalize": newEnchant = Revitalize()
+    case "Ward": newEnchant = Ward()
+    case "Outlast": newEnchant = Outlast()
+    case "Brace": newEnchant = Brace()
+    case "Deflect": newEnchant = Deflect()
+    case "Fortify": newEnchant = Fortify()
+    case "Nullify": newEnchant = Nullify()
+    case "Purity": newEnchant = Purity()
+    case "Purify": newEnchant = Purify()
+    case "Ignorance": newEnchant = Ignorance()
+    case "CleansingWave": newEnchant = CleansingWave()
+    case "Pacifism": newEnchant = Pacifism()
+
+    case "Extend": newEnchant = Extend()
+    case "Expand": newEnchant = Expand()
+    case "Engulf": newEnchant = Engulf()
+    case "Isolate": newEnchant = Isolate()
+    case "Gatling": newEnchant = Gatling()
+    case "Eliminate": newEnchant = Eliminate()
+    case "Aspire": newEnchant = Aspire()
+    case "Randomize": newEnchant = Randomize()
+    case "Shotgun": newEnchant = Shotgun()
+    case "Lob": newEnchant = Lob()
+    case "Enclose": newEnchant = Enclose()
+    case "Snowball": newEnchant = Snowball()
+
+    case "VampiricStrike": newEnchant = VampiricStrike()
+    case "SerratedStrike": newEnchant = SerratedStrike()
+    case "Discombobulate": newEnchant = Discombobulate()
+    case "Cripple": newEnchant = Cripple()
+    case "Pierce": newEnchant = Pierce()
+
+    default:
+        fatalError("Unknown enchantment type: \(data.enchantName)")
+    }
+    newEnchant.id = data.id
+    newEnchant.upgraded = data.upgraded
+    return newEnchant
+}
+func makeEnemy(from data: EnemyData) -> Enemy {
+    var newEnemy: Enemy
+    switch data.enemyName {
+    case "Goblin": newEnemy = Goblin()
+    case "MultiplyingMycospawn": newEnemy = MultiplyingMycospawn()
+    default:
+        fatalError("Unknown enchantment type: \(data.enemyName)")
+    }
+    newEnemy.id = data.id
+    return newEnemy
 }
 
 

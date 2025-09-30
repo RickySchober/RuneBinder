@@ -26,13 +26,15 @@ struct MainMenuView: View {
 struct StartView: View{
     @Binding var isSheetPresented: Bool
     @EnvironmentObject var viewRouter: ViewRouter
+    @EnvironmentObject var viewModel: RuneBinderViewModel //Environment objects can be shared among all views
     var body: some View {
         Button(action:{
         }, label: {Text("Continue")
                 .font(.system(size: 60.0))
                 .onTapGesture {
+                    viewModel.loadSave()
                     SoundManager.shared.playBackgroundMusic(named: "soundtrack")
-                    viewRouter.currentScreen = .combat
+                    viewRouter.currentScreen = .map
                 }
         })
         Button(action:{

@@ -20,11 +20,11 @@ class RuneBinderGame{
     private (set) var validSpell: Bool = false
     private (set) var selectedRune: Rune? = nil
     
-    private var spellLibrary: Array<Enchantment.Type> //List of possible enchants to encounter during run
+    private (set) var spellLibrary: Array<Enchantment.Type> //List of possible enchants to encounter during run
     private (set) var rewardEnchants: Array<Enchantment.Type> = [] //List of known enchantments
-    private var spellBook: [Enchantment] = [Lob(), Engulf(), Enlarge(), Gatling(), Shotgun(), Aspire(), Eliminate(), Fortify(), Swarm()]//List of aquired enchants
+    private (set) var spellBook: [Enchantment] = [Lob(), Engulf(), Enlarge(), Gatling(), Shotgun(), Aspire(), Eliminate(), Fortify(), Swarm()]//List of aquired enchants
     private (set) var spellDeck: [Enchantment]//List of undrawn enchants
-    private var maxEnchants: Int = 5
+    private (set) var maxEnchants: Int = 5
 
     
     var player: Player = Player(currentHealth: 50, maxHealth: 80)
@@ -51,6 +51,24 @@ class RuneBinderGame{
         spellDeck = spellBook
         map = generateMap(numLayers: 10, minNodes: 3, maxNodes: 5)
         shuffleGrid()
+    }
+    init(state: GameState){ //Create model from saved game state
+        gridSize = state.gridSize
+
+        spellLibrary = state.spellLibrary.map { type(of: makeEnchantment(from: $0)) }
+        rewardEnchants = state.rewardEnchants.map { type(of: makeEnchantment(from: $0)) }
+        spellBook = state.spellBook.map { makeEnchantment(from: $0) }
+        spellDeck = state.spellDeck.map { makeEnchantment(from: $0) }
+        maxEnchants = state.maxEnchants
+
+        player.currentHealth = state.playerHealth           // Only current health is needed rn
+        enemies = state.enemies.map { makeEnemy(from: $0) }
+        enemyLimit = state.enemyLimit
+
+        map = rebuildMap(from: state.map)
+
+        victory = state.victory
+        defeat = state.defeat
     }
     func addEnemies(newEnemies: [Enemy], pos: Int){
         enemies.insert(contentsOf: newEnemies[..<min(newEnemies.count, enemyLimit-enemies.count)], at: pos)
@@ -179,7 +197,7 @@ class RuneBinderGame{
                 var pow = 1 //set power based on rarity of letter
                 if(letterOccurence[i]<1){pow = 3}
                 else if(letterOccurence[i]<=3.3){pow = 2}
-                return Rune(l: char, p: pow, e: enchant)
+                return Rune(l: String(char), p: pow, e: enchant)
             }
             prob += letterOccurence[i]
         }
@@ -339,7 +357,7 @@ class RuneBinderGame{
             var enchantCount: Int = 0 //Number of un-used enchants on grid
             for rune in grid{ //count power and enchants
                 if(spell.contains(rune)){
-                    if(rune.debuff == nil || rune.debuff?.type != .weak){
+                    if(rune.debuff == nil || rune.debuff?.archetype != .weak){
                         spellPower += rune.power
                     }
                 }
@@ -400,7 +418,7 @@ class RuneBinderGame{
     //Triggers all active rune debuffs
     func runeDebuffs(){
         for i in (0...gridSize-1){
-            switch grid[i].debuff?.type{
+            switch grid[i].debuff?.archetype{
             case .none:
                 break
             case .some(.lock):
