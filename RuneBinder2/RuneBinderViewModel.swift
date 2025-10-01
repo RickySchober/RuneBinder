@@ -6,33 +6,40 @@
 //
 
 import SwiftUI
+
 class RuneBinderViewModel: ObservableObject {
     @Published private var model: RuneBinderGame    
     private let persistence = SaveManager()
     private var gameState: GameState?
-    
     init(){
         gameState = nil
         model = RuneBinderGame()
     }
     //Loads in previous game state from json and create model object with initial values from game state
-    func loadSave(){
+    func loadSave() -> GameScreen{
         gameState = persistence.load()
         model = (gameState != nil) ? RuneBinderGame(state: gameState!) : RuneBinderGame()
+        switch gameState?.node{
+        case nil: return GameScreen.map
+        case .combat: return GameScreen.combat
+        case .elite: return GameScreen.combat
+        case .event: return GameScreen.event
+        case .rest: return GameScreen.rest
+        case .shop: return GameScreen.shop
+        }
     }
-    func saveGame(){
+    func saveGame(node: NodeType?){
         gameState = GameState(
+            node: node, //Viewmodel determines appropriate screen to restore to based on model state
+            seed: [model.encounterRng.saveState(), model.rewardRng.saveState(), model.shufflingRng.saveState()],
             gridSize: model.gridSize,
             spellLibrary: model.spellLibrary.map { $0.init().toData() },
-            rewardEnchants: rewardEnchants.map { $0.init().toData() },
             spellBook: model.spellBook.map { $0.toData() },
-            spellDeck: model.spellDeck.map { $0.toData() },
             maxEnchants: model.maxEnchants,
             playerHealth: model.player.currentHealth,
-            enemies: model.enemies.map { $0.toData() },
             enemyLimit: model.enemyLimit,
             map: model.map.toData(),
-            victory: model.victory,
+            encounterOver: model.encounterOver,
             defeat: model.defeat
         )
         persistence.save(state: gameState!)
@@ -79,8 +86,8 @@ class RuneBinderViewModel: ObservableObject {
     var map: [[MapNode]]{
         model.map
     }
-    var victory: Bool{
-        model.victory
+    var encounterOver: Bool{
+        model.encounterOver
     }
     var selectedRune: Rune?{
         model.selectedRune
@@ -100,7 +107,10 @@ class RuneBinderViewModel: ObservableObject {
     func playerTurnEnd(){
         model.runeDebuffs()
         model.enemyTurn()
-        model.cleanUp()
+        if(model.cleanUp()){ //Combat is over
+            saveGame(node: NodeType.combat)
+            model.generateEnchantRewards()
+        }
         objectWillChange.send()
 
     }
@@ -115,13 +125,16 @@ class RuneBinderViewModel: ObservableObject {
     }
     func selectNode(node: MapNode){
         model.selectNode(node: node)
-        saveGame()
+        saveGame(node: node.type)
+        model.loadNode(node: node.type!)
         objectWillChange.send()
     }
     func selectReward(enchant: Enchantment.Type){
         model.addEnchant(enchant: enchant)
-        saveGame()
         objectWillChange.send()
+    }
+    func returnToMap(){
+        saveGame(node: nil)
     }
     func shuffleGrid(){
         model.shuffleGrid()

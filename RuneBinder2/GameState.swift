@@ -10,26 +10,28 @@ import Foundation
 /* This struct contains a codable format of all the information representing the game state during a run
  * to be saved as JSON file. When reopening the app and continuing the run the JSON file will be parsed
  * and all the objects will be created. To simplify data being stored and constantly loading/unloading JSON
- * the game will only be saved when and encounter is selected, combat is won, reward option is selected. If
- * you leave mid combat the game should be restored to the begginning of the combat.
+ * the game will only be saved when and encounter is selected, encounter ends, or you return to map. If
+ * you leave mid encounter the save will regenerate the encounter at the beggining. Generation should be the
+   same since it is seeded.
  */
 struct GameState: Codable {
+    var node: NodeType?
+    var seed: [UInt64]
     //var grid: [RuneData] //currently no need to store runes as save will load start of combat and generate grid
     var gridSize: Int
     //Even though spellLibrary and rewardEnchants only care about type store full instance to avoid duplicate registries
     var spellLibrary: [EnchantmentData]
-    var rewardEnchants: [EnchantmentData]
     var spellBook: [EnchantmentData]
-    var spellDeck: [EnchantmentData]
+    //var spellDeck: [EnchantmentData] //As there are no saves mid combat deck is always full so no point saving
     var maxEnchants: Int
 
     var playerHealth: Int                // Only current health is needed rn
-    var enemies: [EnemyData]            // Codable version of Enemy
+    //var enemies: [EnemyData]           // As there are no saves mid combat enemies are generated when reloading
     var enemyLimit: Int
 
     var map: [MapNodeData]
 
-    var victory: Bool
+    var encounterOver: Bool
     var defeat: Bool
 }
 

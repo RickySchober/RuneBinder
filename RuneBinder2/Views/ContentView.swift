@@ -74,10 +74,11 @@ struct ContentView: View {
             .background(Color.red.opacity(0.3))
             //.animation(.easeOut)
             VictoryOverlay() {
+                viewModel.returnToMap()
                 viewRouter.currentScreen = .map
             }
-            .offset(y: viewModel.victory ? 0 : UIScreen.main.bounds.height)
-            .animation(.easeOut(duration: 0.5), value: viewModel.victory)
+            .offset(y: viewModel.encounterOver ? 0 : UIScreen.main.bounds.height)
+            .animation(.easeOut(duration: 0.5), value: viewModel.encounterOver)
             EnchantmentGridView(enchantments: viewModel.spellDeck)
             .offset(y: deckViewer ? 0 : UIScreen.main.bounds.height)
             .animation(.easeOut(duration: 0.5), value: deckViewer)
@@ -278,6 +279,7 @@ struct VictoryOverlay: View {
                         .cornerRadius(10)
                         .onTapGesture {
                             viewModel.selectReward(enchant: viewModel.rewardEnchants[index])
+                            viewModel.returnToMap()
                             viewRouter.currentScreen = .map
                         }
                 }

@@ -7,13 +7,8 @@
 
 import SwiftUI
 
-enum GameScreen {
-    case mainMenu
-    case map
-    case combat
-    case event
-    case shop
-    case settings
+enum GameScreen: String, Codable {
+    case mainMenu, map, event, combat, shop, rest, settings
 }
 
 class ViewRouter: ObservableObject {

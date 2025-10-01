@@ -13,6 +13,7 @@ import Foundation
  * the seed will be broken up into sections of 4 digits for reward generation, encounter generation, and
  * deck shuffling. An example full seed will look like 4782 5927 1293
  */
+/*
 struct SeededGenerator: RandomNumberGenerator {
     private var state: UInt64
 
@@ -27,4 +28,26 @@ struct SeededGenerator: RandomNumberGenerator {
         z = (z ^ (z >> 27)) &* 0x94D049BB133111EB
         return z ^ (z >> 31)
     }
+}*/
+
+struct SeededGenerator: RandomNumberGenerator, Codable {
+    private var state: UInt64
+
+    init(seed: UInt64) {
+        self.state = seed == 0 ? 1 : seed
+    }
+
+    mutating func next() -> UInt64 {
+        state = 6364136223846793005 &* state &+ 1
+        return state
+    }
+
+    // Get a number in range
+    mutating func nextInt(in range: Range<Int>) -> Int {
+        Int(next() % UInt64(range.count)) + range.lowerBound
+    }
+
+    // Save/load current state
+    func saveState() -> UInt64 { state }
+    mutating func loadState(_ saved: UInt64) { state = saved }
 }

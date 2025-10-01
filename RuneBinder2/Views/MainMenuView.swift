@@ -32,9 +32,8 @@ struct StartView: View{
         }, label: {Text("Continue")
                 .font(.system(size: 60.0))
                 .onTapGesture {
-                    viewModel.loadSave()
+                    viewRouter.currentScreen = viewModel.loadSave()
                     SoundManager.shared.playBackgroundMusic(named: "soundtrack")
-                    viewRouter.currentScreen = .map
                 }
         })
         Button(action:{
