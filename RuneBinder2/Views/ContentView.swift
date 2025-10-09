@@ -79,7 +79,7 @@ struct ContentView: View {
             }
             .offset(y: viewModel.encounterOver ? 0 : UIScreen.main.bounds.height)
             .animation(.easeOut(duration: 0.5), value: viewModel.encounterOver)
-            EnchantmentGridView(enchantments: viewModel.spellDeck)
+            EnchantmentGridView(enchantments: viewModel.spellDeck) //Empty 
             .offset(y: deckViewer ? 0 : UIScreen.main.bounds.height)
             .animation(.easeOut(duration: 0.5), value: deckViewer)
         }

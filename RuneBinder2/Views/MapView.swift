@@ -32,6 +32,9 @@ struct MapNodeView: View {
             return GameScreen.event
             
         }
+        else if(node.type == .rest){
+            return GameScreen.rest
+        }
         return GameScreen.combat
     }
 }

@@ -27,9 +27,10 @@ class RuneBinderGame: ObservableObject{
     
     private (set) var spellLibrary: Array<Enchantment.Type> //List of possible enchants to encounter during run
     private (set) var rewardEnchants: Array<Enchantment.Type> = [] //List of known enchantments
-    private (set) var spellBook: [Enchantment] = [Lob(), Engulf(), Enlarge(), Gatling(), Shotgun(), Aspire(), Eliminate(), Fortify(), Swarm()]//List of aquired enchants
+    private (set) var spellBook: [Enchantment] = [Lob(), Engulf(), Enlarge(), Ricochet(), Spray(), Aspire(), Eliminate(), Fortify(), Swarm()]//List of aquired enchants
     private (set) var spellDeck: [Enchantment]//List of undrawn enchants
     private (set) var maxEnchants: Int = 5
+    private var combatCount: Int = 0
 
     
     var player: Player = Player(currentHealth: 50, maxHealth: 80)
@@ -42,7 +43,7 @@ class RuneBinderGame: ObservableObject{
     //Map
     private (set) var map: [[MapNode]] = [[]]
     
-    @Published private (set) var encounterOver: Bool = false
+    @Published var encounterOver: Bool = false
     private (set) var defeat: Bool = false
 
     //Array represents the relative occurence of letters in words in the dictionary
@@ -56,7 +57,7 @@ class RuneBinderGame: ObservableObject{
         shufflingRng = SeededGenerator(seed: seed[2])
         spellLibrary = [
         Empower.self, Revitalize.self, Ward.self, CleansingWave.self, SerratedStrike.self, Purify.self,
-        Shotgun.self, Lob.self, Swarm.self, Shotgun.self, Magnify.self, Enlarge.self
+        Spray.self, Lob.self, Swarm.self, Spray.self, Magnify.self, Enlarge.self
         ]
         spellDeck = spellBook
         map = generateMap(numLayers: 10, minNodes: 3, maxNodes: 5)
@@ -114,6 +115,15 @@ class RuneBinderGame: ObservableObject{
             primaryModifer = modifier
         }
     }
+    func removeEnchantment(enchant: Enchantment){
+        for i in 0..<spellBook.count{
+            if(enchant == spellBook[i]){
+                spellBook.remove(at: i)
+                return 
+            }
+        }
+    }
+    
     func generateMap(numLayers: Int, minNodes: Int, maxNodes: Int) -> [[MapNode]] {
         var map: [[MapNode]] = []
         while map.count < numLayers{
@@ -499,7 +509,8 @@ class RuneBinderGame: ObservableObject{
     }
     
     func generateCombat(){
-        if let encounter = EncounterPool.shared.getRandomEncounter(forZone: .Forest, difficulty: 1) {
+        combatCount += 1
+        if let encounter = EncounterPool.shared.getRandomEncounter(forZone: .Forest, difficulty: combatCount%3+1) {
             enemies = encounter.generateEnemies()
         }
     }

@@ -65,7 +65,7 @@ struct PlayerView: View {
                     .frame(width: screenWidth*0.18, height: screenWidth*0.061)
                     .blur(radius: 5)
                     .offset(y:screenWidth*0.13)
-                Image("player")
+                Image("hermit")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: screenWidth*0.18, height: screenWidth*0.27)

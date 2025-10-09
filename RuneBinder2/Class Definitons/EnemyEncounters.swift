@@ -27,7 +27,11 @@ struct EnemyEncounterData: Codable {
 
 let enemyFactory: [String: () -> Enemy] = [
     "PoisonShroom": { PoisonShroom() },
-    "Goblin": { Goblin() },
+    "GoblinShaman": { GoblinShaman() },
+    "GoblinImp": { GoblinImp() },
+    "GoblinBrawler": { GoblinBrawler() },
+    "GoblinBrute": { GoblinBrute() },
+    "GoblinGrunt": { GoblinGrunt() },
     "RabidWolf": { RabidWolf() },
     "TorchBearer": { TorchBearer() },
     "Tree": { Tree() },

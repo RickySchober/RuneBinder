@@ -95,6 +95,9 @@ class RuneBinderViewModel: ObservableObject {
     var spellDeck: [Enchantment]{
         model.spellDeck
     }
+    var spellBook: [Enchantment]{
+        model.spellBook
+    }
     func hoverRune(rune: Rune?){
         model.hoverRune(rune: rune)
         objectWillChange.send()
@@ -139,6 +142,25 @@ class RuneBinderViewModel: ObservableObject {
     func shuffleGrid(){
         model.shuffleGrid()
         playerTurnEnd()
+    }
+    //Rest Area options
+    func rest(){
+        model.changeHealth(num: player.maxHealth/3)
+        model.encounterOver = true
+        saveGame(node: .rest)
+        objectWillChange.send()
+    }
+    func upgradeEnchant(enchant: Enchantment){
+        enchant.upgraded = true
+        model.encounterOver = true
+        saveGame(node: .rest)
+        objectWillChange.send()
+    }
+    func removeEnchant(enchant: Enchantment){
+        model.removeEnchantment(enchant: enchant)
+        model.encounterOver = true
+        saveGame(node: .rest)
+        objectWillChange.send()
     }
 }
 

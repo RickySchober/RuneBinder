@@ -19,8 +19,9 @@ class Enemy: Equatable, Identifiable{
         }
         return false;
     }
-    let maxHealth: Int
+    var maxHealth: Int
     var currentHealth: Int
+    var ward: Int = 0
     var bleeds: [Bleeds]
     let hitSound = "goblinhit"
     let deathSound = "goblindeath"
@@ -42,7 +43,7 @@ class Enemy: Equatable, Identifiable{
         actions = [Action(dmg: 1)]
         id = UUID()
     }
-    //Determines which action to take bassed on enemies selection algorithm defualt is random
+    //Determines which action to take bassed on enemies selection algorithm default is random
     func chooseAction(game: RuneBinderGame) -> Action{
         return actions[Int.random(in: 0...actions.count-1)]
     }
@@ -56,24 +57,82 @@ extension Enemy { //Converts class into codable struct for storage
         )
     }
 }
-
-class Goblin: Enemy{
+// Goblin forest
+class GoblinGrunt: Enemy{
     override init() {
         super.init()
-        image = "goblin2"
+        image = "goblin_grunt"
+        maxHealth = 8
+        currentHealth = maxHealth
+        actions = [
+            Action(nm: "Sword Strike", dmg: 4),
+            Action(nm: "Block", grd: 6 ),
+        ]
+    }
+}
+class GoblinImp: Enemy{
+    override init() {
+        super.init()
+        image = "goblin_imp"
+        maxHealth = 6
+        currentHealth = maxHealth
+        actions = [
+            Action(nm: "Pathetic Punch", dmg: 2),
+            Action(nm: "Pyromanic", deb: [Debuff(archetype: .scorch, value: 2), Debuff(archetype: .scorch, value: 2)]),
+            Action(nm: "Cower", grd: 3 ),
+        ]
     }
 }
 class GoblinShaman: Enemy{
     override init() {
         super.init()
-        image = "goblin2"
+        image = "goblin_shaman3"
+        maxHealth = 10
+        currentHealth = maxHealth
         actions = [
-            Action(dmg: 4),
-            Action(dmg: 3, deb: [Debuff(archetype: .weak, value: 1),Debuff(archetype: .rot, value: 1)]),
-            Action(dmg: 1, deb: [Debuff(archetype: .weak, value: 3),Debuff(archetype: .rot, value: 3)]),
+            Action(nm: "Staff Bonk", dmg: 4),
+            Action(nm: "Block", grd: 4 ),
+            Action(nm: "Weakening Curse", deb: [Debuff(archetype: .weak, value: 2),Debuff(archetype: .weak, value: 2)]),
         ]
     }
 }
+class GoblinBrawler: Enemy{
+    override init() {
+        super.init()
+        image = "goblin_brawler"
+        maxHealth = 13
+        currentHealth = maxHealth
+        actions = [
+            Action(nm: "Right Hook", dmg: 6),
+            Action(nm: "Defensive Stance", grd: 8 ),
+            Action(nm: "Grapple", dmg: 4, deb: [Debuff(archetype: .lock, value: 3)]),
+        ]
+    }
+}
+class GoblinBrute: Enemy{
+    var track: Int = 0
+    override init() {
+        super.init()
+        image = "goblin_brute"
+        maxHealth = 20
+        currentHealth = maxHealth
+        actions = [
+            Action(nm: "Right Hook", dmg: 6),
+            Action(nm: "Devastating Strike", dmg: 16),
+            Action(nm: "Rest"),
+            Action(nm: "Gaurd", dmg: 4),
+        ]
+    }
+    override func chooseAction(game: RuneBinderGame) -> Action {
+        if(track >= actions.count){
+            track = 0
+        }
+        let chosen = actions[track]
+        track += 1
+        return chosen
+    }
+}
+
 class PoisonShroom: Enemy{
     override init() {
         super.init()
@@ -87,7 +146,7 @@ class PoisonShroom: Enemy{
 class MultiplyingMycospawn: Enemy{
     override init() {
         super.init()
-        image = "shroom"
+        image = "goblintrans"
         actions = [
             Action(dmg: 3),
             Action(dmg: 1, deb: [Debuff(archetype: .rot, value: 1)]),

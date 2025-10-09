@@ -112,14 +112,14 @@ func makeEnchantment(from data: EnchantmentData) -> Enchantment {
     case "Expand": newEnchant = Expand()
     case "Engulf": newEnchant = Engulf()
     case "Isolate": newEnchant = Isolate()
-    case "Gatling": newEnchant = Gatling()
+    case "Spray": newEnchant = Spray()
     case "Eliminate": newEnchant = Eliminate()
     case "Aspire": newEnchant = Aspire()
     case "Randomize": newEnchant = Randomize()
-    case "Shotgun": newEnchant = Shotgun()
+    case "Spray": newEnchant = Spray()
     case "Lob": newEnchant = Lob()
     case "Enclose": newEnchant = Enclose()
-    case "Snowball": newEnchant = Snowball()
+    case "Amplify": newEnchant = Amplify()
 
     case "VampiricStrike": newEnchant = VampiricStrike()
     case "SerratedStrike": newEnchant = SerratedStrike()
@@ -137,7 +137,7 @@ func makeEnchantment(from data: EnchantmentData) -> Enchantment {
 func makeEnemy(from data: EnemyData) -> Enemy {
     var newEnemy: Enemy
     switch data.enemyName {
-    case "Goblin": newEnemy = Goblin()
+    case "Goblin": newEnemy = GoblinBrute()
     case "MultiplyingMycospawn": newEnemy = MultiplyingMycospawn()
     default:
         fatalError("Unknown enchantment type: \(data.enemyName)")

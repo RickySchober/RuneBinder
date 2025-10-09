@@ -28,6 +28,8 @@
 		B689C6762E84CA5600AA786E /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B689C6752E84CA5600AA786E /* PlayerView.swift */; };
 		B689C6782E874F5E00AA786E /* GameState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B689C6772E874F5E00AA786E /* GameState.swift */; };
 		B689C67A2E87695600AA786E /* SeededRandom.swift in Sources */ = {isa = PBXBuildFile; fileRef = B689C6792E87695600AA786E /* SeededRandom.swift */; };
+		B689C67C2E8C910700AA786E /* RestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B689C67B2E8C910700AA786E /* RestView.swift */; };
+		B689C67E2E9741D600AA786E /* EnchantmentIcons.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B689C67D2E9741D600AA786E /* EnchantmentIcons.xcassets */; };
 		B6A92FF52A147B8E00AEF4E7 /* RuneBinder2App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6A92FF42A147B8E00AEF4E7 /* RuneBinder2App.swift */; };
 		B6A92FF72A147B8E00AEF4E7 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6A92FF62A147B8E00AEF4E7 /* ContentView.swift */; };
 		B6A92FF92A147B9200AEF4E7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B6A92FF82A147B9200AEF4E7 /* Assets.xcassets */; };
@@ -65,6 +67,8 @@
 		B689C6752E84CA5600AA786E /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
 		B689C6772E874F5E00AA786E /* GameState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameState.swift; sourceTree = "<group>"; };
 		B689C6792E87695600AA786E /* SeededRandom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeededRandom.swift; sourceTree = "<group>"; };
+		B689C67B2E8C910700AA786E /* RestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestView.swift; sourceTree = "<group>"; };
+		B689C67D2E9741D600AA786E /* EnchantmentIcons.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = EnchantmentIcons.xcassets; sourceTree = "<group>"; };
 		B6A92FF12A147B8E00AEF4E7 /* RuneBinder2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RuneBinder2.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6A92FF42A147B8E00AEF4E7 /* RuneBinder2App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuneBinder2App.swift; sourceTree = "<group>"; };
 		B6A92FF62A147B8E00AEF4E7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -95,6 +99,7 @@
 		B6654CC22DD5392400B33E2C /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				B689C67B2E8C910700AA786E /* RestView.swift */,
 				B643D25A2A9C295900D99896 /* MainMenuView.swift */,
 				B6654CBE2DD3F3B500B33E2C /* RootView.swift */,
 				B612A0A02DDBD25D0030D805 /* SettingsView.swift */,
@@ -163,6 +168,7 @@
 				B6654CC42DD53ACA00B33E2C /* SoundManager.swift */,
 				B6A930062A147C4000AEF4E7 /* RuneBinderViewModel.swift */,
 				B6A92FF82A147B9200AEF4E7 /* Assets.xcassets */,
+				B689C67D2E9741D600AA786E /* EnchantmentIcons.xcassets */,
 				B6A92FFA2A147B9200AEF4E7 /* Preview Content */,
 			);
 			path = RuneBinder2;
@@ -255,6 +261,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B689C67E2E9741D600AA786E /* EnchantmentIcons.xcassets in Resources */,
 				B6654CD22DD53F4E00B33E2C /* humanoiddeath.wav in Resources */,
 				B6654CC82DD53B4000B33E2C /* click.wav in Resources */,
 				B6654CD12DD53F4E00B33E2C /* goblinhit.wav in Resources */,
@@ -282,6 +289,7 @@
 				B6AFAFDC2DE8FEAB00F06F34 /* EnemyEncounters.swift in Sources */,
 				B6AFAFDA2DDE68F900F06F34 /* RuneView.swift in Sources */,
 				B6A930092A147C6200AEF4E7 /* Rune.swift in Sources */,
+				B689C67C2E8C910700AA786E /* RestView.swift in Sources */,
 				B612A0A12DDBD25D0030D805 /* SettingsView.swift in Sources */,
 				B643D25B2A9C295900D99896 /* MainMenuView.swift in Sources */,
 				B6654CD62DD59FD100B33E2C /* Node.swift in Sources */,

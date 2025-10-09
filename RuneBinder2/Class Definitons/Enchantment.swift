@@ -8,7 +8,7 @@
 /*
     Enchantments are tied to different runes that activate when spelled in a word. Rune effects must
  either be persistent effects that add to the cast spell function or be queued to activate in a certain order
- Potentially implement highlight that shows what will happen when spell is cast.
+ Potentially implement highlight that shows what will happen when spell is cast. They should be named as verbs
  */
 import Foundation
 import SwiftUI
@@ -44,11 +44,13 @@ class Enchantment: Equatable, Identifiable{
     var description: String
     var id = UUID()
     var upgraded: Bool
+    var image: String
     required init() {
         priority = 4
         color = Color.yellow
         description = "Enchantment: Wow so shiny"
         upgraded = false
+        image = "empower"
     }
     
     func utilizeEffect(game: RuneBinderGame){
@@ -247,6 +249,7 @@ class Revitalize: Enchantment{
         super.init()
         priority = 0
         color = Color.green
+        image = "revitalize"
         description = "Revitalize: Heal up to 3 hitpoints"
     }
     override func utilizeEffect(game: RuneBinderGame){
@@ -261,6 +264,7 @@ class Ward: Enchantment{
         priority = 0
         color = Color.green
         description = "Ward: Gain 5 block"
+        image = "ward"
     }
     override func utilizeEffect(game: RuneBinderGame){
         game.player.block += 5
@@ -423,6 +427,7 @@ class Extend: Enchantment{
         super.init()
         priority = 2
         color = Color.gray
+        image = "extand"
         description = "Extend: splits damage to enemy behind target for x2/3 spell power"
     }
     override func utilizeEffect(game: RuneBinderGame){
@@ -439,7 +444,8 @@ class Expand: Enchantment{
         super.init()
         priority = 2
         color = Color.gray
-        description = "Extend: splits damage to enemies on either side of target for x1/3 spell power"
+        image = "expand"
+        description = "Expand: splits damage to enemies on either side of target for x1/3 spell power"
     }
     override func utilizeEffect(game: RuneBinderGame){
         if(game.primaryTarget!+1<game.enemies.count){ //ensure valid index
@@ -458,6 +464,7 @@ class Engulf: Enchantment{
         super.init()
         priority = 2
         color = Color.gray
+        image = "engulf"
         description = "Engulf: splits damage to all other enemies for a x1/4 spell power"
     }
     override func utilizeEffect(game: RuneBinderGame){
@@ -474,6 +481,7 @@ class Isolate: Enchantment{
         priority = 2
         color = Color.gray
         description = "Isolate: hits enemies on either side instead of target for x3/4 of spell power"
+        image = "isolate"
     }
     override func utilizeEffect(game: RuneBinderGame){
         if(game.primaryTarget!+1<game.enemies.count){ //ensure valid index
@@ -485,18 +493,19 @@ class Isolate: Enchantment{
         game.addTarget(enemy: game.enemies[game.primaryTarget!], modifier: -game.targets[game.primaryTarget!])
     }
 }
-class Gatling: Enchantment{
+class Ricochet: Enchantment{
     var rarity = rarity.legendary
     var archetype = archetype.manipulation
     required init() {
         super.init()
         priority = 2
         color = Color.gray
-        description = "Gatling: splits damage among 5 random targets dealing a x1/4 spell power"
+        image = "ricochet"
+        description = "Ricochet: splits damage among 5 random targets dealing a x1/4 spell power"
     }
     override func utilizeEffect(game: RuneBinderGame){
         for _ in 0..<5{
-            var rand = Int.random(in: 0..<game.targets.count)
+            let rand = Int.random(in: 0..<game.targets.count)
             game.addTarget(enemy: game.enemies[rand], modifier: 0.25)
         }
     }
@@ -508,6 +517,7 @@ class Eliminate: Enchantment{
         super.init()
         priority = 1
         color = Color.gray
+        image = "eliminate"
         description = "Eliminate: hits the lowest health enemy ignoring target for x1.5 spell power"
     }
     override func utilizeEffect(game: RuneBinderGame){
@@ -546,20 +556,22 @@ class Randomize: Enchantment{
         super.init()
         priority = 1
         color = Color.gray
+        image = "randomize"
         description = "Randomize: hits a random enemy ignoring target for x2.5 spell power"
     }
     override func utilizeEffect(game: RuneBinderGame){
         game.changeTarget(enemy: game.enemies[Int.random(in:0..<game.enemies.count)], modifier: 2.5)
     }
 }
-class Shotgun: Enchantment{
+class Spray: Enchantment{
     var rarity = rarity.rare
     var archetype = archetype.manipulation
     required init() {
         super.init()
         priority = 1
         color = Color.gray
-        description = "Shotgun: hits closest enemy ignoring target for x2 spell power"
+        image = "spray"
+        description = "Spray: hits closest enemy ignoring target for x2 spell power"
     }
     override func utilizeEffect(game: RuneBinderGame){
         game.changeTarget(enemy: game.enemies[0], modifier: 2.0)
@@ -573,6 +585,7 @@ class Lob: Enchantment{
         priority = 1
         color = Color.gray
         description = "Lob: hits furthest enemy ignoring target for x1.5 spell power"
+        image = "lob"
     }
     override func utilizeEffect(game: RuneBinderGame){
         game.changeTarget(enemy: game.enemies[game.enemies.count-1], modifier: 1.5)
@@ -585,6 +598,7 @@ class Enclose: Enchantment{
         super.init()
         priority = 2
         color = Color.gray
+        image = "enclose"
         description = "Enclose: hits for x2 spell power if one enemy remains and x1/2 spell power otherwise"
     }
     override func utilizeEffect(game: RuneBinderGame){
@@ -598,17 +612,18 @@ class Enclose: Enchantment{
         }
     }
 }
-class Snowball: Enchantment{
+class Amplify: Enchantment{
     var rarity = rarity.legendary
     var archetype = archetype.manipulation
     required init() {
         super.init()
         priority = 2
         color = Color.gray
-        description = "Snowball: also hits all enemies behind the target increasing spell power as it grows"
+        image = "amplify"
+        description = "Amplify: also hits all enemies behind the target increasing spell power as it grows"
     }
     override func utilizeEffect(game: RuneBinderGame){
-        var inc: Int = 1
+        let inc: Int = 1
         while(game.primaryTarget! + inc < game.enemies.count){
             game.addTarget(enemy: game.enemies[game.primaryTarget!+inc], modifier: 0.333*Double(inc))
         }
