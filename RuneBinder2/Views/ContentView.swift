@@ -34,37 +34,18 @@ struct ContentView: View {
                     Button(action:{
                         viewModel.validSpell ? self.viewModel.castSpell() : print("your bad")
                     }, label: {Text("Cast Spell")
-                            .font(.system(size: 40.0))
                     })
+                    .runeBinderButtonStyle()
                     Button(action:{
                      self.viewModel.shuffleGrid()
                     }, label: {Text("Scramble")
-                            .font(.system(size: 40.0))
                     })
+                    .runeBinderButtonStyle()
                     Button(action:{
                      deckViewer = true
                     }, label: {Text("Deck")
-                            .font(.system(size: 40.0))
                     })
-                }
-                .background(viewModel.validSpell ? Color.gray : Color.yellow )
-                .frame(width: screenWidth, height: screenHeight*0.1, alignment: .center)
-                HStack(){
-                    Button(action:{
-                        viewModel.validSpell ? self.viewModel.castSpell() : print("your bad")
-                    }, label: {Text("Cast Spell")
-                            .font(.system(size: 40.0))
-                    })
-                    Button(action:{
-                     self.viewModel.shuffleGrid()
-                    }, label: {Text("Scramble")
-                            .font(.system(size: 40.0))
-                    })
-                    Button(action:{
-                     deckViewer = true
-                    }, label: {Text("Deck")
-                            .font(.system(size: 40.0))
-                    })
+                    .runeBinderButtonStyle()
                 }
                 .background(viewModel.validSpell ? Color.gray : Color.yellow )
                 .frame(width: screenWidth, height: screenHeight*0.1, alignment: .center)
@@ -88,46 +69,157 @@ struct ContentView: View {
         }
     }
 }
+struct ImageBorderView<Content: View>: View {
+    let content: Content
+    let cornerImage: String
+    let edgeVert: String
+    let edgeHori: String
+    let cornerSize: CGFloat
+    let edgeThickness: CGFloat
+
+    init(
+        cornerImage: String,
+        edgeVert: String,
+        edgeHori: String,
+        cornerSize: CGFloat = 24,
+        edgeThickness: CGFloat = 16,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.cornerImage = cornerImage
+        self.edgeHori = edgeHori
+        self.edgeVert = edgeVert
+        self.cornerSize = cornerSize
+        self.edgeThickness = edgeThickness
+        self.content = content()
+    }
+
+    var body: some View {
+        ZStack {
+            // Content centered inside
+            content
+                .padding(edgeThickness + (cornerSize-edgeThickness)/2)
+                .background(Color(red: 0.89, green: 0.66, blue: 0.43))
+                .overlay(
+            GeometryReader { geo in
+                let width = geo.size.width
+                let height = geo.size.height
+
+                ZStack {
+                    // Top & Bottom edges
+                    VStack {
+                        Image(edgeHori)
+                            .resizable(resizingMode: .stretch)
+                            .frame(height: edgeThickness)
+                            .padding(.top, (cornerSize-edgeThickness)/2)
+                            .shadow(color: .black.opacity(0.5), radius: edgeThickness/2)
+                        Spacer()
+                        Image(edgeHori)
+                            .resizable(capInsets: EdgeInsets(.zero), resizingMode: .stretch)
+                            .frame(height: edgeThickness)
+                            .padding(.bottom, (cornerSize-edgeThickness)/2)
+                            .shadow(color: .black.opacity(1.0), radius: edgeThickness/2)
+                    }
+
+                    // Left & Right edges
+                    HStack {
+                        Image(edgeVert)
+                            .resizable(resizingMode: .stretch)
+                            .frame(width: edgeThickness)
+                            .padding(.leading, (cornerSize-edgeThickness)/2)
+                            .shadow(color: .black.opacity(0.5), radius: edgeThickness/2)
+                        Spacer()
+                        Image(edgeVert)
+                            .resizable(resizingMode: .stretch)
+                            .rotationEffect(.degrees(180))
+                            .frame(width: edgeThickness)
+                            .padding(.trailing, (cornerSize-edgeThickness)/2)
+                            .shadow(color: .black.opacity(0.5), radius: edgeThickness/2)
+                    }
+
+                    // --- Corners ---
+                    VStack {
+                        HStack {
+                            Image(cornerImage)
+                                .resizable()
+                                .frame(width: cornerSize, height: cornerSize)
+                            Spacer()
+                            Image(cornerImage)
+                                .resizable()
+                                .rotationEffect(.degrees(180))
+                                .frame(width: cornerSize, height: cornerSize)
+                        }
+                        Spacer()
+                        HStack {
+                            Image(cornerImage)
+                                .resizable()
+                                .frame(width: cornerSize, height: cornerSize)
+                            Spacer()
+                            Image(cornerImage)
+                                .resizable()
+                                .rotationEffect(.degrees(180))
+                                .frame(width: cornerSize, height: cornerSize)
+                        }
+                    }
+                }
+            }
+            )
+        }
+    }
+}
 
 struct RuneGrid: View{
     @EnvironmentObject var viewModel: RuneBinderViewModel
     @State private var showTooltip: Bool = false
     @State private var tooltipRune: Rune? = nil
     @State private var tooltipPosition: CGPoint = .zero
+    @State private var tooltipSize: CGSize = .zero
     var namespace: Namespace.ID
     var body: some View {
-        let columns = [
-            GridItem(.flexible(),spacing: 0),
-            GridItem(.flexible(),spacing: 0),
-            GridItem(.flexible(),spacing: 0),
-            GridItem(.flexible(),spacing: 0)
-        ]
-        LazyVGrid(columns: columns, spacing: 0 ){//Grid with 4 columns
-            ForEach(self.viewModel.grid, id: \.id){ runes in
-                if(!viewModel.spell.contains(runes)){
-                    RuneView(rune: runes, namespace: namespace)
-                        .aspectRatio(contentMode: .fit)
-                        .zIndex(viewModel.selectedRune == runes ? 999 : 0)
-                        .anchorPreference(key: RunePositionPreferenceKey.self, value: .center) {
-                                [runes.id: $0]
-                            }
+        ZStack{
+            let columns = [
+                GridItem(.flexible(),spacing: 0),
+                GridItem(.flexible(),spacing: 0),
+                GridItem(.flexible(),spacing: 0),
+                GridItem(.flexible(),spacing: 0)
+            ]
+            ImageBorderView(
+                cornerImage: "wood_corner",
+                edgeVert: "wood_border",
+                edgeHori: "wood_border2",
+                cornerSize: 24,
+                edgeThickness: 16
+            ) {
+                LazyVGrid(columns: columns, spacing: 0 ){//Grid with 4 columns
+                    ForEach(self.viewModel.grid, id: \.id){ runes in
+                        if(!viewModel.spell.contains(runes)){
+                            RuneView(rune: runes, namespace: namespace)
+                                .aspectRatio(contentMode: .fit)
+                                .zIndex(viewModel.selectedRune == runes ? 999 : 0)
+                                .anchorPreference(key: RunePositionPreferenceKey.self, value: .center) {
+                                    [runes.id: $0]
+                                }
+                        }
+                        else{
+                            Color.clear
+                                .fixedSize(horizontal: true, vertical: true)
+                                .frame(width: screenWidth*0.20, height: screenWidth*0.20)
+                        }
+                    }
                 }
-                else{
-                    Color.clear
-                        .fixedSize(horizontal: true, vertical: true)
-                        .frame(width: screenWidth*0.20, height: screenWidth*0.20)
-                }
+                .frame(width: screenWidth*0.8, height: screenWidth*0.8)
             }
-        }
-        .frame(width: screenWidth*0.8, height: screenWidth*0.8)
-        .overlayPreferenceValue(RunePositionPreferenceKey.self) { preferences in
-            GeometryReader { geo in
-                ForEach(viewModel.grid) { rune in
-                    if let anchor = preferences[rune.id], rune.id == viewModel.selectedRune?.id {
-                        let point = geo[anchor]
-                        RuneTooltipView(rune: rune)
-                            .position(smartTooltipPosition(from: point, in: geo.size))
-                            .transition(.opacity)
+            .overlayPreferenceValue(RunePositionPreferenceKey.self) { preferences in
+                GeometryReader { geo in
+                    ForEach(viewModel.grid) { rune in
+                        if let anchor = preferences[rune.id], rune.id == viewModel.selectedRune?.id {
+                            let point = geo[anchor]
+                            RuneTooltipView(rune: rune)
+                                .onPreferenceChange(TooltipSizePreferenceKey.self) { size in
+                                                        tooltipSize = size
+                                }
+                                .position(smartTooltipPosition(from: point, tooltipSize: tooltipSize, in: CGSize(width: screenWidth, height: screenHeight)))
+                                .transition(.opacity)
+                        }
                     }
                 }
             }
@@ -135,16 +227,18 @@ struct RuneGrid: View{
     }
 }
 
-func smartTooltipPosition(from point: CGPoint, in containerSize: CGSize) -> CGPoint {
-    let tooltipWidth: CGFloat = 120
-    let tooltipHeight: CGFloat = 80
+func smartTooltipPosition(from point: CGPoint, tooltipSize: CGSize, in containerSize: CGSize) -> CGPoint {
+    let tooltipWidth: CGFloat = tooltipSize.width
+    let tooltipHeight: CGFloat = tooltipSize.height
     let padding: CGFloat = 10
 
-    var x = point.x + tooltipWidth / 2 + padding
+    var x = point.x
     var y = point.y
 
     if x + tooltipWidth / 2 > containerSize.width {
         x = point.x - tooltipWidth / 2 - padding
+    } else if x - tooltipWidth / 2 < 0 {
+        x = point.x + tooltipWidth / 2 + padding
     }
 
     if y + tooltipHeight / 2 > containerSize.height {
@@ -165,30 +259,58 @@ struct RunePositionPreferenceKey: PreferenceKey {
     }
 }
 
+struct TooltipSizePreferenceKey: PreferenceKey {
+    static var defaultValue: CGSize = .zero
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        value = nextValue()
+    }
+}
 
 struct RuneTooltipView: View {
     var rune: Rune
-
+    let widthRatio = 0.55
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             if let enchant = rune.enchant {
-                Text(enchant.description)
-                    .font(.subheadline)
-                    .fixedSize(horizontal: false, vertical: true)
+                VStack{
+                    Image(rune.enchant!.image)
+                        .resizable()
+                        .frame(width: 0.18*screenWidth, height: 0.18*screenWidth)
+                    Text(enchant.description)
+                        .font(.custom("Trattatello", size: 0.05*screenWidth))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(nil)
+                }
+                .frame(width: screenWidth*widthRatio)
+                .runeBinderButtonStyle()
+            }
+            else if(rune.debuff == nil){
+                Text("Basic \(String(rune.letter)) rune")
+                    .font(.custom("Trattatello", size: 0.05*screenWidth))
+                    .frame(width: screenWidth*widthRatio)
+                    .runeBinderButtonStyle()
             }
             if(rune.debuff != nil){
-                Text(rune.debuff!.text)
-            }
-            else{
-                Text("Basic \(String(rune.letter)) rune")
+                VStack{
+                    Image(rune.debuff!.image)
+                        .resizable()
+                        .frame(width: 0.18*screenWidth, height: 0.18*screenWidth)
+                    Text(rune.debuff!.text)
+                        .font(.custom("Trattatello", size: 0.05*screenWidth))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(nil)
+                }
+                .frame(width: screenWidth*widthRatio)
+                .runeBinderButtonStyle()
             }
         }
-        .padding(10)
-        .background(Color.black.opacity(0.85))
-        .cornerRadius(10)
-        .foregroundColor(.white)
-        .frame(maxWidth: 200)
         .shadow(radius: 5)
+        .overlay(
+            GeometryReader { geo in
+                Color.clear
+                    .preference(key: TooltipSizePreferenceKey.self, value: geo.size)
+            }
+        )
     }
 }
 

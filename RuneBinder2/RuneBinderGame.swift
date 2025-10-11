@@ -61,6 +61,7 @@ class RuneBinderGame: ObservableObject{
         ]
         spellDeck = spellBook
         map = generateMap(numLayers: 10, minNodes: 3, maxNodes: 5)
+        assignMap()
         shuffleGrid()
     }
     init(state: GameState){ //Create model from saved game state
@@ -123,7 +124,14 @@ class RuneBinderGame: ObservableObject{
             }
         }
     }
-    
+    /*
+      Creates a 2d array of map nodes which represent the grid layout of nodes in the map. Each layer has a semi random
+      amount of nodes in range minNodes-maxNodes ensuring the same number of nodes does not appear more than twice in a row.
+      The connections between each row depend on difference between current row and next row while ensuring no overlapping paths.
+      Extra paths are randomly assigned to go left or right to ensure balanced travel accross the map. Once all nodes are created
+      there types are assigned semirandomly biasing towards a certain amount of each node on a given path. On an average 10 node
+      path 4 is combat, 2 is event, 2 is rest, 1 is shop, and 1 is elite.
+     */
     func generateMap(numLayers: Int, minNodes: Int, maxNodes: Int) -> [[MapNode]] {
         var map: [[MapNode]] = []
         while map.count < numLayers{
@@ -211,8 +219,55 @@ class RuneBinderGame: ObservableObject{
                 }
             }
         }
-        
         return map
+    }
+    func assignMapColumn(layer: Int, pos: Int, prob: [Double]) -> [Double]{
+        let selector = WeightedRandomSelector([
+                (.combat, 0.4),
+                (.event, 0.2),
+                (.rest, 0.2),
+                (.shop, 0.1),
+                (.elite, 0.1)
+            ])
+        if(map[layer][pos].nextNodes.count == 0){
+        }
+        return []
+    }
+    func assignMap(){
+        let selector = WeightedRandomSelector([
+                (.combat, 0.4),
+                (.event, 0.2),
+                (.rest, 0.2),
+                (.shop, 0.1),
+                (.elite, 0.1)
+            ])
+        for layer in map{
+            for node in layer{
+                node.type = selector.random(using: &encounterRng)
+                print(node.type)
+            }
+        }
+    }
+    struct WeightedRandomSelector {
+        let weights: [(NodeType, Double)]
+        let totalWeight: Double
+
+        init(_ weights: [(NodeType, Double)]) {
+            self.weights = weights
+            self.totalWeight = weights.reduce(0) { $0 + $1.1 }
+        }
+
+        func random(using generator: inout SeededGenerator) -> NodeType {
+            let r = Double.random(in: 0..<totalWeight, using: &generator)
+            var cumulative = 0.0
+            for (type, weight) in weights {
+                cumulative += weight
+                if r < cumulative {
+                    return type
+                }
+            }
+            return weights.last!.0 // fallback
+        }
     }
     func generateRune(enchant: Enchantment?) -> Rune{
         let temp: Int =  shufflingRng.nextInt(in: 0..<10000)

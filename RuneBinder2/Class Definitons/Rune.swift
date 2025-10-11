@@ -16,23 +16,23 @@ struct Debuff: Codable{
     var value: Int
     var image: String {
             switch archetype {
-            case .lock: return "chain"
+            case .lock: return "lock"
             case .rot: return "rot"
             case .weak: return "weak"
-            case .scorch: return "fire"
+            case .scorch: return "scorch"
             }
         }
 
     var text: String {
         switch archetype {
         case .lock:
-            return "🔒 Locked: Cannot be used in spell for \(value) turns"
+            return "Locked: Cannot be used in spell for \(value) turns"
         case .rot:
-            return "💀 Rot: unused rune deals you \(value) damage at turns end increasing by 1 every round"
+            return "Rot: unused rune deals you \(value) damage at turns end increasing by 1 every round"
         case .weak:
-            return "🌀 Weaken: has no spell power for \(value) turns"
+            return "Weaken: has no spell power for \(value) turns"
         case .scorch:
-            return "🔥 Scorch: unused rune is destroyed at turns end and deals you \(value) damage"
+            return "Scorch: unused rune is destroyed at turns end and deals you \(value) damage"
         }
     }
     init(archetype: Archetype, value: Int) {

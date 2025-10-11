@@ -16,13 +16,15 @@ struct RuneView: View{
     var body: some View {
         GeometryReader(content: { geometry in
             ZStack{
-                Rectangle()
+                /*Rectangle()
                     .fill((rune.enchant==nil) ? Color.brown : rune.enchant!.color)
                     .opacity(0.8)
                 Image("Rune1")
                     .resizable()
                     .renderingMode(Image.TemplateRenderingMode.original)
-                    .frame(width: geometry.size.width*0.9, height: geometry.size.height*0.9)
+                    .frame(width: geometry.size.width*0.9, height: geometry.size.height*0.9)*/
+                Rectangle()
+                    .runeBinderButtonStyle()
                 if(rune.enchant != nil){
                     Image(rune.enchant!.image)
                         .resizable()
@@ -33,7 +35,7 @@ struct RuneView: View{
                     .font(.custom("Trattatello", size:(CGFloat)(0.5*min(geometry.size.width,geometry.size.height))))
                     .multilineTextAlignment(.center)
                     .shadow(color: .black.opacity(0.8), radius: 2, x: 3, y: 3)
-                    .foregroundColor(.white)
+                    .foregroundColor(Color(red: 0.5, green: 0.35, blue: 0.2))
                     .bold()
                 Text(String(rune.debuff?.archetype != .weak ? rune.power : 0))
                     .foregroundColor(.white)

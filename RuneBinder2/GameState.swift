@@ -116,7 +116,7 @@ func makeEnchantment(from data: EnchantmentData) -> Enchantment {
     case "Eliminate": newEnchant = Eliminate()
     case "Aspire": newEnchant = Aspire()
     case "Randomize": newEnchant = Randomize()
-    case "Spray": newEnchant = Spray()
+    case "Ricochet": newEnchant = Ricochet()
     case "Lob": newEnchant = Lob()
     case "Enclose": newEnchant = Enclose()
     case "Amplify": newEnchant = Amplify()
