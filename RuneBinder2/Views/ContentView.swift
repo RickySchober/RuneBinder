@@ -23,11 +23,18 @@ struct ContentView: View {
         ZStack(){
             VStack(spacing:0){
                 CombatView()
-                    .frame(width: screenWidth, height: screenHeight*0.9-screenWidth*1.0)
+                    .frame(width: screenWidth, height: screenHeight*0.9-screenWidth*1.15)
                     .background(.blue)
-                SpellView(namespace: runesNamespace)
-                    .frame(width: screenWidth, height: screenWidth*0.20) //Reserve this space for view regardless of adjusted size
-                    .background(.green)
+                ImageBorderView(
+                    cornerImage: "wood_corner",
+                    edgeVert: "wood_border",
+                    edgeHori: "wood_border2",
+                    cornerSize: 24,
+                    edgeThickness: 16
+                ) {
+                    SpellView(namespace: runesNamespace)
+                        .frame(width: screenWidth-32, height: screenWidth*0.20) //Reserve this space for view regardless of adjusted size
+                }
                 RuneGrid(namespace: runesNamespace)
                     .background(.yellow)
                 HStack(){
@@ -321,7 +328,7 @@ struct SpellView: View{
         HStack(alignment: .top){
             ForEach(self.viewModel.spell, id: \.id){ runes in
                 RuneView(rune: runes, namespace: namespace)
-                        .padding(-3)
+                    .padding(-3)
             }
         }
         .frame(width: min(screenWidth,(screenWidth/4.0*(CGFloat)(viewModel.spell.count))), height: screenWidth*CGFloat(viewModel.spellRuneSize)) //adjust allocated width with spell length
@@ -387,37 +394,47 @@ struct VictoryOverlay: View {
     @EnvironmentObject var viewRouter: ViewRouter
     let onContinue: () -> Void
     var body: some View {
-        VStack(spacing: 20) {
-            Text("Victory")
-                .font(.largeTitle)
-                .bold()
-                .foregroundColor(.white)
-            HStack(spacing: 15){
-                ForEach(viewModel.rewardEnchants.indices, id: \.self) { index in
-                    let enchant = viewModel.rewardEnchants[index].init()
-                    Text(enchant.description)
-                        .padding()
-                        .background(enchant.color.opacity(0.8))
-                        .cornerRadius(10)
+        ImageBorderView(
+            cornerImage: "wood_corner",
+            edgeVert: "wood_border",
+            edgeHori: "wood_border2",
+            cornerSize: 24,
+            edgeThickness: 16
+        ) {
+            VStack(spacing: 10) {
+                Text("Victory")
+                    .runeBinderButtonStyle()
+                Text("Select a rune to add to spell library:")
+                    .runeBinderButtonStyle()
+                VStack(spacing: 10){
+                    ForEach(viewModel.rewardEnchants.indices, id: \.self) { index in
+                        let enchant = viewModel.rewardEnchants[index].init()
+                        HStack(alignment: .center, spacing: 1) {
+                            Image(enchant.image)
+                                .resizable()
+                                .frame(width: 0.18*screenWidth, height: 0.18*screenWidth)
+                                .padding(screenWidth*0.01)
+                                .runeTileStyle(shadowDepth: 0.09)
+                            Text(enchant.description)
+                                .font(.custom("Trattatello", size: 0.05*screenWidth))
+                                .fixedSize(horizontal: false, vertical: true)
+                                .lineLimit(nil)
+                        }
+                        .frame(width: screenWidth*0.8, height: screenWidth*0.2)
+                        .runeBinderButtonStyle()
                         .onTapGesture {
                             viewModel.selectReward(enchant: viewModel.rewardEnchants[index])
                             viewModel.returnToMap()
                             viewRouter.currentScreen = .map
                         }
+                    }
                 }
+                Button("Continue", action: onContinue)
+                    .runeBinderButtonStyle()
+                    .padding(.bottom, 10)
             }
-            Button("Continue", action: onContinue)
-                .font(.headline)
-                .padding()
-                .background(Color.white.opacity(0.2))
-                .cornerRadius(10)
-                .foregroundColor(.white)
+            .padding(10)
         }
-        .padding()
-        .frame(maxWidth: .infinity)
-        .background(Color.black.opacity(0.8))
-        .cornerRadius(20)
-        .padding()
     }
 }
 

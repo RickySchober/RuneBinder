@@ -20,23 +20,27 @@ struct EnchantmentGridView: View {
     ]
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: columns, spacing: 16) {
+            LazyVGrid(columns: columns) {
                 ForEach(enchantments.filter(filter), id: \.id) { enchant in
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Image(enchant.image)
+                            .resizable()
+                            .frame(width: 0.18*screenWidth, height: 0.18*screenWidth)
+                            .padding(screenWidth*0.01)
+                            .runeTileStyle(shadowDepth: 0.09)
                         Text(enchant.description)
-                            .font(.headline)
-                            .foregroundColor(enchant.color)
-                            .multilineTextAlignment(.leading)
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(RoundedRectangle(cornerRadius: 12).fill(enchant.color.opacity(0.1)))
-                            .onTapGesture {
-                                onTap(enchant)
-                            }
+                            .font(.custom("Trattatello", size: 0.05*screenWidth))
+                            .fixedSize(horizontal: false, vertical: true)
+                            .lineLimit(nil)
+                    }
+                    .frame(width: screenWidth*0.44, height: screenWidth*0.5)
+                    .runeBinderButtonStyle()
+                    .onTapGesture {
+                        onTap(enchant)
                     }
                 }
             }
-            .padding()
+            .padding(1)
         }
         .background(Color.black)
         .navigationTitle("Enchantments")

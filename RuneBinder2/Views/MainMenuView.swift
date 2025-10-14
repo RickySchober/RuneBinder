@@ -55,7 +55,7 @@ struct RuneBinderButtonStyle: ViewModifier {
     func body(content: Content) -> some View {
         content
             .padding(.vertical, 10)
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 10)
             .font(.custom("CinzelDecorative-Regular", size: 20))
             .foregroundColor(cornerColor)
             .background(

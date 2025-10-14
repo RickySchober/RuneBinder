@@ -23,8 +23,6 @@ struct RuneView: View{
                     .resizable()
                     .renderingMode(Image.TemplateRenderingMode.original)
                     .frame(width: geometry.size.width*0.9, height: geometry.size.height*0.9)*/
-                Rectangle()
-                    .runeBinderButtonStyle()
                 if(rune.enchant != nil){
                     Image(rune.enchant!.image)
                         .resizable()
@@ -35,13 +33,13 @@ struct RuneView: View{
                     .font(.custom("Trattatello", size:(CGFloat)(0.5*min(geometry.size.width,geometry.size.height))))
                     .multilineTextAlignment(.center)
                     .shadow(color: .black.opacity(0.8), radius: 2, x: 3, y: 3)
-                    .foregroundColor(Color(red: 0.5, green: 0.35, blue: 0.2))
+                    .foregroundColor(.white)
                     .bold()
                 Text(String(rune.debuff?.archetype != .weak ? rune.power : 0))
                     .foregroundColor(.white)
                     .position(x: 0.8*geometry.size.width, y: 0.8*geometry.size.height)
                     .font(Font.system(size:(CGFloat)(0.3*min(geometry.size.width,geometry.size.height))))
-                    .padding([.bottom], 1)
+                    .padding([.bottom], 3)
                     .shadow(color: .black.opacity(0.8), radius: 2, x: 3, y: 3)
                     .bold()
                 if(rune.debuff != nil){
@@ -75,6 +73,7 @@ struct RuneView: View{
             }
         })
         .frame(minWidth: screenWidth*0.05, maxWidth: screenWidth*0.20,minHeight: screenWidth*0.05, maxHeight: screenWidth*0.20)
+        .runeTileStyle(shadowDepth: 0.09)
         .modifier(Shake(animatableData: CGFloat(locked)))
         .matchedGeometryEffect(id: rune.id, in: namespace) //Only gestures can be below matched geometry
         .gesture( //Must have tapgesture first or it doesn't animate?!?!
@@ -124,6 +123,85 @@ struct Shake: GeometryEffect {
         ProjectionTransform(CGAffineTransform(translationX:
             amount * sin(animatableData * .pi * CGFloat(shakesPerUnit)),
             y: 0))
+    }
+}
+// Must define as a shape to conform to VectorArithmetic allowing proper animation
+struct TrapezoidEdge: Shape {
+    enum Edge {
+        case top, bottom, left, right
+    }
+    
+    var edge: Edge
+    var depth: CGFloat
+    
+    var animatableData: CGFloat { //Define variable to be interpolated for animation
+        get { depth }
+        set { depth = newValue }
+    }
+    
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        switch edge {
+        case .top:
+            path.move(to: .zero)
+            path.addLine(to: CGPoint(x: rect.width, y: 0))
+            path.addLine(to: CGPoint(x: rect.width - depth, y: depth))
+            path.addLine(to: CGPoint(x: depth, y: depth))
+        case .bottom:
+            path.move(to: CGPoint(x: 0, y: rect.height))
+            path.addLine(to: CGPoint(x: rect.width, y: rect.height))
+            path.addLine(to: CGPoint(x: rect.width - depth, y: rect.height - depth))
+            path.addLine(to: CGPoint(x: depth, y: rect.height - depth))
+        case .left:
+            path.move(to: .zero)
+            path.addLine(to: CGPoint(x: 0, y: rect.height))
+            path.addLine(to: CGPoint(x: depth, y: rect.height - depth))
+            path.addLine(to: CGPoint(x: depth, y: depth))
+        case .right:
+            path.move(to: CGPoint(x: rect.width, y: 0))
+            path.addLine(to: CGPoint(x: rect.width, y: rect.height))
+            path.addLine(to: CGPoint(x: rect.width - depth, y: rect.height - depth))
+            path.addLine(to: CGPoint(x: rect.width - depth, y: depth))
+        }
+        path.closeSubpath()
+        return path
+    }
+}
+
+
+struct RuneTileStyle: ViewModifier {
+    var baseColor: Color = Color(red: 0.95, green: 0.90, blue: 0.70)
+    var shadowDepth: CGFloat = 0.05
+    func body(content: Content) -> some View {
+        content
+            .background(
+                GeometryReader { geo in
+                    let depth = min(geo.size.width, geo.size.height) * shadowDepth
+                    ZStack {
+                        baseColor
+                        TrapezoidEdge(edge: .top, depth: depth)
+                            .fill(Color.white.opacity(0.4))
+                        TrapezoidEdge(edge: .left, depth: depth)
+                            .fill(Color.black.opacity(0.2))
+                        TrapezoidEdge(edge: .right, depth: depth)
+                            .fill(Color.black.opacity(0.2))
+                        TrapezoidEdge(edge: .bottom, depth: depth)
+                            .fill(Color.black.opacity(0.5))
+                        RoundedRectangle(cornerRadius: 1)
+                            .stroke(Color.black.opacity(0.4), lineWidth: 1)
+                            .padding(depth*2/3)
+                    }
+                })
+    }
+}
+extension View {
+    func runeTileStyle(
+        baseColor: Color = Color(red: 0.95, green: 0.90, blue: 0.70),
+        lightEdge: Color = Color.white.opacity(0.8),
+        darkEdge: Color = Color.black.opacity(0.35),
+        shadowDepth: CGFloat = 0.1
+    ) -> some View {
+        self.modifier(RuneTileStyle(baseColor: baseColor, shadowDepth: shadowDepth))
     }
 }
 
