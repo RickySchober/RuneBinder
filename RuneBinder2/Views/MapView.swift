@@ -46,7 +46,6 @@ struct MapView: View {
     var body: some View {
         GeometryReader { geometry in
             let layerSpacing = geometry.size.height / CGFloat(map.count + 1)
-
             ZStack {
                 Image("Rune1")
                     .resizable()

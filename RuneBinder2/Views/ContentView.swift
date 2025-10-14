@@ -108,9 +108,6 @@ struct ImageBorderView<Content: View>: View {
                 .background(Color(red: 0.89, green: 0.66, blue: 0.43))
                 .overlay(
             GeometryReader { geo in
-                let width = geo.size.width
-                let height = geo.size.height
-
                 ZStack {
                     // Top & Bottom edges
                     VStack {
