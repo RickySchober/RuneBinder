@@ -25,6 +25,20 @@ struct ContentView: View {
                 CombatView()
                     .frame(width: screenWidth, height: screenHeight*0.9-screenWidth*1.15)
                     .background(.blue)
+                    .overlayPreferenceValue(RunePositionPreferenceKey.self) { preferences in
+                        GeometryReader { geo in
+                            ForEach(viewModel.floatingTexts) { text in
+                                ForEach(viewModel.enemies) { enemy in
+                                    if let anchor = preferences[enemy.id], text.enemyId == enemy.id {
+                                        let point = geo[anchor]
+                                        FloatingTextView(text: text.text, color: text.color)
+                                            .position(point)
+                                            .transition(.opacity)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 ImageBorderView(
                     cornerImage: "wood_corner",
                     edgeVert: "wood_border",
@@ -219,7 +233,7 @@ struct RuneGrid: View{
                             let point = geo[anchor]
                             RuneTooltipView(rune: rune)
                                 .onPreferenceChange(TooltipSizePreferenceKey.self) { size in
-                                                        tooltipSize = size
+                                    tooltipSize = size
                                 }
                                 .position(smartTooltipPosition(from: point, tooltipSize: tooltipSize, in: CGSize(width: screenWidth, height: screenHeight)))
                                 .transition(.opacity)
@@ -339,7 +353,7 @@ struct EnemyListView: View {
             ForEach(self.viewModel.enemies, id: \.id) { enemy in
                 EnemyView(enemy: enemy)
                     .padding(0)
-                    .background((viewModel.targets.contains(enemy)) ? Color.red.opacity(0.3) : Color.clear)
+                    .background((viewModel.target == enemy) ? Color.red.opacity(0.3) : Color.clear)
                     .cornerRadius(10)
             }
         }

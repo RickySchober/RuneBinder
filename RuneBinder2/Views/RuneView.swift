@@ -28,6 +28,13 @@ struct RuneView: View{
                         .resizable()
                         .renderingMode(Image.TemplateRenderingMode.original)
                         .frame(width: geometry.size.width*0.9, height: geometry.size.height*0.9)
+                    if(rune.enchant!.upgraded){
+                        Text("+")
+                            .foregroundColor(.white)
+                            .position(x: 0.8*geometry.size.width, y: 0.13*geometry.size.height)
+                            .font(Font.system(size:(CGFloat)(0.3*min(geometry.size.width,geometry.size.height))))
+                            .shadow(color: .black.opacity(0.8), radius: 2, x: 3, y: 3)
+                            .bold()                    }
                 }
                 Text(String(rune.letter))
                     .font(.custom("Trattatello", size:(CGFloat)(0.5*min(geometry.size.width,geometry.size.height))))
@@ -51,13 +58,13 @@ struct RuneView: View{
                         .frame(width: geometry.size.width*0.2, height: geometry.size.height*0.2)
                         .position(x: 0.15*geometry.size.width, y: 0.15*geometry.size.height)
                     Text("\(rune.debuff!.value)")
-                        .font(.caption2)
-                        .foregroundColor(.black)
+                        .foregroundColor(.white)
                         .position(x: 0.2*geometry.size.width, y: 0.2*geometry.size.height)
                         .font(Font.system(size:(CGFloat)(0.2*min(geometry.size.width,geometry.size.height))))
                         .padding([.bottom, .trailing], 1)
+                        .shadow(color: .black.opacity(0.8), radius: 2, x: 3, y: 3)
+                        .bold()
                 }
-     
                /* LinearGradient(colors: [.white.opacity(0.6), .clear],
                                startPoint: .topLeading,
                                endPoint: .bottomTrailing)

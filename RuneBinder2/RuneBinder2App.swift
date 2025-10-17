@@ -17,11 +17,13 @@ class ViewRouter: ObservableObject {
 
 @main
 struct RuneBinder2App: App {
-    @StateObject var viewModel = RuneBinderViewModel()
-    @StateObject var viewRouter = ViewRouter()
+    @StateObject private var viewModel = RuneBinderViewModel()
+    @StateObject private var accountManager = AccountManager()
+    @StateObject private var viewRouter = ViewRouter()
     var body: some Scene {
         WindowGroup {
             RootView()
+                .environmentObject(accountManager)
                 .environmentObject(viewRouter)
                 .environmentObject(viewModel)
         }

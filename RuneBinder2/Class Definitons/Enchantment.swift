@@ -19,17 +19,11 @@ class Enchantment: Equatable, Identifiable{
         return lhs.description == rhs.description
     }
     
-    enum rarity{
-        case common //starting deck cards not found in runs
-        case uncommon
-        case rare
-        case legendary
+    enum rarity: String, Codable{
+        case common, uncommon, rare, legendary
     }
-    enum archetype{
-        case hex
-        case destruction
-        case manipulation
-        case preservation
+    enum archetype: String, Codable{
+        case hex, destruction, manipulation, preservation
     }
     /*Enchantment priority goes from the lowest priority of 0 to highest priority
      enchants of same priority should be able to be used in any order without affecting the outcome

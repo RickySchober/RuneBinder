@@ -73,6 +73,16 @@ struct EnemyView: View{
             }
             .frame(width: screenWidth*0.18, height: screenWidth*0.27)
         }
+       /* .overlay{
+            ForEach(viewModel.floatingTexts){ text in
+                if(text.id == enemy.id){
+                    FloatingTextView(text: text.text, color: text.color)
+                }
+            }
+        }*/
+        .anchorPreference(key: RunePositionPreferenceKey.self, value: .center) { anchor in
+            [enemy.id: anchor]
+        }
         .transition(.asymmetric(insertion: .identity , removal: .opacity)) //animates insertion and deletion of view
     }
 }

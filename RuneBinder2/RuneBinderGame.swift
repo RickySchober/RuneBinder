@@ -9,6 +9,13 @@ import Foundation
 import UIKit
 import SwiftUI
 
+enum CombatEvent {
+    case runeActivated(Rune)
+    case damage(enemyIndex: Int, amount: Int)
+    case death(enemyIndex: Int)
+    case sound(name: String)
+}
+
 class RuneBinderGame: ObservableObject{
     //Seed
     private (set) var encounterRng: SeededGenerator
@@ -27,12 +34,12 @@ class RuneBinderGame: ObservableObject{
     
     private (set) var spellLibrary: Array<Enchantment.Type> //List of possible enchants to encounter during run
     private (set) var rewardEnchants: Array<Enchantment.Type> = [] //List of known enchantments
-    private (set) var spellBook: [Enchantment] = [Lob(), Engulf(), Enlarge(), Ricochet(), Spray(), Aspire(), Eliminate(), Fortify(), Swarm()]//List of aquired enchants
+    private (set) var spellBook: [Enchantment]
     private (set) var spellDeck: [Enchantment]//List of undrawn enchants
     private (set) var maxEnchants: Int = 5
-    private var combatCount: Int = 0
+    private var encounterCount: Int = 0
 
-    
+    var character: Characters = hermit
     var player: Player = Player(currentHealth: 50, maxHealth: 80)
     //Enemy data
     private (set) var enemies: [Enemy] = [] //Array containing the enemies in the current encounter will be in index 0-3 based on position
@@ -43,13 +50,14 @@ class RuneBinderGame: ObservableObject{
     //Map
     private (set) var map: [[MapNode]] = [[]]
     
-    @Published var encounterOver: Bool = false
+    var encounterOver: Bool = false
     private (set) var defeat: Bool = false
 
     //Array represents the relative occurence of letters in words in the dictionary
     //numbers represent the % of its occurence and correlate with A-Z
     private let letterOccurence: Array<Double> = [7.8, 2.0, 4.0, 3.8, 11, 1.4, 3.0, 2.3, 8.6, 0.21, 0.97, 5.3, 2.7, 7.2,
                                                   6.1, 2.8, 0.19, 7.3, 8.7, 6.7, 3.3, 1.0, 0.91, 0.27, 1.6, 0.44]
+    var eventLog: [CombatEvent] = []//Queue for resolving animations on combat action
     init(){
         seed = [UInt64.random(in: 0...9999), UInt64.random(in: 0...9999), UInt64.random(in: 0...9999)] //random seed
         encounterRng = SeededGenerator(seed: seed[0])
@@ -59,6 +67,7 @@ class RuneBinderGame: ObservableObject{
         Empower.self, Revitalize.self, Ward.self, CleansingWave.self, SerratedStrike.self, Purify.self,
         Spray.self, Lob.self, Swarm.self, Spray.self, Magnify.self, Enlarge.self
         ]
+        spellBook = []
         spellDeck = spellBook
         map = generateMap(numLayers: 10, minNodes: 3, maxNodes: 5)
         assignMap()
@@ -87,6 +96,11 @@ class RuneBinderGame: ObservableObject{
         if(state.node != nil){ //If you are currently on a node load it otherwise on map so do nothing
             loadNode(node: state.node!)
         }
+    }
+    func selectCharacter(character: Characters){
+        self.character = character
+        spellBook = character.startingDeck.map { makeEnchantment(from: $0) }
+        spellDeck = spellBook
     }
     func addEnemies(newEnemies: [Enemy], pos: Int){
         enemies.insert(contentsOf: newEnemies[..<min(newEnemies.count, enemyLimit-enemies.count)], at: pos)
@@ -244,7 +258,6 @@ class RuneBinderGame: ObservableObject{
         for layer in map{
             for node in layer{
                 node.type = selector.random(using: &encounterRng)
-                print(node.type)
             }
         }
     }
@@ -453,10 +466,13 @@ class RuneBinderGame: ObservableObject{
             if(targets.max()==0.0){ //If no additional targets just hit primary target
                 enemies[primaryTarget!].currentHealth -= Int(primaryModifer*Double(spellPower))
                 if(enemies[primaryTarget!].currentHealth<=0){
-                    SoundManager.shared.playSoundEffect(named: enemies[primaryTarget!].deathSound)
+                    eventLog.append(.damage(enemyIndex: primaryTarget!, amount: -Int(primaryModifer*Double(spellPower))))
                 }
                 else{
-                    SoundManager.shared.playSoundEffect(named: enemies[primaryTarget!].hitSound)
+                    eventLog.append(.damage(enemyIndex: primaryTarget!, amount: -Int(primaryModifer*Double(spellPower))))
+                    eventLog.append(.damage(enemyIndex: primaryTarget!, amount: -Int(primaryModifer*Double(spellPower))))
+                    eventLog.append(.damage(enemyIndex: primaryTarget!, amount: -Int(primaryModifer*Double(spellPower))))
+                    eventLog.append(.damage(enemyIndex: primaryTarget!, amount: -Int(primaryModifer*Double(spellPower))))
                 }
             }
             else{
@@ -534,6 +550,7 @@ class RuneBinderGame: ObservableObject{
     func selectNode(node: MapNode){
         //Change selectable
         encounterOver = false
+        encounterCount = node.layer + 1
         for node in map[node.layer]{
             node.selectable = false
         }
@@ -564,8 +581,8 @@ class RuneBinderGame: ObservableObject{
     }
     
     func generateCombat(){
-        combatCount += 1
-        if let encounter = EncounterPool.shared.getRandomEncounter(forZone: .Forest, difficulty: combatCount%3+1) {
+        print("Combat count of \(encounterCount) generating encounter of difficulty \((encounterCount-1)/3+1)")
+        if let encounter = EncounterPool.shared.getRandomEncounter(forZone: .Forest, difficulty: (encounterCount-1)/3+1) {
             enemies = encounter.generateEnemies()
         }
     }

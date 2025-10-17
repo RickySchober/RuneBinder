@@ -8,41 +8,60 @@
 import SwiftUI
 
 struct MainMenuView: View {
-    @State private var isPresentingStart = false
+    @State private var isCharSelect = false
     @EnvironmentObject var viewRouter: ViewRouter
     @EnvironmentObject var viewModel: RuneBinderViewModel
+    @EnvironmentObject var accountManager: AccountManager
     var body: some View {
-        
-        Text("Runebinder")
-            .font(.system(size: 60.0))
+        if(!isCharSelect){
+            Text("Runebinder")
+                .font(.system(size: 60.0))
+                .runeBinderButtonStyle()
+            Spacer()
+            Button(action:{
+            }, label: {Text("Continue")
+                    .font(.system(size: 60.0))
+                    .onTapGesture {
+                        viewRouter.currentScreen = viewModel.loadSave()
+                        SoundManager.shared.playBackgroundMusic(named: "soundtrack")
+                    }
+            })
+            .padding(10)
             .runeBinderButtonStyle()
-        Spacer()
-        Button(action:{
-        }, label: {Text("Continue")
-                .font(.system(size: 60.0))
-                .onTapGesture {
-                    viewRouter.currentScreen = viewModel.loadSave()
-                    SoundManager.shared.playBackgroundMusic(named: "soundtrack")
-                }
-        })
-        .padding(10)
-        .runeBinderButtonStyle()
-        Button(action:{
-        }, label: {Text("New Game")
-                .font(.system(size: 60.0))
-                .onTapGesture {
-                    SoundManager.shared.playBackgroundMusic(named: "soundtrack")
-                    viewRouter.currentScreen = .map
-                }
-        })
-        .padding(10)
-        .runeBinderButtonStyle()
-        Button(action:{
-        }, label: {Text("Back")
-                .font(.system(size: 60.0))
-        })
-        .padding(10)
-        .runeBinderButtonStyle()
+            Button(action:{
+            }, label: {Text("New Game")
+                    .font(.system(size: 60.0))
+                    .onTapGesture {
+                        isCharSelect = true
+                    }
+            })
+            .padding(10)
+            .runeBinderButtonStyle()
+        }
+        else{
+            ForEach(accountManager.account.unlockedCharacters){ char in
+                Button(action:{
+                }, label: {Text(char.id)
+                        .font(.system(size: 60.0))
+                        .onTapGesture {
+                            viewModel.selectCharacter(character: char)
+                            viewRouter.currentScreen = .map
+                            SoundManager.shared.playBackgroundMusic(named: "soundtrack")
+                        }
+                })
+                .padding(10)
+                .runeBinderButtonStyle()
+            }
+            Button(action:{
+            }, label: {Text("Back")
+                    .font(.system(size: 60.0))
+                    .onTapGesture {
+                        isCharSelect = false
+                    }
+            })
+            .padding(10)
+            .runeBinderButtonStyle()
+        }
     }
 }
 
@@ -50,14 +69,14 @@ struct RuneBinderButtonStyle: ViewModifier {
     var cornerColor: Color = Color(red: 0.5, green: 0.35, blue: 0.2)
     var backgroundColor: Color = Color(red: 0.96, green: 0.9, blue: 0.75)
     var borderColor: Color = Color(red: 0.4, green: 0.25, blue: 0.1)
-    var pressed: Bool = false
-    
+    var inActive: Bool = false
     func body(content: Content) -> some View {
         content
             .padding(.vertical, 10)
             .padding(.horizontal, 10)
             .font(.custom("CinzelDecorative-Regular", size: 20))
             .foregroundColor(cornerColor)
+            .opacity(inActive ? 0.4 : 1.0)
             .background(
                 ZStack {
                     Rectangle()
@@ -90,8 +109,6 @@ struct RuneBinderButtonStyle: ViewModifier {
                         .stroke(backgroundColor, lineWidth: 2)
                 }
             )
-            .scaleEffect(pressed ? 0.95 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: pressed)
     }
     
     // Helper corner decoration (pixel-style corner)
@@ -108,8 +125,8 @@ struct RuneBinderButtonStyle: ViewModifier {
 }
 
 extension View {
-    func runeBinderButtonStyle(pressed: Bool = false) -> some View {
-        self.modifier(RuneBinderButtonStyle(pressed: pressed))
+    func runeBinderButtonStyle(inActive: Bool = false) -> some View {
+        self.modifier(RuneBinderButtonStyle(inActive: inActive))
     }
 }
 

@@ -11,6 +11,13 @@ class RuneBinderViewModel: ObservableObject {
     @Published private var model: RuneBinderGame    
     private let persistence = SaveManager()
     private var gameState: GameState?
+    @Published var floatingTexts: [FloatingTextData] = []
+    struct FloatingTextData: Identifiable, Equatable {
+        let id = UUID()
+        let enemyId: UUID
+        let text: String
+        let color: Color
+    }
     init(){
         gameState = nil
         model = RuneBinderGame()
@@ -102,6 +109,9 @@ class RuneBinderViewModel: ObservableObject {
         model.hoverRune(rune: rune)
         objectWillChange.send()
     }
+    func selectCharacter(character: Characters){
+        model.selectCharacter(character: character)
+    }
     func selectRune(rune: Rune){
         model.selectRune(rune: rune)
         model.checkSpellValid()
@@ -119,8 +129,60 @@ class RuneBinderViewModel: ObservableObject {
     }
     func castSpell(){
         model.castSpell()
+        Task {
+            await playCombatEvents(from: model) // visual playback
+        }
         model.checkSpellValid()
         playerTurnEnd()
+    }
+    @MainActor
+    func playCombatEvents(from model: RuneBinderGame) async {
+        for event in model.eventLog {
+            Task{
+                await show(event)
+            }
+            try? await Task.sleep(for: .seconds(0.3))
+        }
+        model.eventLog.removeAll()
+    }
+    @MainActor
+    func show(_ event: CombatEvent) async {
+        switch event {
+       /* case .runeActivated(let rune):
+            currentFloatingText = "Activating \(rune.enchant?.description ?? "")"
+            SoundManager.shared.playSoundEffect(named: "rune_cast")*/
+        case .damage(let enemyIndex, let amount):
+            let enemy = enemies[enemyIndex]
+            SoundManager.shared.playSoundEffect(named: enemy.hitSound)
+            await showFloatingText("\(amount)", color: .red, over: enemy)
+            
+        case .death(let enemyIndex):
+            SoundManager.shared.playSoundEffect(named: enemies[enemyIndex].deathSound)
+            await showFloatingText("💀", color: .gray, over: enemies[enemyIndex])
+
+        case .sound(let name):
+            SoundManager.shared.playSoundEffect(named: name)
+        case .runeActivated(_):
+            print("gogogogolem")
+        }
+    }
+    @MainActor
+    func showFloatingText(_ text: String, color: Color, over enemy: Enemy) async {
+        let newText = FloatingTextData(
+            enemyId: enemy.id,
+            text: text,
+            color: color
+        )
+        // Add this floating text
+        floatingTexts.append(newText)
+        
+        // Wait for animation duration
+        try? await Task.sleep(for: .seconds(0.6))
+        
+        // Remove it after the animation completes
+        if let index = floatingTexts.firstIndex(of: newText) {
+            floatingTexts.remove(at: index)
+        }
     }
     func selectEnemy(enemy: Enemy){
         model.changeTarget(enemy: enemy, modifier: 1.0)

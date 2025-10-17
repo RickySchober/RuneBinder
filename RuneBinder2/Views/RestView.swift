@@ -20,64 +20,45 @@ struct RestView: View {
                 HStack(){
                     Button(action: {if(!viewModel.encounterOver){viewModel.rest()} }) {
                         VStack(spacing: 8) {
+                            Image("rest")
+                                .resizable()
+                                .frame(width: screenWidth*0.2, height: screenWidth*0.2)
                             Text("Rest: Heal 1/3 of your health")
-                                .font(.headline)
-                                .foregroundColor(.white)
                         }
-                        .padding()
-                        .frame(maxWidth: .infinity, minHeight: 120)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(!viewModel.encounterOver ? Color.blue: Color.gray)
-                                .shadow(radius: 4)
-                        )
+                        .frame(maxWidth: .infinity, minHeight: screenWidth*0.4)
                     }
+                    .runeBinderButtonStyle(inActive: viewModel.encounterOver)
                     Button(action: { if(!viewModel.encounterOver) {upgradeViewer = true} }) {
                         VStack(spacing: 8) {
+                            Image("study")
+                                .resizable()
+                                .frame(width: screenWidth*0.2, height: screenWidth*0.2)
                             Text("Study: Upgrade an enchantment")
-                                .font(.headline)
-                                .foregroundColor(.white)
                         }
-                        .padding()
-                        .frame(maxWidth: .infinity, minHeight: 120)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(!viewModel.encounterOver ? Color.blue: Color.gray)
-                                .shadow(radius: 4)
-                        )
+                        .frame(maxWidth: .infinity, minHeight: screenWidth*0.4)
                     }
+                    .runeBinderButtonStyle(inActive: viewModel.encounterOver)
                 }
                 HStack(){
                     Button(action: { if(!viewModel.encounterOver) {removeViewer = true} }) {
                         VStack(spacing: 8) {
+                            Image("clean")
+                                .resizable()
+                                .frame(width: screenWidth*0.2, height: screenWidth*0.2)
                             Text("Clean: Remove and enchantment")
-                                .font(.headline)
-                                .foregroundColor(.white)
                         }
-                        .padding()
-                        .frame(maxWidth: .infinity, minHeight: 120)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(!viewModel.encounterOver ? Color.blue: Color.gray)
-                                .shadow(radius: 4)
-                        )
+                        .frame(maxWidth: .infinity, minHeight: screenWidth*0.4)
                     }
+                    .runeBinderButtonStyle(inActive: viewModel.encounterOver)
                     Button(action: {
                         viewModel.saveGame(node: nil)
                         viewRouter.currentScreen = .map
                     }) {
                         VStack(spacing: 8) {
                             Text("Leave")
-                                .font(.headline)
-                                .foregroundColor(.white)
                         }
-                        .padding()
-                        .frame(maxWidth: .infinity, minHeight: 120)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.blue)
-                                .shadow(radius: 4)
-                        )
+                        .frame(maxWidth: .infinity, minHeight: screenWidth*0.4)
+                        .runeBinderButtonStyle()
                     }
                 }
             }
