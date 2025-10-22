@@ -45,6 +45,10 @@
 		B6C7DE6C2E9F083300333526 /* AccountState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6C7DE6B2E9F083300333526 /* AccountState.swift */; };
 		B6C7DE6E2EA0445800333526 /* Characters.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6C7DE6D2EA0445800333526 /* Characters.swift */; };
 		B6C7DE702EA1B4CD00333526 /* CombatAnimations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6C7DE6F2EA1B4CD00333526 /* CombatAnimations.swift */; };
+		B6C7DE742EA3177700333526 /* sword_stab.wav in Resources */ = {isa = PBXBuildFile; fileRef = B6C7DE712EA3177700333526 /* sword_stab.wav */; };
+		B6C7DE752EA3177700333526 /* sword_clash.wav in Resources */ = {isa = PBXBuildFile; fileRef = B6C7DE722EA3177700333526 /* sword_clash.wav */; };
+		B6C7DE762EA3177700333526 /* sword_sheath.wav in Resources */ = {isa = PBXBuildFile; fileRef = B6C7DE732EA3177700333526 /* sword_sheath.wav */; };
+		B6C7DE7A2EA5C1BE00333526 /* impact.gif in Resources */ = {isa = PBXBuildFile; fileRef = B6C7DE792EA5C1BE00333526 /* impact.gif */; };
 		B6D1D24D2A1B0B24001A16BD /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6D1D24C2A1B0B24001A16BD /* Player.swift */; };
 		B6D1D24F2A1B0B6A001A16BD /* Enchantment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6D1D24E2A1B0B6A001A16BD /* Enchantment.swift */; };
 /* End PBXBuildFile section */
@@ -89,6 +93,10 @@
 		B6C7DE6B2E9F083300333526 /* AccountState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountState.swift; sourceTree = "<group>"; };
 		B6C7DE6D2EA0445800333526 /* Characters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Characters.swift; sourceTree = "<group>"; };
 		B6C7DE6F2EA1B4CD00333526 /* CombatAnimations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CombatAnimations.swift; sourceTree = "<group>"; };
+		B6C7DE712EA3177700333526 /* sword_stab.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = sword_stab.wav; sourceTree = "<group>"; };
+		B6C7DE722EA3177700333526 /* sword_clash.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = sword_clash.wav; sourceTree = "<group>"; };
+		B6C7DE732EA3177700333526 /* sword_sheath.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = sword_sheath.wav; sourceTree = "<group>"; };
+		B6C7DE792EA5C1BE00333526 /* impact.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; name = impact.gif; path = "../../../../Downloads/Pixel Art VFX Impacts - FREE Version/VFX4/COLOR/impact.gif"; sourceTree = "<group>"; };
 		B6D1D24C2A1B0B24001A16BD /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		B6D1D24E2A1B0B6A001A16BD /* Enchantment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Enchantment.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -143,8 +151,9 @@
 		B6654CC62DD53B1700B33E2C /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				B6AFAFDF2DE9071F00F06F34 /* Storage */,
+				B6C7DE792EA5C1BE00333526 /* impact.gif */,
 				B6AFAFDD2DE906E800F06F34 /* Sound Effects */,
+				B6AFAFDF2DE9071F00F06F34 /* Storage */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -203,6 +212,9 @@
 				B6654CCD2DD53F4D00B33E2C /* goblinhit.wav */,
 				B6654CCE2DD53F4E00B33E2C /* humanoiddeath.wav */,
 				B6654CCC2DD53F4D00B33E2C /* humanoidhit.wav */,
+				B6C7DE722EA3177700333526 /* sword_clash.wav */,
+				B6C7DE732EA3177700333526 /* sword_sheath.wav */,
+				B6C7DE712EA3177700333526 /* sword_stab.wav */,
 			);
 			path = "Sound Effects";
 			sourceTree = "<group>";
@@ -277,9 +289,13 @@
 				B6654CD22DD53F4E00B33E2C /* humanoiddeath.wav in Resources */,
 				B6654CC82DD53B4000B33E2C /* click.wav in Resources */,
 				B6654CD12DD53F4E00B33E2C /* goblinhit.wav in Resources */,
+				B6C7DE742EA3177700333526 /* sword_stab.wav in Resources */,
 				B6A92FFC2A147B9200AEF4E7 /* Preview Assets.xcassets in Resources */,
 				B6654CCA2DD53D5D00B33E2C /* soundtrack.mp3 in Resources */,
+				B6C7DE762EA3177700333526 /* sword_sheath.wav in Resources */,
 				B6654CD02DD53F4E00B33E2C /* humanoidhit.wav in Resources */,
+				B6C7DE752EA3177700333526 /* sword_clash.wav in Resources */,
+				B6C7DE7A2EA5C1BE00333526 /* impact.gif in Resources */,
 				B6A92FF92A147B9200AEF4E7 /* Assets.xcassets in Resources */,
 				B6AFAFE32DE9093300F06F34 /* ForestEncounters.json in Resources */,
 				B6654CCF2DD53F4E00B33E2C /* goblindeath.wav in Resources */,

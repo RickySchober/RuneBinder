@@ -8,7 +8,7 @@
 //there position in the word is represented by an integer if this int is -1 not in word
 import Foundation
 
-struct Debuff: Codable{
+struct RuneDebuff: Codable{
     enum Archetype: String, Codable{
         case lock, scorch, weak, rot
     }
@@ -45,7 +45,7 @@ class Rune: Identifiable, Equatable{
     var power: Int
     let id: UUID
     var enchant: Enchantment?
-    var debuff: Debuff?
+    var debuff: RuneDebuff?
     init(l: String, p: Int, e: Enchantment?){
         letter = l
         power = p

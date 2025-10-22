@@ -51,7 +51,7 @@ struct RuneData: Codable {
     var power: Int
     var id: UUID
     var enchant: EnchantmentData?
-    var debuff: Debuff?
+    var debuff: RuneDebuff?
 }
 
 struct MapNodeData: Codable, Identifiable {

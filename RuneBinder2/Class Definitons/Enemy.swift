@@ -7,12 +7,33 @@
 
 import Foundation
 
-struct Bleeds{
-    var turns: Int
-    var dmg: Int
+
+struct Debuff: Codable, Identifiable{
+    enum Archetype: String, Codable{
+        case bleed, stun, frail
+    }
+    let archetype: Archetype
+    var value: Int
+    var image: String {
+            switch archetype {
+            case .bleed: return "bleed"
+            case .stun: return "stun"
+            case .frail: return "weak"
+            }
+        }
+
+    var text: String {
+        return "gotem"
+    }
+    var id: UUID
+    init(archetype: Archetype, value: Int) {
+        self.archetype = archetype
+        self.value = value
+        id = UUID()
+    }
 }
 
-class Enemy: Equatable, Identifiable{
+class Enemy: Equatable, Identifiable, Entity{
     static func == (lhs: Enemy, rhs: Enemy) -> Bool {
         if(lhs.id==rhs.id){
             return true;
@@ -21,25 +42,17 @@ class Enemy: Equatable, Identifiable{
     }
     var maxHealth: Int
     var currentHealth: Int
-    var ward: Int = 0
-    var bleeds: [Bleeds]
+    var ward: Int = 10
+    var debuffs: [Debuff] = []
     let hitSound = "goblinhit"
     let deathSound = "goblindeath"
     var image = "Rune2"
     var id: UUID
     var actions: [Action]
-    var bleedDamage: Int {
-        var temp = 0
-        for bleed in bleeds {
-            temp += bleed.dmg
-        }
-        return temp
-    }
     
     init(){
         maxHealth = 15
         currentHealth = maxHealth
-        bleeds = [Bleeds(turns: 2, dmg: 2)]
         actions = [Action(dmg: 1)]
         id = UUID()
     }
@@ -78,7 +91,7 @@ class GoblinImp: Enemy{
         currentHealth = maxHealth
         actions = [
             Action(nm: "Pathetic Punch", dmg: 2),
-            Action(nm: "Pyromanic", deb: [Debuff(archetype: .scorch, value: 2), Debuff(archetype: .scorch, value: 2)]),
+            Action(nm: "Pyromanic", deb: [RuneDebuff(archetype: .scorch, value: 2), RuneDebuff(archetype: .scorch, value: 2)]),
             Action(nm: "Cower", grd: 3 ),
         ]
     }
@@ -92,7 +105,7 @@ class GoblinShaman: Enemy{
         actions = [
             Action(nm: "Staff Bonk", dmg: 4),
             Action(nm: "Block", grd: 4 ),
-            Action(nm: "Weakening Curse", deb: [Debuff(archetype: .weak, value: 2),Debuff(archetype: .weak, value: 2)]),
+            Action(nm: "Weakening Curse", deb: [RuneDebuff(archetype: .weak, value: 2),RuneDebuff(archetype: .weak, value: 2)]),
         ]
     }
 }
@@ -105,7 +118,7 @@ class GoblinBrawler: Enemy{
         actions = [
             Action(nm: "Right Hook", dmg: 6),
             Action(nm: "Defensive Stance", grd: 8 ),
-            Action(nm: "Grapple", dmg: 4, deb: [Debuff(archetype: .lock, value: 3)]),
+            Action(nm: "Grapple", dmg: 4, deb: [RuneDebuff(archetype: .lock, value: 3)]),
         ]
     }
 }
@@ -139,7 +152,7 @@ class PoisonShroom: Enemy{
         image = "shroom"
         actions = [
             Action(dmg: 5),
-            Action(dmg: 1, deb: [Debuff(archetype: .rot, value: 1),Debuff(archetype: .rot, value: 1)]),
+            Action(dmg: 1, deb: [RuneDebuff(archetype: .rot, value: 1),RuneDebuff(archetype: .rot, value: 1)]),
         ]
     }
 }
@@ -149,7 +162,7 @@ class MultiplyingMycospawn: Enemy{
         image = "goblintrans"
         actions = [
             Action(dmg: 3),
-            Action(dmg: 1, deb: [Debuff(archetype: .rot, value: 1)]),
+            Action(dmg: 1, deb: [RuneDebuff(archetype: .rot, value: 1)]),
             SummonAction(nm:"Rapid Reproduction", summons: ["MultiplyingMycospawn"])
         ]
     }
@@ -210,7 +223,7 @@ class TorchBearer: Enemy{
         image = "torchbearer"
         actions = [
             Action(dmg: 7),
-            Action(dmg: 0, deb: [Debuff(archetype: .scorch, value: 1),Debuff(archetype: .scorch, value: 1)]),
+            Action(dmg: 0, deb: [RuneDebuff(archetype: .scorch, value: 1),RuneDebuff(archetype: .scorch, value: 1)]),
         ]
     }
 }
@@ -220,7 +233,7 @@ class Tree: Enemy{
         image = "tree"
         actions = [
             Action(dmg: 8),
-            Action(dmg: 0, deb: [Debuff(archetype: .rot, value: 5),Debuff(archetype: .scorch, value: 5)]),
+            Action(dmg: 0, deb: [RuneDebuff(archetype: .rot, value: 5),RuneDebuff(archetype: .scorch, value: 5)]),
         ]
     }
 }
@@ -228,7 +241,7 @@ class ChainBearer: Enemy{
     override init() {
         super.init()
         image = "chainbearer"
-        actions = [Action(dmg: 5, deb: [Debuff(archetype: .lock, value: 1), Debuff(archetype: .lock, value: 1), Debuff(archetype: .weak, value: 1)])]
+        actions = [Action(dmg: 5, deb: [RuneDebuff(archetype: .lock, value: 1), RuneDebuff(archetype: .lock, value: 1), RuneDebuff(archetype: .weak, value: 1)])]
     }
 }
 //Biome ideas Phonetic Forest, Glyph Mines, Ancient Archive, Citadel

@@ -9,13 +9,19 @@ import Foundation
 import UIKit
 import SwiftUI
 
-enum CombatEvent {
-    case runeActivated(Rune)
-    case damage(enemyIndex: Int, amount: Int)
-    case death(enemyIndex: Int)
-    case sound(name: String)
+enum CombatEvent { //Store information for animations to be resolved in queue
+    case runeActivated(rune: Rune, text: String, delay: Double) //
+    case damage(id: UUID, amount: Int, delay: Double) //Hit damage
+    case lunge(id: UUID, delay: Double) //Attack start animation
+    case death(enemyIndex: Int, delay: Double)
+    case sound(name: String, delay: Double)
+    case debuff(id: UUID, debuff: Debuff, delay: Double) //Debuff applied
 }
-
+struct Hit{
+    let enemy: Enemy
+    var modifier: Double
+    var debuffs: [Debuff] = []
+}
 class RuneBinderGame: ObservableObject{
     //Seed
     private (set) var encounterRng: SeededGenerator
@@ -45,7 +51,7 @@ class RuneBinderGame: ObservableObject{
     private (set) var enemies: [Enemy] = [] //Array containing the enemies in the current encounter will be in index 0-3 based on position
     private (set) var primaryTarget: Int? = nil //Each spell cast requires selecting an enemy as a target
     private (set) var primaryModifer: Double = 0.0 //The damage modifier to the primary target before additional targets
-    private (set) var targets: [Double] = [0.0, 0.0, 0.0, 0.0] //Runes that modify targeting deal a portion of damage to other enemies
+    private (set) var targets: [Hit] = [] //Runes that modify targeting deal a portion of damage to other enemies
     private (set) var enemyLimit: Int = 4 //Maximum number of enemies in a given encounter
     //Map
     private (set) var map: [[MapNode]] = [[]]
@@ -100,6 +106,7 @@ class RuneBinderGame: ObservableObject{
     func selectCharacter(character: Characters){
         self.character = character
         spellBook = character.startingDeck.map { makeEnchantment(from: $0) }
+        spellBook = [Ricochet(),Ricochet(),Ricochet(),Ricochet(),Ricochet(),SerratedStrike(),SerratedStrike(),SerratedStrike()]
         spellDeck = spellBook
     }
     func addEnemies(newEnemies: [Enemy], pos: Int){
@@ -115,9 +122,12 @@ class RuneBinderGame: ObservableObject{
     func hoverRune(rune: Rune?){
         selectedRune = rune
     }
+    func addAnimation(event: CombatEvent){
+        eventLog.append(event)
+    }
     //Modifies damage to additional targets based on damage to main target
-    func addTarget(enemy: Enemy, modifier: Double){
-        targets[enemies.firstIndex(of: enemy)!] += modifier
+    func addTarget(hit: Hit){
+        targets.append(hit)
     }
     //Changes the primary target
     func changeTarget(enemy: Enemy, modifier: Double){
@@ -126,8 +136,14 @@ class RuneBinderGame: ObservableObject{
         }
         else{
             primaryTarget = enemies.firstIndex(of: enemy);
-            targets = [Double](repeating: 0.0, count: enemies.count) //When new target selected reset all damage modifiers
+            targets = [] //When new target selected reset all hits
             primaryModifer = modifier
+        }
+    }
+    func addHitEffect(debuffs: [Debuff] = [], modifier: Double = 1){
+        for i in targets.indices {
+            targets[i].modifier *= modifier
+            targets[i].debuffs.append(contentsOf: debuffs)
         }
     }
     func removeEnchantment(enchant: Enchantment){
@@ -382,13 +398,13 @@ class RuneBinderGame: ObservableObject{
         for enemy in enemies {
             let choice: Action = enemy.chooseAction(game: self)
             choice.utilizeEffect(game: self)
-            if(player.block > 0){
-                if(choice.damage > player.block){
-                    player.currentHealth -= choice.damage + player.block
-                    player.block = 0
+            if(player.ward > 0){
+                if(choice.damage > player.ward){
+                    player.currentHealth -= choice.damage + player.ward
+                    player.ward = 0
                 }
                 else{
-                    player.block -= choice.damage
+                    player.ward -= choice.damage
                 }
             }
             else{
@@ -426,24 +442,14 @@ class RuneBinderGame: ObservableObject{
     /*Since the effects of enchantments must be applied in a specific order this function creates an ordered list of all enchantments
     in the current spell. This is only needed to be run when there is both a valid target and word*/
     func queueEnchants(){
-        enchantQueue.removeAll()
-        for rune in grid{
-            if(spell.contains(rune)&&rune.enchant != nil){
-                for i in (0...enchantQueue.count){
-                    if(i==enchantQueue.count){
-                        enchantQueue.append(rune)
-                    }
-                    else if(rune.enchant!.priority>=enchantQueue[i].enchant!.priority){
-                        enchantQueue.insert(rune, at: i)
-                    }
-                }
-            }
-        }
+        enchantQueue = spell.filter { $0.enchant != nil }
+                            .sorted { $0.enchant!.priority < $1.enchant!.priority }
     }
-    func castSpell(){
+    func prepareSpell() -> Bool{
         //change grid size if surge letters used
         if(primaryTarget==nil){//select target warning
-            print("no enemy targeted")
+            Swift.print("no enemy targeted")
+            return false
         }
         else{
             spellPower = 0
@@ -459,59 +465,59 @@ class RuneBinderGame: ObservableObject{
                     enchantCount += 1
                 }
             }
-            print("spell power of \(spellPower) enchant count of \(enchantCount)")
-            for rune in enchantQueue{
-                rune.enchant?.utilizeEffect(game: self)
-            }
-            if(targets.max()==0.0){ //If no additional targets just hit primary target
-                enemies[primaryTarget!].currentHealth -= Int(primaryModifer*Double(spellPower))
-                if(enemies[primaryTarget!].currentHealth<=0){
-                    eventLog.append(.damage(enemyIndex: primaryTarget!, amount: -Int(primaryModifer*Double(spellPower))))
+        }
+        return true
+    }
+    func spellCleanup(){
+        enchantQueue.removeAll()
+        targets.removeAll()
+        primaryTarget = nil
+        var enchantCount: Int = (grid.filter { $0.enchant != nil && !spell.contains($0) }).count //Number of un-used enchants on grid
+        for i in (0...gridSize-1){ //Replace used letters in grid
+            if(spell.contains(grid[i])){
+                if(enchantCount < min(spellBook.count, maxEnchants)){
+                    let rng = shufflingRng.nextInt(in: 0..<spellBook.count)
+                    grid[i] = generateRune(enchant: drawEnchant(casting: true))
+                    enchantCount += 1
+                    print("gimme enchant")
                 }
                 else{
-                    eventLog.append(.damage(enemyIndex: primaryTarget!, amount: -Int(primaryModifer*Double(spellPower))))
-                    eventLog.append(.damage(enemyIndex: primaryTarget!, amount: -Int(primaryModifer*Double(spellPower))))
-                    eventLog.append(.damage(enemyIndex: primaryTarget!, amount: -Int(primaryModifer*Double(spellPower))))
-                    eventLog.append(.damage(enemyIndex: primaryTarget!, amount: -Int(primaryModifer*Double(spellPower))))
+                    grid[i] = generateRune(enchant: nil)
                 }
             }
-            else{
-                for i in 0..<targets.count {
-                    enemies[i].currentHealth -=  Int(targets[i]*primaryModifer*Double(spellPower))//Deal damage based on targets modifier rounding down
-                    if(enemies[i].currentHealth<=0){
-                        SoundManager.shared.playSoundEffect(named: enemies[i].deathSound)
-                    }
-                    else{
-                        SoundManager.shared.playSoundEffect(named: enemies[i].hitSound)
-                    }
-                }
+            else if(grid[i].enchant != nil){
+                enchantCount += 1
             }
-            withAnimation{
-                enemies.removeAll { $0.currentHealth <= 0 }
-            }
-            enchantQueue.removeAll()
-            targets.removeAll()
-            primaryTarget = nil
-            for i in (0...gridSize-1){ //Replace used letters in grid
-                if(spell.contains(grid[i])){
-                    if(enchantCount < min(spellBook.count, maxEnchants)){
-                        let rng = shufflingRng.nextInt(in: 0..<spellBook.count)
-                        grid[i] = generateRune(enchant: drawEnchant(casting: true))
-                        enchantCount += 1
-                        print("gimme enchant")
-                    }
-                    else{
-                        grid[i] = generateRune(enchant: nil)
-                    }
-                }
-                else if(grid[i].enchant != nil){
-                    enchantCount += 1
-                }
-            }
-            spell.removeAll()
+        }
+        spell.removeAll()
+        checkSpellValid()
+    }
+    func prepareAttack(){
+        eventLog.append(.lunge(id: player.id, delay: 0.5))
+        if(targets.isEmpty){ //If no additional hits just use base hit
+            targets.append(Hit(enemy: enemies[primaryTarget!], modifier: primaryModifer))
         }
     }
-    
+    func resolveHit(hit: Hit){
+        let damage: Int = Int(hit.modifier*primaryModifer*Double(spellPower))
+        hit.enemy.currentHealth -= damage
+        eventLog.append(.damage(id: hit.enemy.id, amount: damage, delay: 0.5))
+        if(hit.debuffs.count > 0){
+            for debuff in hit.debuffs{
+                if let index = hit.enemy.debuffs.firstIndex(where: { $0.archetype == debuff.archetype }) {
+                        hit.enemy.debuffs[index].value += debuff.value
+                    } else {
+                        hit.enemy.debuffs.append(debuff)
+                    }
+            }
+           /* for debuff in hit.debuffs{
+                eventLog.append(.debuff(id: hit.enemy.id, debuff: debuff, delay: 0.3)) //no animations for now
+            }*/
+        }
+    }
+    func resolveEnchant(rune: Rune){
+        rune.enchant?.utilizeEffect(game: self)
+    }
     //Triggers all active rune debuffs
     func runeDebuffs(){
         for i in (0...gridSize-1){
@@ -601,6 +607,9 @@ class RuneBinderGame: ObservableObject{
     }
     //This functions handles clean up actions involved during combat and returns true if combat is over
     func cleanUp() -> Bool{
+        withAnimation(){
+            enemies.removeAll { $0.currentHealth <= 0 }
+        }
         if enemies.isEmpty{
             spellDeck = spellBook //Reset deck
             withAnimation(){
@@ -613,7 +622,7 @@ class RuneBinderGame: ObservableObject{
                 defeat = true
             }
         }
-        player.block = 0
+        player.ward = 0
         return false
     }
 }

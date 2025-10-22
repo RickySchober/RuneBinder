@@ -25,20 +25,6 @@ struct ContentView: View {
                 CombatView()
                     .frame(width: screenWidth, height: screenHeight*0.9-screenWidth*1.15)
                     .background(.blue)
-                    .overlayPreferenceValue(RunePositionPreferenceKey.self) { preferences in
-                        GeometryReader { geo in
-                            ForEach(viewModel.floatingTexts) { text in
-                                ForEach(viewModel.enemies) { enemy in
-                                    if let anchor = preferences[enemy.id], text.enemyId == enemy.id {
-                                        let point = geo[anchor]
-                                        FloatingTextView(text: text.text, color: text.color)
-                                            .position(point)
-                                            .transition(.opacity)
-                                    }
-                                }
-                            }
-                        }
-                    }
                 ImageBorderView(
                     cornerImage: "wood_corner",
                     edgeVert: "wood_border",
@@ -84,6 +70,34 @@ struct ContentView: View {
             EnchantmentGridView(enchantments: viewModel.spellDeck) //Empty 
             .offset(y: deckViewer ? 0 : UIScreen.main.bounds.height)
             .animation(.easeOut(duration: 0.5), value: deckViewer)
+        }
+        .overlayPreferenceValue(RunePositionPreferenceKey.self) { preferences in
+            GeometryReader { geo in
+                ForEach(viewModel.floatingTexts) { text in
+                    ForEach(viewModel.enemies) { enemy in
+                        if let anchor = preferences[enemy.id], text.entityId == enemy.id {
+                            let point = geo[anchor]
+                            FloatingTextView(text: text.text, color: text.color)
+                                .position(point)
+                                .transition(.opacity)
+                        }
+                    }
+                    ForEach(viewModel.spell){ rune in
+                        if let anchor = preferences[rune.id], text.entityId == rune.id {
+                            let point = geo[anchor]
+                            FloatingTextView(text: text.text, color: text.color)
+                                .position(point)
+                                .transition(.opacity)
+                        }
+                    }
+                    if let anchor = preferences[viewModel.player.id], text.entityId == viewModel.player.id {
+                        let point = geo[anchor]
+                        FloatingTextView(text: text.text, color: text.color)
+                            .position(point)
+                            .transition(.opacity)
+                    }
+                }
+            }
         }
         .onTapGesture {
             deckViewer = false
@@ -362,6 +376,7 @@ struct EnemyListView: View {
 }
 
 struct CombatView: View {
+    @EnvironmentObject var viewModel: RuneBinderViewModel
     var body: some View {
         ZStack {
             // Background
@@ -387,7 +402,7 @@ struct CombatView: View {
             // Characters anchored to ground
             HStack(alignment: .bottom) {
                 // Player on left
-                PlayerView()
+                PlayerView(player: viewModel.player)
                     .padding(.leading, screenWidth*0.51)
                     .offset(y: screenHeight*0.09)
                 Spacer()

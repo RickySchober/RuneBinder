@@ -12,9 +12,10 @@ class RuneBinderViewModel: ObservableObject {
     private let persistence = SaveManager()
     private var gameState: GameState?
     @Published var floatingTexts: [FloatingTextData] = []
+    @Published var lunge: UUID = UUID()
     struct FloatingTextData: Identifiable, Equatable {
         let id = UUID()
-        let enemyId: UUID
+        let entityId: UUID
         let text: String
         let color: Color
     }
@@ -75,9 +76,7 @@ class RuneBinderViewModel: ObservableObject {
     var targets: [Enemy]{ //Returns enemies that will be hit for purpose of highlighting
         var temp: [Enemy] = []
         for i in 0..<model.targets.count{
-            if(model.targets[i]>0.0){ //If enemy is being hit
-                temp.append(model.enemies[1])
-            }
+            temp.append(model.targets[i].enemy)
         }
         return temp
     }
@@ -118,6 +117,10 @@ class RuneBinderViewModel: ObservableObject {
         objectWillChange.send()
     }
     func playerTurnEnd(){
+        if(model.cleanUp()){ //Combat is over
+            saveGame(node: NodeType.combat)
+            model.generateEnchantRewards()
+        }
         model.runeDebuffs()
         model.enemyTurn()
         if(model.cleanUp()){ //Combat is over
@@ -127,49 +130,77 @@ class RuneBinderViewModel: ObservableObject {
         objectWillChange.send()
 
     }
+    /* On spell cast the game should play out a sequence of animations as effects resolve.
+     * This includes enchantment effects as the go through the queue. Resolving all effects first
+     * and then storing animations in a queue leads to complications of storing extra information.
+     * Instead trigger animations to resolve asyncronously while adding blocking delay on main thread.
+     * Normally blocking main thread is taboo but no valid input can be taken from user until all effects are resolved.
+     * Priority 0 and 4 resolve immediately, Priority 1-3 will modify a hits
+     */
+    @MainActor
     func castSpell(){
-        model.castSpell()
-        Task {
-            await playCombatEvents(from: model) // visual playback
+        Task{
+            if(model.prepareSpell()){ //returns true when ready to cast
+                for rune in model.enchantQueue{
+                    rune.enchant?.utilizeEffect(game: model)
+                    if(rune.enchant?.priority==0){
+                        print("i am waiting")
+                        await playCombatEvents(from: model)
+                    }
+                }
+                model.prepareAttack()
+                for i in model.targets.indices {
+                    model.resolveHit(hit: model.targets[i])
+                    await playCombatEvents(from: model)
+                }
+                model.spellCleanup()
+                playerTurnEnd()
+            }
         }
-        model.checkSpellValid()
-        playerTurnEnd()
     }
     @MainActor
     func playCombatEvents(from model: RuneBinderGame) async {
         for event in model.eventLog {
-            Task{
-                await show(event)
-            }
-            try? await Task.sleep(for: .seconds(0.3))
+            var animationDelay: Double = 0.0
+                switch event {
+                case .damage(let id, let amount, let delay):
+                    SoundManager.shared.playSoundEffect(named: "sword_stab")
+                    //SoundManager.shared.playSoundEffect(named: enemy.hitSound)
+                    print("playing sound")
+                    Task{
+                        await showFloatingText("\(amount)", color: .red, over: id)
+                    }
+                    animationDelay = delay
+                case .death(let enemyIndex, let delay):
+                    SoundManager.shared.playSoundEffect(named: enemies[enemyIndex].deathSound)
+                    Task{
+                        await showFloatingText("💀", color: .gray, over: enemies[enemyIndex].id)
+                    }
+                    animationDelay = delay
+                case .sound(let name, let delay):
+                    SoundManager.shared.playSoundEffect(named: name)
+                    animationDelay = delay
+                case .runeActivated(let rune, let text, let delay):
+                    Task{
+                        await showFloatingText(text, color: rune.enchant?.color ?? .green, over: rune.id)
+                    }
+                    animationDelay = delay
+                    print("gentlemen we got em")
+                case .lunge(let id, let delay):
+                    lunge = id
+                    animationDelay = delay
+                case .debuff(let id, let debuff, let delay):
+                    print("")
+                }
+            try? await Task.sleep(for: .seconds(animationDelay))
         }
         model.eventLog.removeAll()
+        print("Empty event log\(model.eventLog)")
     }
     @MainActor
-    func show(_ event: CombatEvent) async {
-        switch event {
-       /* case .runeActivated(let rune):
-            currentFloatingText = "Activating \(rune.enchant?.description ?? "")"
-            SoundManager.shared.playSoundEffect(named: "rune_cast")*/
-        case .damage(let enemyIndex, let amount):
-            let enemy = enemies[enemyIndex]
-            SoundManager.shared.playSoundEffect(named: enemy.hitSound)
-            await showFloatingText("\(amount)", color: .red, over: enemy)
-            
-        case .death(let enemyIndex):
-            SoundManager.shared.playSoundEffect(named: enemies[enemyIndex].deathSound)
-            await showFloatingText("💀", color: .gray, over: enemies[enemyIndex])
-
-        case .sound(let name):
-            SoundManager.shared.playSoundEffect(named: name)
-        case .runeActivated(_):
-            print("gogogogolem")
-        }
-    }
-    @MainActor
-    func showFloatingText(_ text: String, color: Color, over enemy: Enemy) async {
+    func showFloatingText(_ text: String, color: Color, over entity: UUID) async {
         let newText = FloatingTextData(
-            enemyId: enemy.id,
+            entityId: entity,
             text: text,
             color: color
         )
@@ -177,7 +208,7 @@ class RuneBinderViewModel: ObservableObject {
         floatingTexts.append(newText)
         
         // Wait for animation duration
-        try? await Task.sleep(for: .seconds(0.6))
+        try? await Task.sleep(for: .seconds(2.0))
         
         // Remove it after the animation completes
         if let index = floatingTexts.firstIndex(of: newText) {

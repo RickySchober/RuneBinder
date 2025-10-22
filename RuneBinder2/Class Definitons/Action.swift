@@ -7,9 +7,9 @@ import Foundation
 class Action{
     let name: String
     let damage: Int
-    let debuffs: [Debuff]
+    let debuffs: [RuneDebuff]
     let gaurd: Int
-    init(nm: String = "Bonk", dmg: Int = 0, grd: Int = 0, deb: [Debuff] = []){
+    init(nm: String = "Bonk", dmg: Int = 0, grd: Int = 0, deb: [RuneDebuff] = []){
         name = nm
         damage = dmg
         debuffs = deb
@@ -21,7 +21,7 @@ class Action{
 //Actions that summon additional units if there is space. Take in array of units to summon as input
 class SummonAction: Action {
     var factories: [() -> Enemy]
-    init(nm: String = "Bonk", dmg: Int = 0, deb: [Debuff] = [], summons: [String]){
+    init(nm: String = "Bonk", dmg: Int = 0, deb: [RuneDebuff] = [], summons: [String]){
         factories = summons.compactMap { enemy in //Map string to function which generates an enemy of same name
             enemyFactory[enemy]
         }
@@ -34,7 +34,7 @@ class SummonAction: Action {
 //Actions that apply buffs to enemies.
 class BuffAction: Action {
     
-    override init(nm: String = "Bonk", dmg: Int = 0, grd: Int = 0, deb: [Debuff] = []) {
+    override init(nm: String = "Bonk", dmg: Int = 0, grd: Int = 0, deb: [RuneDebuff] = []) {
     }
     override func utilizeEffect(game: RuneBinderGame) {
     }

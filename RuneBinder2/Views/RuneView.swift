@@ -10,19 +10,16 @@ import SwiftUI
 struct RuneView: View{
     @EnvironmentObject var viewModel: RuneBinderViewModel
     @State private var locked: Int = 0
+    @State private var scale: Double = 1.0
     @State private var hoverWorkItem: DispatchWorkItem? = nil //Adds delay to turn drag gesture into a psuedo long press
     var rune: Rune
     var namespace: Namespace.ID
     var body: some View {
         GeometryReader(content: { geometry in
             ZStack{
-                /*Rectangle()
+                Rectangle()
                     .fill((rune.enchant==nil) ? Color.brown : rune.enchant!.color)
-                    .opacity(0.8)
-                Image("Rune1")
-                    .resizable()
-                    .renderingMode(Image.TemplateRenderingMode.original)
-                    .frame(width: geometry.size.width*0.9, height: geometry.size.height*0.9)*/
+                    .opacity(0.2)
                 if(rune.enchant != nil){
                     Image(rune.enchant!.image)
                         .resizable()
@@ -82,6 +79,24 @@ struct RuneView: View{
         .frame(minWidth: screenWidth*0.05, maxWidth: screenWidth*0.20,minHeight: screenWidth*0.05, maxHeight: screenWidth*0.20)
         .runeTileStyle(shadowDepth: 0.09)
         .modifier(Shake(animatableData: CGFloat(locked)))
+        /*.scaleEffect(scale)
+        .onChange(of: viewModel.floatingTexts) { newValue in
+            ForEach(viewModel.floatingTexts){ text in
+                if(text.id == rune.id){
+                    withAnimation(.easeOut(duration: 0.15)) {
+                        scale = 1.5
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        withAnimation(.easeIn(duration: 0.3)) {
+                            scale = 1
+                        }
+                    }
+                }
+            }
+        }*/
+        .anchorPreference(key: RunePositionPreferenceKey.self, value: .center) { anchor in
+            [rune.id: anchor]
+        }
         .matchedGeometryEffect(id: rune.id, in: namespace) //Only gestures can be below matched geometry
         .gesture( //Must have tapgesture first or it doesn't animate?!?!
             TapGesture()
@@ -89,12 +104,16 @@ struct RuneView: View{
                     hoverWorkItem?.cancel()
                     hoverWorkItem = nil
                     if rune.debuff?.archetype == .lock  {
-                        SoundManager.shared.playSoundEffect(named: "click")
+                        Task{
+                            await SoundManager.shared.playSoundEffect(named: "click")
+                        }
                         withAnimation {
                             locked += 1
                         }
                     } else {
-                        SoundManager.shared.playSoundEffect(named: "click")
+                        Task{
+                            await SoundManager.shared.playSoundEffect(named: "click")
+                        }
                         withAnimation(.easeInOut(duration: 0.4)) {
                             viewModel.selectRune(rune: rune)
                         }
