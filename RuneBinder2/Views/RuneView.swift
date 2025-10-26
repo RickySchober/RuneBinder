@@ -105,14 +105,14 @@ struct RuneView: View{
                     hoverWorkItem = nil
                     if rune.debuff?.archetype == .lock  {
                         Task{
-                            await SoundManager.shared.playSoundEffect(named: "click")
+                            SoundManager.shared.playSoundEffect(named: "click")
                         }
                         withAnimation {
                             locked += 1
                         }
                     } else {
                         Task{
-                            await SoundManager.shared.playSoundEffect(named: "click")
+                            SoundManager.shared.playSoundEffect(named: "click")
                         }
                         withAnimation(.easeInOut(duration: 0.4)) {
                             viewModel.selectRune(rune: rune)

@@ -309,7 +309,7 @@ class Outlast: Enchantment{
     }
     override func utilizeEffect(game: RuneBinderGame){
         game.player.ward += (upgraded ? 9 : 6)
-        game.player.outlast += 1
+        game.player.applyBuff(buff: Buff(archetype: .outlast, value: 1))
     }
 }
 class Brace: Enchantment{
@@ -340,7 +340,7 @@ class Deflect: Enchantment{
     }
     override func utilizeEffect(game: RuneBinderGame){
         game.player.ward += (upgraded ? 11 : 9)
-        game.player.deflect += 1
+        game.player.applyBuff(buff: Buff(archetype: .deflect, value: 1))
     }
 }
 class Fortify: Enchantment{
@@ -370,7 +370,7 @@ class Nullify: Enchantment{
         color = Color.green
     }
     override func utilizeEffect(game: RuneBinderGame){
-        game.player.nullify += (upgraded ? 2 : 1)
+        game.player.applyBuff(buff: Buff(archetype: .nullify, value: (upgraded ? 2 : 1)))
     }
 }
 class Purity: Enchantment{
@@ -385,7 +385,7 @@ class Purity: Enchantment{
         color = Color.green
     }
     override func utilizeEffect(game: RuneBinderGame){
-        game.player.nullify += 1
+        game.player.applyBuff(buff: Buff(archetype: .nullify, value: (upgraded ? 2 : 1)))
     }
 }
 class Purify: Enchantment{

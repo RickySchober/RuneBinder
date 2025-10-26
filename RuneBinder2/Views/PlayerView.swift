@@ -26,15 +26,13 @@ struct PlayerView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: screenWidth*0.18, height: screenWidth*0.27)
-                    .clipped()
-                
             }
             .offset(x: lunge)
         }
         .anchorPreference(key: RunePositionPreferenceKey.self, value: .center) { anchor in
             [player.id: anchor]
         }
-        .onChange(of: viewModel.lunge) { newValue in
+        .onChange(of: viewModel.lungeTrigger) { newValue in
             if(viewModel.lunge == player.id){
                 withAnimation(.easeOut(duration: 0.15)) {
                     lunge = screenWidth*0.18

@@ -8,6 +8,31 @@
 import Foundation
 
 
+struct Buff: Codable, Identifiable{
+    enum Archetype: String, Codable{
+        case outlast, deflect, nullify
+    }
+    let archetype: Archetype
+    var value: Int
+    var image: String {
+            switch archetype {
+            case .outlast: return "outlast"
+            case .deflect: return "deflect"
+            case .nullify: return "nullify"
+            }
+        }
+
+    var text: String {
+        return "gotem"
+    }
+    var id: UUID
+    init(archetype: Archetype, value: Int) {
+        self.archetype = archetype
+        self.value = value
+        id = UUID()
+    }
+}
+
 struct Debuff: Codable, Identifiable{
     enum Archetype: String, Codable{
         case bleed, stun, frail
@@ -33,32 +58,28 @@ struct Debuff: Codable, Identifiable{
     }
 }
 
-class Enemy: Equatable, Identifiable, Entity{
+class Enemy: Entity, Equatable{
     static func == (lhs: Enemy, rhs: Enemy) -> Bool {
         if(lhs.id==rhs.id){
             return true;
         }
         return false;
     }
-    var maxHealth: Int
-    var currentHealth: Int
-    var ward: Int = 10
-    var debuffs: [Debuff] = []
     let hitSound = "goblinhit"
     let deathSound = "goblindeath"
     var image = "Rune2"
-    var id: UUID
     var actions: [Action]
+    var chosenAction: Action? = nil
     
-    init(){
+    override init(){
+        actions = [Action(dmg: 1)]
+        super.init()
         maxHealth = 15
         currentHealth = maxHealth
-        actions = [Action(dmg: 1)]
-        id = UUID()
     }
     //Determines which action to take bassed on enemies selection algorithm default is random
-    func chooseAction(game: RuneBinderGame) -> Action{
-        return actions[Int.random(in: 0...actions.count-1)]
+    func chooseAction(game: RuneBinderGame){
+        chosenAction = actions[Int.random(in: 0...actions.count-1)]
     }
 }
 
@@ -136,13 +157,13 @@ class GoblinBrute: Enemy{
             Action(nm: "Gaurd", dmg: 4),
         ]
     }
-    override func chooseAction(game: RuneBinderGame) -> Action {
+    override func chooseAction(game: RuneBinderGame) {
         if(track >= actions.count){
             track = 0
         }
         let chosen = actions[track]
         track += 1
-        return chosen
+        chosenAction = chosen
     }
 }
 
@@ -166,13 +187,13 @@ class MultiplyingMycospawn: Enemy{
             SummonAction(nm:"Rapid Reproduction", summons: ["MultiplyingMycospawn"])
         ]
     }
-    override func chooseAction(game: RuneBinderGame) -> Action{
+    override func chooseAction(game: RuneBinderGame){
         if(Double(currentHealth)/Double(maxHealth)<0.5){
-            return actions[actions.count-1]
+            chosenAction = actions[actions.count-1]
         }
         else{
-            return actions[Int.random(in: 0...actions.count-2)]
-        }        
+            chosenAction = actions[Int.random(in: 0...actions.count-2)]
+        }
     }
 }
 class RabidWolf: Enemy{
@@ -187,12 +208,12 @@ class RabidWolf: Enemy{
             Action(dmg: 6),
         ]
     }
-    override func chooseAction(game: RuneBinderGame) -> Action{
+    override func chooseAction(game: RuneBinderGame){
         track += 1
         if(track > actions.count-1){
             track = 0
         }
-        return actions[track]
+        chosenAction = actions[track]
     }
 }
 class WolfPackLeader: Enemy{
@@ -205,14 +226,14 @@ class WolfPackLeader: Enemy{
             SummonAction(nm:"Call of the Hunt", summons: ["RabidWolf","RabidWolf"])
         ]
     }
-    override func chooseAction(game: RuneBinderGame) -> Action{
+    override func chooseAction(game: RuneBinderGame){
         if(game.enemies.count<=2 && track >= 3){
             track = 0
-            return actions[actions.count-1]
+            chosenAction = actions[actions.count-1]
         }
         else{
             track += 1
-            return actions[Int.random(in: 0...actions.count-2)]
+            chosenAction = actions[Int.random(in: 0...actions.count-2)]
         }
         
     }

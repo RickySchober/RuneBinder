@@ -10,14 +10,17 @@ import SwiftUI
 struct EnemyView: View{
     @EnvironmentObject var viewModel: RuneBinderViewModel
     @State var lunge: CGFloat = 0
+    @State var recoil: CGFloat = 0
+    @State private var previousFloatingTexts: [FloatingTextData] = []
     var enemy: Enemy
     var healthRatio: CGFloat {
         CGFloat(enemy.currentHealth) / CGFloat(enemy.maxHealth)
     }
     var body: some View{
         VStack(spacing: 0){
+            EnemyActionView(enemy: enemy)
             HealthBar(entity: enemy)
-            .frame(width: screenWidth*0.18)
+                .frame(width: screenWidth*0.18)
             DebuffGrid(entity: enemy)
             VStack{
                 Spacer() //force enemy to bottom
@@ -30,20 +33,29 @@ struct EnemyView: View{
                     Image(enemy.image)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .clipped()
-                        .onTapGesture{ viewModel.selectEnemy(enemy: enemy)
+                        .onTapGesture{
+                            viewModel.selectEnemy(enemy: enemy)
                         }
+                    StatusApplied(entity: enemy)
                 }
-                .offset(x: lunge)
             }
             .frame(width: screenWidth*0.18, height: screenWidth*0.27)
+            .offset(x: lunge + recoil)
         }
-        .onChange(of: viewModel.lunge) { newValue in
+        .overlay{
+                ForEach(viewModel.floatingTexts){ text in
+                    if(text.entityId == enemy.id){
+                        AnimatedGIFView(name: "impact", loopCount: 1)
+                            .frame(width: screenWidth*0.18, height: screenWidth*0.18)
+                            .autoDisappear(after: 0.5)
+                    }
+                }
+        }
+        .onChange(of: viewModel.lungeTrigger) { newValue in
             if(viewModel.lunge == enemy.id){
                 withAnimation(.easeOut(duration: 0.15)) {
                     lunge = -screenWidth*0.18
                 }
-                
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                     withAnimation(.easeIn(duration: 0.5)) {
                         lunge = 0
@@ -51,119 +63,119 @@ struct EnemyView: View{
                 }
             }
         }
-       .overlay{
-            ForEach(viewModel.floatingTexts){ text in
-                if(text.entityId == enemy.id){
-                    AnimatedGIFView(name: "impact", loopCount: 1)
-                        .frame(width: screenWidth*0.18, height: screenWidth*0.18)
+        .onChange(of: viewModel.floatingTexts) { newValue in
+            // Detect new floating texts for this enemy
+            let newForEnemy = newValue.filter { $0.entityId == enemy.id }
+                .filter { newText in !previousFloatingTexts.contains(where: { $0.id == newText.id }) }
+
+            if !newForEnemy.isEmpty {
+                withAnimation(.easeOut(duration: 0.15)) {
+                    recoil = screenWidth * 0.02
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    withAnimation(.easeIn(duration: 0.25)) {
+                        recoil = 0
+                    }
                 }
             }
+
+            // Update for next comparison
+            previousFloatingTexts = newValue
         }
+
         .anchorPreference(key: RunePositionPreferenceKey.self, value: .center) { anchor in
             [enemy.id: anchor]
         }
         .transition(.asymmetric(insertion: .identity , removal: .opacity)) //animates insertion and deletion of view
     }
 }
-struct DebuffGrid: View{
+
+struct EnemyActionView: View{
+    let enemy: Enemy
     @EnvironmentObject var viewModel: RuneBinderViewModel
-    var entity: Entity
-    @State var scale: Double = 1.0
+    @State var echo: Int = 0
     var body: some View{
-        ZStack{
-            ForEach(entity.debuffs.indices, id: \.self) { index in
-                let debuff = entity.debuffs[index]
-                GeometryReader { geometry in
-                    let size = geometry.size
-                    ZStack(alignment: .topLeading) {
-                        Image(debuff.image)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .clipped()
-                        Text("\(debuff.value)")
-                            .font(.caption2)
-                            .foregroundColor(.white)
-                            .position(x: 0.8 * size.width, y: 0.8 * size.height)
-                            .font(.system(size: 0.2 * min(size.width, size.height)))
-                    }
-                }
-                .scaleEffect(scale)
-                .onChange(of: debuff.value){ _ in
-                    withAnimation(.easeOut(duration: 0.15)) {
-                        scale = 2.0                        }
-                    
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        withAnimation(.easeIn(duration: 0.3)) {
-                            scale = 1.0
+        if(enemy.chosenAction != nil){
+            GeometryReader { geometry in
+                let size = geometry.size
+                BobbingView(amplitude: screenWidth*0.015, speed: 1.2) {
+                    ZStack(){
+                        if(enemy.chosenAction!.gaurd>0){
+                            Image("ward")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: screenWidth*0.09, height: screenWidth*0.09)
+                                .echoEffect(
+                                    trigger: echo,
+                                    appearTrigger: false,
+                                    scale: 3.0,
+                                    opacity: 0.4,
+                                    duration: 0.8,
+                                    repeats: 3
+                                )
+                        }
+                        else if(enemy.chosenAction!.debuffs.count>0){
+                            Image("status")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: screenWidth*0.09, height: screenWidth*0.09)
+                                .echoEffect(
+                                    trigger: echo,
+                                    appearTrigger: false,
+                                    scale: 3.0,
+                                    opacity: 0.4,
+                                    duration: 0.8,
+                                    repeats: 3
+                                )
+                        }
+                        if(enemy.chosenAction!.damage > 0){
+                            Image("attack")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: screenWidth*0.09, height: screenWidth*0.09)
+                                .echoEffect(
+                                    trigger: echo,
+                                    appearTrigger: false,
+                                    scale: 3.0,
+                                    opacity: 0.4,
+                                    duration: 0.8,
+                                    repeats: 3
+                                )
+                            Text("\(enemy.chosenAction!.damage)")
+                                .foregroundColor(.white)
+                                .bold()
+                                .position(x: 0.9 * size.width, y: 0.85 * size.height)
+                                .font(.system(size: 0.5 * min(size.width, size.height)))
                         }
                     }
                 }
-                .onAppear(){
-                    withAnimation(.easeOut(duration: 0.15)) {
-                        scale = 2.0                        }
-                    
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        withAnimation(.easeIn(duration: 0.3)) {
-                            scale = 1.0
-                        }
-                    }
-                }
-                .frame(width: screenWidth * 0.04, height: screenWidth * 0.04)
-                .offset(x: CGFloat(index % 4) * screenWidth * 0.04 - screenWidth*0.05,
-                        y: CGFloat(index / 4) * screenWidth * 0.04)
             }
+            .onChange(of: viewModel.lungeTrigger) { newValue in
+                if(viewModel.lunge == enemy.id){
+                   echo += 1 // If enemy is attacking trigger animation on icon
+                }
+            }
+            .frame(width: screenWidth*0.09, height: screenWidth*0.09)
         }
-        .padding(1)
     }
 }
-struct HealthBar: View{
-    @EnvironmentObject var viewModel: RuneBinderViewModel
-    var entity: Entity
-    var healthRatio: CGFloat {
-        CGFloat(entity.currentHealth) / CGFloat(entity.maxHealth)
-    }
-    var wardRatio: CGFloat {
-        min(CGFloat(entity.ward) / CGFloat(entity.maxHealth), 1.0)
-    }
-    var body: some View{
-        if(entity.ward>0){
-            ZStack(alignment: .leading) { //Block bar
-                Rectangle()
-                    .frame(width: screenWidth*0.13, height: screenHeight*0.0075)
-                    .foregroundColor(.gray.opacity(0.3))
-                    .cornerRadius(3)
-                Rectangle()
-                    .frame(width: screenWidth*0.13*min(1 ,wardRatio), height: screenHeight*0.0075) // 50 is total width
-                    .foregroundColor(.blue)
-                    .cornerRadius(3)
-                
-                Text("\(entity.ward)")
-                    .font(.caption2)
-                    .foregroundColor(.white)
-                    .frame(width: screenWidth*0.13, height: screenHeight*0.02)
-                    .minimumScaleFactor(0.5)
-                    .lineLimit(nil)
+struct BobbingView<Content: View>: View {
+    let amplitude: CGFloat    // how far up/down it moves
+    let speed: Double         // duration of one full cycle
+    let content: () -> Content
+
+    @State private var offset: CGFloat = 0
+
+    var body: some View {
+        content()
+            .offset(y: offset)
+            .onAppear {
+                withAnimation(
+                    Animation.easeInOut(duration: speed)
+                        .repeatForever(autoreverses: true)
+                ) {
+                    offset = -amplitude
+                }
             }
-            .animation(.linear(duration: 0.5), value: wardRatio)
-            .padding(0)
-        }
-        ZStack(alignment: .leading) { //HP bar
-            Rectangle()
-                .frame(width: screenWidth*0.13, height: screenHeight*0.0075)
-                .foregroundColor(.gray.opacity(0.3))
-                .cornerRadius(3)
-            Rectangle()
-                .frame(width: max(0, screenWidth*0.13*healthRatio), height: screenHeight*0.0075) // 50 is total width
-                .foregroundColor(.red)
-                .cornerRadius(3)
-            Text("\(entity.currentHealth)/\(entity.maxHealth)")
-                .font(.caption2)
-                .foregroundColor(.white)
-                .frame(width: screenWidth*0.13, height: screenHeight*0.02)
-                .minimumScaleFactor(0.5)
-                .lineLimit(nil)
-        }
-        .padding(0)
-        .animation(.linear(duration: 0.5), value: healthRatio)
     }
 }

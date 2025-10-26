@@ -7,18 +7,24 @@
 
 import SwiftUI
 
+struct FloatingTextData: Identifiable, Equatable {
+    let id = UUID()
+    let entityId: UUID
+    let text: String
+    let color: Color
+}
+
 class RuneBinderViewModel: ObservableObject {
     @Published private var model: RuneBinderGame    
     private let persistence = SaveManager()
     private var gameState: GameState?
+    //Animation tracking vars
     @Published var floatingTexts: [FloatingTextData] = []
+    @Published var isAnimatingTurn: Bool = false
     @Published var lunge: UUID = UUID()
-    struct FloatingTextData: Identifiable, Equatable {
-        let id = UUID()
-        let entityId: UUID
-        let text: String
-        let color: Color
-    }
+    @Published var lungeTrigger = false
+
+    
     init(){
         gameState = nil
         model = RuneBinderGame()
@@ -116,19 +122,107 @@ class RuneBinderViewModel: ObservableObject {
         model.checkSpellValid()
         objectWillChange.send()
     }
+    func playerTurnStart(){
+        isAnimatingTurn = false
+        player.triggerBuffs()
+        for enemy in enemies {
+            enemy.chooseAction(game: model)
+        }
+        model.player.actions = 2 //reset actions
+    }
     func playerTurnEnd(){
+        player.triggerDebuffs().forEach { model.addAnimation(event: $0) }
+        model.runeDebuffs()
         if(model.cleanUp()){ //Combat is over
             saveGame(node: NodeType.combat)
             model.generateEnchantRewards()
         }
-        model.runeDebuffs()
-        model.enemyTurn()
-        if(model.cleanUp()){ //Combat is over
-            saveGame(node: NodeType.combat)
-            model.generateEnchantRewards()
+        else{
+            Task{
+                await enemyTurns()
+            }
         }
         objectWillChange.send()
-
+    }
+    @MainActor
+    func enemyTurnEnd(){
+        Task{
+            for enemy in enemies {
+                enemy.triggerDebuffs().forEach { model.addAnimation(event: $0) }
+                await playCombatEvents(from: model)
+            }
+            if(model.cleanUp()){ //Combat is over
+                saveGame(node: NodeType.combat)
+                model.generateEnchantRewards()
+            }
+            playerTurnStart()
+            objectWillChange.send()
+        }
+    }
+    @MainActor
+    func castSpell(){
+        Task{
+            if(model.prepareSpell()){ //returns true when ready to cast
+                isAnimatingTurn = true
+                for rune in model.enchantQueue{
+                    if(rune.enchant!.priority>=3 && model.targets.isEmpty){ //If spell contains no additional targets add base hit
+                        model.addTarget(hit: Hit(enemy: enemies[model.primaryTarget!], modifier: model.primaryModifer))
+                    }
+                    rune.enchant?.utilizeEffect(game: model)
+                    if(rune.enchant?.priority==0){
+                        print("i am waiting")
+                        await playCombatEvents(from: model)
+                    }
+                }
+                if(model.targets.isEmpty){ //If spell contains no additional targets add base hit
+                    model.addTarget(hit: Hit(enemy: enemies[model.primaryTarget!], modifier: model.primaryModifer))
+                }
+                model.addAnimation(event: .lunge(id: player.id, delay: 0.5))
+                for i in model.targets.indices {
+                    model.resolveHit(hit: model.targets[i])
+                    await playCombatEvents(from: model)
+                }
+                model.spellCleanup()
+                model.player.actions -= 1
+                if(player.actions<=0){
+                    playerTurnEnd()
+                }
+                else{
+                    if(model.cleanUp()){ //Combat is over
+                        saveGame(node: NodeType.combat)
+                        model.generateEnchantRewards()
+                    }
+                    isAnimatingTurn = false
+                }
+            }
+        }
+    }
+    @MainActor
+    func enemyTurns(){
+        for enemy in enemies {
+            enemy.triggerBuffs()
+        }
+        Task{
+            for enemy in enemies {
+                if(enemy.chosenAction != nil){
+                    enemy.chosenAction!.utilizeEffect(game: model) // Any special effects related to action
+                    
+                    if(enemy.chosenAction!.damage > 0){ //Hit portion of action
+                        model.addAnimation(event: .lunge(id: enemy.id, delay: 0.5))
+                        await playCombatEvents(from: model)
+                        let damage: Int = model.player.takeDamage(hit: enemy.chosenAction!.damage)
+                        model.addAnimation(event: .damage(id: player.id, amount: damage, delay: 0.5))
+                        await playCombatEvents(from: model)
+                    }
+                    if(enemy.chosenAction!.gaurd > 0){
+                        enemy.ward += enemy.chosenAction!.gaurd
+                    }
+                    model.applyRuneDebuffs(atk: enemy.chosenAction!) // Apply player and rune debuffs
+                    enemy.chosenAction = nil
+                }
+            }
+            enemyTurnEnd()
+        }
     }
     /* On spell cast the game should play out a sequence of animations as effects resolve.
      * This includes enchantment effects as the go through the queue. Resolving all effects first
@@ -138,28 +232,7 @@ class RuneBinderViewModel: ObservableObject {
      * Priority 0 and 4 resolve immediately, Priority 1-3 will modify a hits
      */
     @MainActor
-    func castSpell(){
-        Task{
-            if(model.prepareSpell()){ //returns true when ready to cast
-                for rune in model.enchantQueue{
-                    rune.enchant?.utilizeEffect(game: model)
-                    if(rune.enchant?.priority==0){
-                        print("i am waiting")
-                        await playCombatEvents(from: model)
-                    }
-                }
-                model.prepareAttack()
-                for i in model.targets.indices {
-                    model.resolveHit(hit: model.targets[i])
-                    await playCombatEvents(from: model)
-                }
-                model.spellCleanup()
-                playerTurnEnd()
-            }
-        }
-    }
-    @MainActor
-    func playCombatEvents(from model: RuneBinderGame) async {
+    func playCombatEvents(from model: RuneBinderGame) async{
         for event in model.eventLog {
             var animationDelay: Double = 0.0
                 switch event {
@@ -188,6 +261,7 @@ class RuneBinderViewModel: ObservableObject {
                     print("gentlemen we got em")
                 case .lunge(let id, let delay):
                     lunge = id
+                    lungeTrigger.toggle()
                     animationDelay = delay
                 case .debuff(let id, let debuff, let delay):
                     print("")
@@ -233,8 +307,20 @@ class RuneBinderViewModel: ObservableObject {
         saveGame(node: nil)
     }
     func shuffleGrid(){
+        isAnimatingTurn = true
         model.shuffleGrid()
-        playerTurnEnd()
+        model.player.actions -= 1
+        if(player.actions<=0){
+            playerTurnEnd()
+        }
+        else{
+            if(model.cleanUp()){ //Combat is over
+                saveGame(node: NodeType.combat)
+                model.generateEnchantRewards()
+            }
+            isAnimatingTurn = false
+        }
+        objectWillChange.send()
     }
     //Rest Area options
     func rest(){

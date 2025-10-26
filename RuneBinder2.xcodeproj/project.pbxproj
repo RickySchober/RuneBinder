@@ -49,6 +49,7 @@
 		B6C7DE752EA3177700333526 /* sword_clash.wav in Resources */ = {isa = PBXBuildFile; fileRef = B6C7DE722EA3177700333526 /* sword_clash.wav */; };
 		B6C7DE762EA3177700333526 /* sword_sheath.wav in Resources */ = {isa = PBXBuildFile; fileRef = B6C7DE732EA3177700333526 /* sword_sheath.wav */; };
 		B6C7DE7A2EA5C1BE00333526 /* impact.gif in Resources */ = {isa = PBXBuildFile; fileRef = B6C7DE792EA5C1BE00333526 /* impact.gif */; };
+		B6C7DE7C2EAAFA0800333526 /* EntityViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6C7DE7B2EAAFA0800333526 /* EntityViews.swift */; };
 		B6D1D24D2A1B0B24001A16BD /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6D1D24C2A1B0B24001A16BD /* Player.swift */; };
 		B6D1D24F2A1B0B6A001A16BD /* Enchantment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6D1D24E2A1B0B6A001A16BD /* Enchantment.swift */; };
 /* End PBXBuildFile section */
@@ -97,6 +98,7 @@
 		B6C7DE722EA3177700333526 /* sword_clash.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = sword_clash.wav; sourceTree = "<group>"; };
 		B6C7DE732EA3177700333526 /* sword_sheath.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = sword_sheath.wav; sourceTree = "<group>"; };
 		B6C7DE792EA5C1BE00333526 /* impact.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; name = impact.gif; path = "../../../../Downloads/Pixel Art VFX Impacts - FREE Version/VFX4/COLOR/impact.gif"; sourceTree = "<group>"; };
+		B6C7DE7B2EAAFA0800333526 /* EntityViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntityViews.swift; sourceTree = "<group>"; };
 		B6D1D24C2A1B0B24001A16BD /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		B6D1D24E2A1B0B6A001A16BD /* Enchantment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Enchantment.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -161,6 +163,7 @@
 		B6A92FE82A147B8E00AEF4E7 = {
 			isa = PBXGroup;
 			children = (
+				B6C7DE7B2EAAFA0800333526 /* EntityViews.swift */,
 				B6A92FF32A147B8E00AEF4E7 /* RuneBinder2 */,
 				B6A92FF22A147B8E00AEF4E7 /* Products */,
 			);
@@ -326,6 +329,7 @@
 				B612A09F2DDBD1120030D805 /* EventView.swift in Sources */,
 				B6654CBF2DD3F3B500B33E2C /* RootView.swift in Sources */,
 				B689C67A2E87695600AA786E /* SeededRandom.swift in Sources */,
+				B6C7DE7C2EAAFA0800333526 /* EntityViews.swift in Sources */,
 				B6654CDA2DD7F06200B33E2C /* MapView.swift in Sources */,
 				B6C7DE6E2EA0445800333526 /* Characters.swift in Sources */,
 				B6A930052A147C2900AEF4E7 /* RuneBinderGame.swift in Sources */,

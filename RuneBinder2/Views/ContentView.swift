@@ -57,6 +57,7 @@ struct ContentView: View {
                 .background(viewModel.validSpell ? Color.gray : Color.yellow )
                 .frame(width: screenWidth, height: screenHeight*0.1, alignment: .center)
             }
+            .allowsHitTesting(!viewModel.isAnimatingTurn)
             .edgesIgnoringSafeArea(.top)
             //.frame(width: screenWidth, height: screenHeight)
             .background(Color.red.opacity(0.3))
@@ -361,14 +362,13 @@ struct SpellView: View{
 }
 struct EnemyListView: View {
     @EnvironmentObject var viewModel: RuneBinderViewModel
-
     var body: some View {
         HStack(alignment: .bottom, spacing: -10) {
             ForEach(self.viewModel.enemies, id: \.id) { enemy in
-                EnemyView(enemy: enemy)
-                    .padding(0)
-                    .background((viewModel.target == enemy) ? Color.red.opacity(0.3) : Color.clear)
-                    .cornerRadius(10)
+                    EnemyView(enemy: enemy)
+                        .padding(0)
+                        .background((viewModel.target == enemy) ? Color.red.opacity(0.3) : Color.clear)
+                        .zIndex(viewModel.lunge == enemy.id ? 10 : 0)
             }
         }
         .animation(.default, value: viewModel.enemies)
@@ -400,16 +400,18 @@ struct CombatView: View {
                 )
                 .offset(y: screenHeight * -0.03)
             // Characters anchored to ground
-            HStack(alignment: .bottom) {
-                // Player on left
-                PlayerView(player: viewModel.player)
-                    .padding(.leading, screenWidth*0.51)
-                    .offset(y: screenHeight*0.09)
+            VStack{
                 Spacer()
-                // Enemies on right
-                EnemyListView()
-                    .padding(.trailing, screenWidth*0.51)
-                    .offset(y: screenHeight*0.09)
+                HStack(alignment: .bottom) {
+                    // Player on left
+                    PlayerView(player: viewModel.player)
+                        .padding(.leading, screenWidth*0.51)
+                    Spacer()
+                    // Enemies on right
+                    EnemyListView()
+                        .padding(.trailing, screenWidth*0.51)
+                }
+                .padding(.bottom, screenWidth*0.18)
             }
         }
     }
