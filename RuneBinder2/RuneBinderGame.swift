@@ -9,8 +9,28 @@ import Foundation
 import UIKit
 import SwiftUI
 
-class RuneBinderGame{
-    //Spell Vars
+enum CombatEvent { //Store information for animations to be resolved in queue
+    case runeActivated(rune: Rune, text: String, delay: Double) //
+    case damage(id: UUID, amount: Int, delay: Double) //Hit damage
+    case action(id: UUID, delay: Double) //Attack start animation
+    case lunge(id: UUID, delay: Double) //Attack start animation
+    case death(enemyIndex: Int, delay: Double)
+    case sound(name: String, delay: Double)
+    case debuff(id: UUID, debuff: Debuff, delay: Double) //Debuff applied
+    case implicit(delay: Double) //For animations implicitly defined to model changes just add delay to let them playout
+}
+struct Hit{
+    let enemy: Enemy
+    var modifier: Double
+    var debuffs: [Debuff] = []
+}
+class RuneBinderGame: ObservableObject{
+    //Seed
+    var encounterRng: SeededGenerator
+    var rewardRng: SeededGenerator
+    var shufflingRng: SeededGenerator
+    private (set) var seed: [UInt64]
+    //Spell data
     private (set) var grid: Array<Rune> = []
     private (set) var enchantQueue: Array<Rune> = []
     private (set) var gridSize: Int = 16
@@ -20,37 +40,76 @@ class RuneBinderGame{
     private (set) var validSpell: Bool = false
     private (set) var selectedRune: Rune? = nil
     
-    private var spellLibrary: Array<Enchantment.Type> //List of possible enchants to encounter during run
+    private (set) var spellLibrary: Array<Enchantment.Type> //List of possible enchants to encounter during run
     private (set) var rewardEnchants: Array<Enchantment.Type> = [] //List of known enchantments
-    private var spellBook: [Enchantment] = [Lob(), Engulf(), Enlarge(), Gatling(), Shotgun(), Aspire(), Eliminate(), Fortify(), Swarm()]//List of aquired enchants
+    private (set) var spellBook: [Enchantment]
     private (set) var spellDeck: [Enchantment]//List of undrawn enchants
-    private var maxEnchants: Int = 5
+    private (set) var maxEnchants: Int = 5
+    private var encounterCount: Int = 0
 
-    
+    var character: Characters = hermit
     var player: Player = Player(currentHealth: 50, maxHealth: 80)
+    //Enemy data
     private (set) var enemies: [Enemy] = [] //Array containing the enemies in the current encounter will be in index 0-3 based on position
     private (set) var primaryTarget: Int? = nil //Each spell cast requires selecting an enemy as a target
     private (set) var primaryModifer: Double = 0.0 //The damage modifier to the primary target before additional targets
-    private (set) var targets: [Double] = [0.0, 0.0, 0.0, 0.0] //Runes that modify targeting deal a portion of damage to other enemies
+    private (set) var targets: [Hit] = [] //Runes that modify targeting deal a portion of damage to other enemies
     private (set) var enemyLimit: Int = 4 //Maximum number of enemies in a given encounter
     //Map
     private (set) var map: [[MapNode]] = [[]]
     
-    private (set) var victory: Bool = false
+    var encounterOver: Bool = false
     private (set) var defeat: Bool = false
 
     //Array represents the relative occurence of letters in words in the dictionary
     //numbers represent the % of its occurence and correlate with A-Z
     private let letterOccurence: Array<Double> = [7.8, 2.0, 4.0, 3.8, 11, 1.4, 3.0, 2.3, 8.6, 0.21, 0.97, 5.3, 2.7, 7.2,
                                                   6.1, 2.8, 0.19, 7.3, 8.7, 6.7, 3.3, 1.0, 0.91, 0.27, 1.6, 0.44]
+    var eventLog: [CombatEvent] = []//Queue for resolving animations on combat action
     init(){
+        seed = [UInt64.random(in: 0...9999), UInt64.random(in: 0...9999), UInt64.random(in: 0...9999)] //random seed
+        encounterRng = SeededGenerator(seed: seed[0])
+        rewardRng = SeededGenerator(seed: seed[1])
+        shufflingRng = SeededGenerator(seed: seed[2])
         spellLibrary = [
         Empower.self, Revitalize.self, Ward.self, CleansingWave.self, SerratedStrike.self, Purify.self,
-        Shotgun.self, Lob.self, Swarm.self, Shotgun.self, Magnify.self, Enlarge.self
+        Spray.self, Lob.self, Swarm.self, Spray.self, Magnify.self, Enlarge.self
         ]
+        spellBook = []
         spellDeck = spellBook
         map = generateMap(numLayers: 10, minNodes: 3, maxNodes: 5)
+        assignMap()
         shuffleGrid()
+    }
+    init(state: GameState){ //Create model from saved game state
+        seed = state.seed
+        encounterRng = SeededGenerator(seed: seed[0])
+        rewardRng = SeededGenerator(seed: seed[1])
+        shufflingRng = SeededGenerator(seed: seed[2])
+        
+        spellLibrary = state.spellLibrary.map { type(of: makeEnchantment(from: $0)) }
+        spellBook = state.spellBook.map { makeEnchantment(from: $0) }
+        maxEnchants = state.maxEnchants
+
+        player.currentHealth = state.playerHealth           // Only current health is needed rn
+        enemyLimit = state.enemyLimit
+
+        map = rebuildMap(from: state.map)
+
+        gridSize = state.gridSize
+        encounterOver = state.encounterOver
+        defeat = state.defeat
+        
+        spellDeck = spellBook
+        if(state.node != nil){ //If you are currently on a node load it otherwise on map so do nothing
+            loadNode(node: state.node!)
+        }
+    }
+    func selectCharacter(character: Characters){
+        self.character = character
+        spellBook = character.startingDeck.map { makeEnchantment(from: $0) }
+        spellBook = [Ricochet(),Ricochet(),Ricochet(),Ricochet(),Ricochet(),SerratedStrike(),SerratedStrike(),SerratedStrike()]
+        spellDeck = spellBook
     }
     func addEnemies(newEnemies: [Enemy], pos: Int){
         enemies.insert(contentsOf: newEnemies[..<min(newEnemies.count, enemyLimit-enemies.count)], at: pos)
@@ -65,9 +124,12 @@ class RuneBinderGame{
     func hoverRune(rune: Rune?){
         selectedRune = rune
     }
+    func addAnimation(event: CombatEvent){
+        eventLog.append(event)
+    }
     //Modifies damage to additional targets based on damage to main target
-    func addTarget(enemy: Enemy, modifier: Double){
-        targets[enemies.firstIndex(of: enemy)!] += modifier
+    func addTarget(hit: Hit){
+        targets.append(hit)
     }
     //Changes the primary target
     func changeTarget(enemy: Enemy, modifier: Double){
@@ -76,19 +138,41 @@ class RuneBinderGame{
         }
         else{
             primaryTarget = enemies.firstIndex(of: enemy);
-            targets = [Double](repeating: 0.0, count: enemies.count) //When new target selected reset all damage modifiers
+            targets = [] //When new target selected reset all hits
             primaryModifer = modifier
         }
     }
+    func addHitEffect(debuffs: [Debuff] = [], modifier: Double = 1){
+        for i in targets.indices {
+            targets[i].modifier *= modifier
+            targets[i].debuffs.append(contentsOf: debuffs)
+        }
+    }
+    func removeEnchantment(enchant: Enchantment){
+        for i in 0..<spellBook.count{
+            if(enchant == spellBook[i]){
+                spellBook.remove(at: i)
+                return 
+            }
+        }
+    }
+    /*
+      Creates a 2d array of map nodes which represent the grid layout of nodes in the map. Each layer has a semi random
+      amount of nodes in range minNodes-maxNodes ensuring the same number of nodes does not appear more than twice in a row.
+      The connections between each row depend on difference between current row and next row while ensuring no overlapping paths.
+      Extra paths are randomly assigned to go left or right to ensure balanced travel accross the map. Once all nodes are created
+      there types are assigned semirandomly biasing towards a certain amount of each node on a given path. On an average 10 node
+      path 4 is combat, 2 is event, 2 is rest, 1 is shop, and 1 is elite.
+     */
     func generateMap(numLayers: Int, minNodes: Int, maxNodes: Int) -> [[MapNode]] {
         var map: [[MapNode]] = []
         while map.count < numLayers{
             map.append([])
         }
         for layer in 0..<numLayers {
-            var nodeCount = Int.random(in: minNodes...maxNodes)
+            var nodeCount = encounterRng.nextInt(in: minNodes..<maxNodes+1)
             while(layer >= 2  && nodeCount == map[layer-1].count && nodeCount == map[layer-2].count){ //Prevent many same size in a row
-                nodeCount = Int.random(in: minNodes...maxNodes)
+                nodeCount = encounterRng.nextInt(in: minNodes..<maxNodes+1)
             }
             for i in 0..<nodeCount{
                 map[layer].append(MapNode(pos: i, lay: layer, tp: .combat))
@@ -103,9 +187,9 @@ class RuneBinderGame{
             if(map[layer+1].count > map[layer].count){ //Next row bigger
                 let extraPaths = map[layer+1].count - map[layer].count //Randomly assign extra paths to nodes default path
                 for _ in 0..<extraPaths{
-                    var randPos = Int.random(in: 0..<map[layer].count)
+                    var randPos = encounterRng.nextInt(in: 0..<map[layer].count)
                     while(!map[layer][randPos].nextNodes.isEmpty){ //Random unchosen starting node
-                        randPos = Int.random(in: 0..<map[layer].count)
+                        randPos = encounterRng.nextInt(in: 0..<map[layer].count)
                     }
                     map[layer][randPos].nextNodes = [map[layer+1][map[layer][randPos].position*(map[layer+1].count-1)/(map[layer].count-1)]]
                 }
@@ -134,7 +218,7 @@ class RuneBinderGame{
                 }
             }
             else if(map[layer+1].count < map[layer].count){ //Next row smaller
-                let direction = Int.random(in: 0..<2)
+                let direction = encounterRng.nextInt(in: 0..<2)
                 if(direction == 0){ //Bias Right
                     for node in map[layer] {
                         node.nextNodes = [map[layer+1][node.position*(map[layer+1].count-1)/(map[layer].count-1)]]
@@ -149,7 +233,7 @@ class RuneBinderGame{
                 }
             }
             else{ //Same size
-                let extraPath = Int.random(in: 0..<map[layer].count) //give random node extra path
+                let extraPath = encounterRng.nextInt(in: 0..<map[layer].count) //give random node extra path
                 for node in map[layer] {
                     node.nextNodes.append(map[layer+1][node.position])
                     if node == map[layer][extraPath]{
@@ -160,28 +244,74 @@ class RuneBinderGame{
                             node.nextNodes.append(map[layer+1][node.position-1])
                         }
                         else{
-                            let direction = Int.random(in: 1...2)
+                            let direction = encounterRng.nextInt(in: 1..<3)
                             direction == 1 ? node.nextNodes.append(map[layer+1][node.position-1]) : node.nextNodes.append(map[layer+1][node.position+1])
                         }
                     }
                 }
             }
         }
-        
         return map
     }
+    func assignMapColumn(layer: Int, pos: Int, prob: [Double]) -> [Double]{
+        let selector = WeightedRandomSelector([
+                (.combat, 0.4),
+                (.event, 0.2),
+                (.rest, 0.2),
+                (.shop, 0.1),
+                (.elite, 0.1)
+            ])
+        if(map[layer][pos].nextNodes.count == 0){
+        }
+        return []
+    }
+    func assignMap(){
+        let selector = WeightedRandomSelector([
+                (.combat, 0.4),
+                (.event, 0.2),
+                (.rest, 0.2),
+                (.shop, 0.1),
+                (.elite, 0.1)
+            ])
+        for layer in map{
+            for node in layer{
+                node.type = selector.random(using: &encounterRng)
+            }
+        }
+    }
+    struct WeightedRandomSelector {
+        let weights: [(NodeType, Double)]
+        let totalWeight: Double
+
+        init(_ weights: [(NodeType, Double)]) {
+            self.weights = weights
+            self.totalWeight = weights.reduce(0) { $0 + $1.1 }
+        }
+
+        func random(using generator: inout SeededGenerator) -> NodeType {
+            let r = Double.random(in: 0..<totalWeight, using: &generator)
+            var cumulative = 0.0
+            for (type, weight) in weights {
+                cumulative += weight
+                if r < cumulative {
+                    return type
+                }
+            }
+            return weights.last!.0 // fallback
+        }
+    }
     func generateRune(enchant: Enchantment?) -> Rune{
-        let temp =  Double.random(in: 0..<100)
-        var prob: Double = 0.0
+        let temp: Int =  shufflingRng.nextInt(in: 0..<10000)
+        var prob: Int = 0
         for i in (0...letterOccurence.count-1){
-            if(temp>=prob&&temp<prob+letterOccurence[i]){
+            if(temp>=prob&&temp<prob+Int(letterOccurence[i]*100)){
                 let char = Character(UnicodeScalar(i+97)!)//convert int to lower case char based on ascii value
                 var pow = 1 //set power based on rarity of letter
                 if(letterOccurence[i]<1){pow = 3}
                 else if(letterOccurence[i]<=3.3){pow = 2}
-                return Rune(l: char, p: pow, e: enchant)
+                return Rune(l: String(char), p: pow, e: enchant)
             }
-            prob += letterOccurence[i]
+            prob += Int(letterOccurence[i]*100)
         }
         
         return Rune(l: "a", p: 1, e: nil)
@@ -200,9 +330,9 @@ class RuneBinderGame{
         
         var enchantIndices: [Int] = []
         for _ in (0..<min(maxEnchants, spellBook.count)){
-            var rand = Int.random(in: 0..<gridSize)
+            var rand = shufflingRng.nextInt(in: 0..<gridSize)
             while(enchantIndices.contains(rand)){
-                rand = Int.random(in: 0..<gridSize)
+                rand = shufflingRng.nextInt(in: 0..<gridSize)
             }
             enchantIndices.append(rand)
         }
@@ -215,24 +345,16 @@ class RuneBinderGame{
     func drawEnchant(casting: Bool = false) -> Enchantment?{
         if(spellBook.count==0){ return nil }
         if(spellDeck.isEmpty){ //Reshuffle all enchantments not on the grid
-            spellDeck = spellBook
-            for rune in grid{
+            spellDeck = spellBook //Add all enchants
+            for rune in grid{ //Remove enchants in grid unless they are used in spell
                 if(rune.enchant != nil && !(casting && spell.contains(rune))){
                     spellDeck.remove(at: spellDeck.firstIndex(of: rune.enchant!)!)
                 }
             }
         }
-        let rand = Int.random(in: 0..<spellDeck.count)
+        let rand = shufflingRng.nextInt(in: 0..<spellDeck.count)
         let enchant = spellDeck[rand]
         spellDeck.remove(at: rand)
-        if(spellDeck.isEmpty){ //Reshuffle all enchantments not on the grid
-            spellDeck = spellBook
-            for rune in grid{
-                if(rune.enchant != nil && (!casting || !spell.contains(rune))){
-                    spellDeck.remove(at: spellDeck.firstIndex(of: rune.enchant!)!)
-                }
-            }
-        }
         return enchant
         
     }
@@ -266,29 +388,10 @@ class RuneBinderGame{
             validSpell = (misspelledRange.location == NSNotFound)
         }
     }
-    func enemyTurn(){
-        for enemy in enemies {
-            let choice: Action = enemy.chooseAction(game: self)
-            choice.utilizeEffect(game: self)
-            if(player.block > 0){
-                if(choice.damage > player.block){
-                    player.currentHealth -= choice.damage + player.block
-                    player.block = 0
-                }
-                else{
-                    player.block -= choice.damage
-                }
-            }
-            else{
-                player.currentHealth -= choice.damage
-            }
-            applyRuneDebuffs(atk: choice)
-        }
-    }
     //Applies debuffs of an enemy attack to random runes that are not enchanted or debuffed
     func applyRuneDebuffs(atk: Action){
-        if(player.nullify>0){
-            player.nullify -= 1
+        if(player.buffs.contains { $0.archetype == .nullify}) { //Negates debuffs from an attack
+            return
         }
         var debuffable: Int = 0
         for rune in grid{
@@ -296,14 +399,14 @@ class RuneBinderGame{
                 debuffable += 1
             }
         }
-        for i in 0..<atk.debuffs.count{
-            var rand = Int.random(in: 0..<debuffable-1) //assign the randth valid rune to be debuffed
+        for i in 0..<atk.runeDebuffs.count{
+            var rand = shufflingRng.nextInt(in: 0..<debuffable-1) //assign the randth valid rune to be debuffed
             for rune in grid{
                 if(rune.debuff == nil && rand > 0){
                     rand -= 1
                 }
                 if(rand == 0){
-                    rune.debuff = atk.debuffs[i]
+                    rune.debuff = atk.runeDebuffs[i]
                     debuffable -= 1
                     break
                 }
@@ -313,24 +416,14 @@ class RuneBinderGame{
     /*Since the effects of enchantments must be applied in a specific order this function creates an ordered list of all enchantments
     in the current spell. This is only needed to be run when there is both a valid target and word*/
     func queueEnchants(){
-        enchantQueue.removeAll()
-        for rune in grid{
-            if(spell.contains(rune)&&rune.enchant != nil){
-                for i in (0...enchantQueue.count){
-                    if(i==enchantQueue.count){
-                        enchantQueue.append(rune)
-                    }
-                    else if(rune.enchant!.priority>=enchantQueue[i].enchant!.priority){
-                        enchantQueue.insert(rune, at: i)
-                    }
-                }
-            }
-        }
+        enchantQueue = spell.filter { $0.enchant != nil }
+                            .sorted { $0.enchant!.priority < $1.enchant!.priority }
     }
-    func castSpell(){
+    func prepareSpell() -> Bool{
         //change grid size if surge letters used
         if(primaryTarget==nil){//select target warning
-            print("no enemy targeted")
+            Swift.print("no enemy targeted")
+            return false
         }
         else{
             spellPower = 0
@@ -338,7 +431,7 @@ class RuneBinderGame{
             var enchantCount: Int = 0 //Number of un-used enchants on grid
             for rune in grid{ //count power and enchants
                 if(spell.contains(rune)){
-                    if(rune.debuff == nil || rune.debuff?.type != .weak){
+                    if(rune.debuff == nil || rune.debuff?.archetype != .weak){
                         spellPower += rune.power
                     }
                 }
@@ -346,60 +439,47 @@ class RuneBinderGame{
                     enchantCount += 1
                 }
             }
-            print("spell power of \(spellPower) enchant count of \(enchantCount)")
-            for rune in enchantQueue{
-                rune.enchant?.utilizeEffect(game: self)
-            }
-            if(targets.max()==0.0){ //If no additional targets just hit primary target
-                enemies[primaryTarget!].currentHealth -= Int(primaryModifer*Double(spellPower))
-                if(enemies[primaryTarget!].currentHealth<=0){
-                    SoundManager.shared.playSoundEffect(named: enemies[primaryTarget!].deathSound)
+        }
+        return true
+    }
+    // Resolve all actions after casting spell including clearing enchant queue, hit queue and replacing runes
+    func spellCleanup(){
+        enchantQueue.removeAll()
+        targets.removeAll()
+        primaryTarget = nil
+        var enchantCount: Int = (grid.filter { $0.enchant != nil && !spell.contains($0) }).count //Number of un-used enchants on grid
+        for i in (0...gridSize-1){ //Replace used letters in grid
+            if(spell.contains(grid[i])){
+                if(enchantCount < min(spellBook.count, maxEnchants)){
+                    grid[i] = generateRune(enchant: drawEnchant(casting: true))
+                    enchantCount += 1
+                    print("gimme enchant")
                 }
                 else{
-                    SoundManager.shared.playSoundEffect(named: enemies[primaryTarget!].hitSound)
+                    grid[i] = generateRune(enchant: nil)
                 }
             }
-            else{
-                for i in 0..<targets.count {
-                    enemies[i].currentHealth -=  Int(targets[i]*primaryModifer*Double(spellPower))//Deal damage based on targets modifier rounding down
-                    if(enemies[i].currentHealth<=0){
-                        SoundManager.shared.playSoundEffect(named: enemies[i].deathSound)
-                    }
-                    else{
-                        SoundManager.shared.playSoundEffect(named: enemies[i].hitSound)
-                    }
-                }
+        }
+        spell.removeAll()
+        checkSpellValid()
+    }
+    func resolveHit(hit: Hit){
+        let damage: Int = Int(hit.modifier*primaryModifer*Double(spellPower))
+        let text = hit.enemy.takeDamage(hit: damage)
+        eventLog.append(.damage(id: hit.enemy.id, amount: text, delay: 0.5))
+        if(hit.debuffs.count > 0){
+            for debuff in hit.debuffs{
+                hit.enemy.applyDebuff(debuff: debuff)
             }
-            withAnimation{
-                enemies.removeAll { $0.currentHealth <= 0 }
-            }
-            enchantQueue.removeAll()
-            targets.removeAll()
-            primaryTarget = nil
-            for i in (0...gridSize-1){ //Replace used letters in grid
-                if(spell.contains(grid[i])){
-                    if(enchantCount < min(spellBook.count, maxEnchants)){
-                        let rng = Int.random(in: 0...(spellBook.count-1))
-                        grid[i] = generateRune(enchant: drawEnchant(casting: true))
-                        enchantCount += 1
-                        print("gimme enchant")
-                    }
-                    else{
-                        grid[i] = generateRune(enchant: nil)
-                    }
-                }
-                else if(grid[i].enchant != nil){
-                    enchantCount += 1
-                }
-            }
-            spell.removeAll()
         }
     }
-    
+    func resolveEnchant(rune: Rune){
+        rune.enchant?.utilizeEffect(game: self)
+    }
     //Triggers all active rune debuffs
     func runeDebuffs(){
         for i in (0...gridSize-1){
-            switch grid[i].debuff?.type{
+            switch grid[i].debuff?.archetype{
             case .none:
                 break
             case .some(.lock):
@@ -408,10 +488,10 @@ class RuneBinderGame{
                     grid[i].debuff = nil
                 }
             case .some(.scorch):
-                player.currentHealth -= grid[i].debuff!.value
+                player.takeDamage(hit: grid[i].debuff!.value)
                 grid[i] = generateRune(enchant: nil)
             case .some(.rot):
-                player.currentHealth -= grid[i].debuff!.value
+                player.takeDamage(hit: grid[i].debuff!.value)
                 grid[i].debuff?.value += 1
             case .some(.weak):
                 grid[i].debuff?.value -= 1
@@ -429,21 +509,30 @@ class RuneBinderGame{
         else{
             spell.removeSubrange(spell.firstIndex(of: rune)!..<spell.count) //removes the element and all following
         }
-        
+        selectedRune = rune
     }
     func selectNode(node: MapNode){
         //Change selectable
+        encounterOver = false
+        encounterCount = node.layer + 1
         for node in map[node.layer]{
             node.selectable = false
         }
         for node in node.nextNodes{
             node.selectable = true
         }
-        switch node.type{
+    }
+    func loadNode(node: NodeType){
+        switch node{
         case .combat:
-            generateCombat()
-            spellDeck = spellBook //Reset deck
-            shuffleGrid() //Reset grid
+            if(!encounterOver){
+                generateCombat()
+                spellDeck = spellBook //Reset deck
+                shuffleGrid() //Reset grid
+            }
+            else{
+                generateEnchantRewards()
+            }
         case .elite:
             return
         case .event:
@@ -452,14 +541,17 @@ class RuneBinderGame{
             return
         case .shop:
             return
-        case nil:
-            return
         }
     }
     
     func generateCombat(){
-        if let encounter = EncounterPool.shared.getRandomEncounter(forZone: .Forest, difficulty: 1) {
+        print("Combat count of \(encounterCount) generating encounter of difficulty \((encounterCount-1)/3+1)")
+        if let encounter = EncounterPool.shared.getRandomEncounter(forZone: .Forest, difficulty: (encounterCount-1)/3+1) {
             enemies = encounter.generateEnemies()
+        }
+        print(enemies)
+        for enemy in enemies {
+            enemy.chooseAction(game: self)
         }
     }
     func generateEvent(){
@@ -467,29 +559,32 @@ class RuneBinderGame{
     }
     func generateEnchantRewards(){
         for _ in (0..<3){
-            var rand = Int.random(in: (0..<spellLibrary.count))
-            rewardEnchants.append(spellLibrary[rand])
+            rewardEnchants.append(spellLibrary[rewardRng.nextInt(in: (0..<spellLibrary.count))])
         }
     }
     func addEnchant(enchant: Enchantment.Type){
         spellBook.append(enchant.init())
         rewardEnchants = []
-        victory = false
+        encounterOver = false
     }
-    //This functions handles clean up actions involved during combat 
-    func cleanUp(){
+    //This functions handles clean up actions involved during combat and returns true if combat is over
+    func cleanUp() -> Bool{
+        withAnimation(){
+            enemies.removeAll { $0.currentHealth <= 0 }
+        }
         if enemies.isEmpty{
+            spellDeck = spellBook //Reset deck
             withAnimation(){
-                victory = true
-                generateEnchantRewards()
+                encounterOver = true
             }
+            return true
         }
         if player.currentHealth <= 0{
             withAnimation(){
                 defeat = true
             }
         }
-        player.block = 0
+        return false
     }
 }
 

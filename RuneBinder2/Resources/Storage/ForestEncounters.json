@@ -1,79 +1,84 @@
 [
     {
       "enemies": [
-        { "type": "WolfPackLeader"}
+        { "type": "GoblinBrawler"}
+      ],
+      "difficulty": 1,
+      "zone": "Forest"
+    },
+    {
+      "enemies": [
+        { "type": "GoblinImp"},
+        { "type": "GoblinShaman"},
+      ],
+      "difficulty": 1,
+      "zone": "Forest"
+    },
+    {
+      "enemies": [
+        { "type": "GoblinGrunt"},
+        { "type": "GoblinGrunt"}
+      ],
+      "difficulty": 1,
+      "zone": "Forest"
+    },
+    {
+      "enemies": [
+        { "type": "GoblinGrunt"},
+        { "type": "GoblinBrawler"}
       ],
       "difficulty": 2,
       "zone": "Forest"
     },
     {
       "enemies": [
-        { "type": "MultiplyingMycospawn"}
+        { "type": "GoblinBrute"}
       ],
-      "difficulty": 1,
+      "difficulty": 2,
       "zone": "Forest"
     },
-
     {
-    "enemies": [
-      { "type": "PoisonShroom"}
-    ],
-    "difficulty": 2,
-    "zone": "Forest"
+      "enemies": [
+        { "type": "Imp"},
+        { "type": "GoblinGrunt"},
+        { "type": "GoblinShaman"}
+      ],
+      "difficulty": 2,
+      "zone": "Forest"
     },
     {
-    "enemies": [
-      { "type": "Goblin"},
-      { "type": "Goblin" }
-    ],
-    "difficulty": 2,
-    "zone": "Forest"
+      "enemies": [
+        { "type": "GoblinBrute"},
+        { "type": "GoblinShaman"}
+      ],
+      "difficulty": 3,
+      "zone": "Forest"
     },
     {
-    "enemies": [
-      { "type": "RabidWolf" },
-      { "type": "Goblin" }
-    ],
-    "difficulty": 2,
-    "zone": "Forest"
+      "enemies": [
+        { "type": "GoblinImp"},
+        { "type": "GoblinImp"},
+        { "type": "GoblinImp"},
+        { "type": "GoblinImp"}
+      ],
+      "difficulty": 3,
+      "zone": "Forest"
     },
     {
-    "enemies": [
-      { "type": "TorchBearer" }
-    ],
-    "difficulty": 2,
-    "zone": "Forest"
+      "enemies": [
+        { "type": "GoblinGrunt"},
+        { "type": "GoblinGrunt"},
+        { "type": "GoblinBrute"}
+      ],
+      "difficulty": 3,
+      "zone": "Forest"
     },
     {
-    "enemies": [
-      { "type": "PoisonShroom" },
-      { "type": "PoisonShroom" }
-    ],
-    "difficulty": 2,
-    "zone": "Forest"
-    },
-    {
-    "enemies": [
-      { "type": "TorchBearer" },
-      { "type": "Goblin" }
-    ],
-    "difficulty": 2,
-    "zone": "Forest"
-    },
-    {
-    "enemies": [
-      { "type": "RabidWolf" },
-      { "type": "RabidWolf" },
-      { "type": "Goblin" }
-    ],
-    "difficulty": 2,
-    "zone": "Forest"
-    },
-    {
-    "enemies": [
-      { "type": "Tree" }
-    ],
-    "difficulty": 2,
-    "zone": "Forest"
+      "enemies": [
+        { "type": "GoblinBrawler"},
+        { "type": "GoblinBrute"}
+      ],
+      "difficulty": 3,
+      "zone": "Forest"
     }
 ]

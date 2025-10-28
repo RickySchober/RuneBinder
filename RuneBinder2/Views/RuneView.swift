@@ -10,6 +10,7 @@ import SwiftUI
 struct RuneView: View{
     @EnvironmentObject var viewModel: RuneBinderViewModel
     @State private var locked: Int = 0
+    @State private var scale: Double = 1.0
     @State private var hoverWorkItem: DispatchWorkItem? = nil //Adds delay to turn drag gesture into a psuedo long press
     var rune: Rune
     var namespace: Namespace.ID
@@ -18,22 +19,33 @@ struct RuneView: View{
             ZStack{
                 Rectangle()
                     .fill((rune.enchant==nil) ? Color.brown : rune.enchant!.color)
-                    .opacity(0.8)
-                Image("Rune1")
-                    .resizable()
-                    .renderingMode(Image.TemplateRenderingMode.original)
-                    .frame(width: geometry.size.width*0.9, height: geometry.size.height*0.9)
-                Rectangle()
-                    .fill((rune.enchant==nil) ? Color.yellow : rune.enchant!.color)
                     .opacity(0.2)
+                if(rune.enchant != nil){
+                    Image(rune.enchant!.image)
+                        .resizable()
+                        .renderingMode(Image.TemplateRenderingMode.original)
+                        .frame(width: geometry.size.width*0.9, height: geometry.size.height*0.9)
+                    if(rune.enchant!.upgraded){
+                        Text("+")
+                            .foregroundColor(.white)
+                            .position(x: 0.8*geometry.size.width, y: 0.13*geometry.size.height)
+                            .font(Font.system(size:(CGFloat)(0.3*min(geometry.size.width,geometry.size.height))))
+                            .shadow(color: .black.opacity(0.8), radius: 2, x: 3, y: 3)
+                            .bold()                    }
+                }
                 Text(String(rune.letter))
-                    .font(Font.system(size:(CGFloat)(0.5*min(geometry.size.width,geometry.size.height))))
+                    .font(.custom("Trattatello", size:(CGFloat)(0.5*min(geometry.size.width,geometry.size.height))))
                     .multilineTextAlignment(.center)
-                Text(String(rune.debuff?.type != .weak ? rune.power : 0))
+                    .shadow(color: .black.opacity(0.8), radius: 2, x: 3, y: 3)
+                    .foregroundColor(.white)
+                    .bold()
+                Text(String(rune.debuff?.archetype != .weak ? rune.power : 0))
                     .foregroundColor(.white)
                     .position(x: 0.8*geometry.size.width, y: 0.8*geometry.size.height)
-                    .font(Font.system(size:(CGFloat)(0.2*min(geometry.size.width,geometry.size.height))))
-                    .padding([.bottom, .trailing], 1)
+                    .font(Font.system(size:(CGFloat)(0.3*min(geometry.size.width,geometry.size.height))))
+                    .padding([.bottom], 3)
+                    .shadow(color: .black.opacity(0.8), radius: 2, x: 3, y: 3)
+                    .bold()
                 if(rune.debuff != nil){
                     Image(rune.debuff!.image)
                         .resizable()
@@ -43,53 +55,88 @@ struct RuneView: View{
                         .frame(width: geometry.size.width*0.2, height: geometry.size.height*0.2)
                         .position(x: 0.15*geometry.size.width, y: 0.15*geometry.size.height)
                     Text("\(rune.debuff!.value)")
-                        .font(.caption2)
-                        .foregroundColor(.black)
+                        .foregroundColor(.white)
                         .position(x: 0.2*geometry.size.width, y: 0.2*geometry.size.height)
                         .font(Font.system(size:(CGFloat)(0.2*min(geometry.size.width,geometry.size.height))))
                         .padding([.bottom, .trailing], 1)
+                        .shadow(color: .black.opacity(0.8), radius: 2, x: 3, y: 3)
+                        .bold()
                 }
+               /* LinearGradient(colors: [.white.opacity(0.6), .clear],
+                               startPoint: .topLeading,
+                               endPoint: .bottomTrailing)
+                    .blendMode(.screen)*/
+/*
+                case .weak:
+                    Color.blue.opacity(0.3)
+                        .blendMode(.multiply)*/
+/*
+                RadialGradient(colors: [.black.opacity(0.6), .clear],
+                               center: .center, startRadius: 0, endRadius: 60)
+                    .blendMode(.multiply)*/
             }
-            .matchedGeometryEffect(id: rune.id, in: namespace)
-            .modifier(Shake(animatableData: CGFloat(locked)))
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { _ in
-                        if hoverWorkItem == nil {
-                            let workItem = DispatchWorkItem {
-                                viewModel.hoverRune(rune: rune)
-                            }
-                            hoverWorkItem = workItem
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: workItem)
-                        }
-                    }
-                    .onEnded { _ in
-                        hoverWorkItem?.cancel()
-                        hoverWorkItem = nil
-                        viewModel.hoverRune(rune: nil)
-                    }
-            )
-            .simultaneousGesture(
-                TapGesture()
-                    .onEnded {
-                        hoverWorkItem?.cancel()
-                        hoverWorkItem = nil
-                        if rune.debuff?.type == .lock  {
-                            SoundManager.shared.playSoundEffect(named: "click")
-                            withAnimation {
-                                locked += 1
-                            }
-                        } else {
-                            SoundManager.shared.playSoundEffect(named: "click")
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                viewModel.selectRune(rune: rune)
-                            }
-                        }
-                    }
-            )
-
         })
         .frame(minWidth: screenWidth*0.05, maxWidth: screenWidth*0.20,minHeight: screenWidth*0.05, maxHeight: screenWidth*0.20)
+        .runeTileStyle(shadowDepth: 0.09)
+        .modifier(Shake(animatableData: CGFloat(locked)))
+        /*.scaleEffect(scale)
+        .onChange(of: viewModel.floatingTexts) { newValue in
+            ForEach(viewModel.floatingTexts){ text in
+                if(text.id == rune.id){
+                    withAnimation(.easeOut(duration: 0.15)) {
+                        scale = 1.5
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        withAnimation(.easeIn(duration: 0.3)) {
+                            scale = 1
+                        }
+                    }
+                }
+            }
+        }*/
+        .anchorPreference(key: RunePositionPreferenceKey.self, value: .center) { anchor in
+            [rune.id: anchor]
+        }
+        .matchedGeometryEffect(id: rune.id, in: namespace) //Only gestures can be below matched geometry
+        .gesture( //Must have tapgesture first or it doesn't animate?!?!
+            TapGesture()
+                .onEnded {
+                    hoverWorkItem?.cancel()
+                    hoverWorkItem = nil
+                    if rune.debuff?.archetype == .lock  {
+                        Task{
+                            SoundManager.shared.playSoundEffect(named: "click")
+                        }
+                        withAnimation {
+                            locked += 1
+                        }
+                    } else {
+                        Task{
+                            SoundManager.shared.playSoundEffect(named: "click")
+                        }
+                        withAnimation(.easeInOut(duration: 0.4)) {
+                            viewModel.selectRune(rune: rune)
+                        }
+                    }
+                }
+        )
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    if hoverWorkItem == nil {
+                        let workItem = DispatchWorkItem {
+                            viewModel.hoverRune(rune: rune)
+                        }
+                        hoverWorkItem = workItem
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: workItem)
+                    }
+                }
+                .onEnded { _ in
+                    hoverWorkItem?.cancel()
+                    hoverWorkItem = nil
+                    viewModel.hoverRune(rune: nil)
+                }
+        )
     }
 }
 
@@ -102,6 +149,85 @@ struct Shake: GeometryEffect {
         ProjectionTransform(CGAffineTransform(translationX:
             amount * sin(animatableData * .pi * CGFloat(shakesPerUnit)),
             y: 0))
+    }
+}
+// Must define as a shape to conform to VectorArithmetic allowing proper animation
+struct TrapezoidEdge: Shape {
+    enum Edge {
+        case top, bottom, left, right
+    }
+    
+    var edge: Edge
+    var depth: CGFloat
+    
+    var animatableData: CGFloat { //Define variable to be interpolated for animation
+        get { depth }
+        set { depth = newValue }
+    }
+    
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        switch edge {
+        case .top:
+            path.move(to: .zero)
+            path.addLine(to: CGPoint(x: rect.width, y: 0))
+            path.addLine(to: CGPoint(x: rect.width - depth, y: depth))
+            path.addLine(to: CGPoint(x: depth, y: depth))
+        case .bottom:
+            path.move(to: CGPoint(x: 0, y: rect.height))
+            path.addLine(to: CGPoint(x: rect.width, y: rect.height))
+            path.addLine(to: CGPoint(x: rect.width - depth, y: rect.height - depth))
+            path.addLine(to: CGPoint(x: depth, y: rect.height - depth))
+        case .left:
+            path.move(to: .zero)
+            path.addLine(to: CGPoint(x: 0, y: rect.height))
+            path.addLine(to: CGPoint(x: depth, y: rect.height - depth))
+            path.addLine(to: CGPoint(x: depth, y: depth))
+        case .right:
+            path.move(to: CGPoint(x: rect.width, y: 0))
+            path.addLine(to: CGPoint(x: rect.width, y: rect.height))
+            path.addLine(to: CGPoint(x: rect.width - depth, y: rect.height - depth))
+            path.addLine(to: CGPoint(x: rect.width - depth, y: depth))
+        }
+        path.closeSubpath()
+        return path
+    }
+}
+
+
+struct RuneTileStyle: ViewModifier {
+    var baseColor: Color = Color(red: 0.95, green: 0.90, blue: 0.70)
+    var shadowDepth: CGFloat = 0.05
+    func body(content: Content) -> some View {
+        content
+            .background(
+                GeometryReader { geo in
+                    let depth = min(geo.size.width, geo.size.height) * shadowDepth
+                    ZStack {
+                        baseColor
+                        TrapezoidEdge(edge: .top, depth: depth)
+                            .fill(Color.white.opacity(0.4))
+                        TrapezoidEdge(edge: .left, depth: depth)
+                            .fill(Color.black.opacity(0.2))
+                        TrapezoidEdge(edge: .right, depth: depth)
+                            .fill(Color.black.opacity(0.2))
+                        TrapezoidEdge(edge: .bottom, depth: depth)
+                            .fill(Color.black.opacity(0.5))
+                        RoundedRectangle(cornerRadius: 1)
+                            .stroke(Color.black.opacity(0.4), lineWidth: 1)
+                            .padding(depth*2/3)
+                    }
+                })
+    }
+}
+extension View {
+    func runeTileStyle(
+        baseColor: Color = Color(red: 0.95, green: 0.90, blue: 0.70),
+        lightEdge: Color = Color.white.opacity(0.8),
+        darkEdge: Color = Color.black.opacity(0.35),
+        shadowDepth: CGFloat = 0.1
+    ) -> some View {
+        self.modifier(RuneTileStyle(baseColor: baseColor, shadowDepth: shadowDepth))
     }
 }
 

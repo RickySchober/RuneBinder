@@ -6,9 +6,9 @@ struct MapNodeView: View {
     @EnvironmentObject var viewModel: RuneBinderViewModel
     @State private var pulse = false
     var body: some View {
-        Circle()
-            .fill(Color.red) //(for: node.type))
-            .frame(width: 40, height: 40)
+        Image(node.type?.rawValue ?? "combat")
+            .resizable()
+            .frame(width: screenWidth*0.1, height: screenWidth*0.1)
             .scaleEffect(node.selectable ? (pulse ? 1.3 : 1.0) : 1.0)
             .onAppear {
                 if node.selectable {
@@ -32,6 +32,9 @@ struct MapNodeView: View {
             return GameScreen.event
             
         }
+        else if(node.type == .rest){
+            return GameScreen.rest
+        }
         return GameScreen.combat
     }
 }
@@ -43,7 +46,6 @@ struct MapView: View {
     var body: some View {
         GeometryReader { geometry in
             let layerSpacing = geometry.size.height / CGFloat(map.count + 1)
-
             ZStack {
                 Image("Rune1")
                     .resizable()
@@ -58,7 +60,7 @@ struct MapView: View {
                             path.move(to: start)
                             path.addLine(to: end)
                         }
-                        .stroke(Color.red.opacity(0.8), lineWidth: 4)
+                        .stroke(Color.black.opacity(0.8), style: StrokeStyle(lineWidth: 4, dash: [5, 5]))
                     }
                 }
                 

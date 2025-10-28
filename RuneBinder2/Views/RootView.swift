@@ -18,6 +18,8 @@ struct RootView: View {
             ShopView()
         case .settings:
             SettingsView()
+        case .rest:
+            RestView()
         }
     }
 }

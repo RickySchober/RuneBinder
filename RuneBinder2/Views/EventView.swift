@@ -8,8 +8,13 @@
 import SwiftUI
 
 struct EventView: View {
+    @EnvironmentObject var viewModel: RuneBinderViewModel //Environment objects can be shared among all views
+    @EnvironmentObject var viewRouter: ViewRouter
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        Text("Continue")
+            .onTapGesture {
+                viewRouter.currentScreen = .map
+            }
     }
 }
 

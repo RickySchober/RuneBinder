@@ -8,52 +8,69 @@
 //there position in the word is represented by an integer if this int is -1 not in word
 import Foundation
 
-struct Debuff{
-    enum type{
-        case lock
-        case scorch
-        case weak
-        case rot
+struct RuneDebuff: Codable{
+    enum Archetype: String, Codable{
+        case lock, scorch, weak, rot
     }
-    let type: type
+    let archetype: Archetype
     var value: Int
-    let image: String
-    let text: String
-    init(type: type, value: Int) {
-        self.type = type
+    var image: String {
+            switch archetype {
+            case .lock: return "lock"
+            case .rot: return "rot"
+            case .weak: return "weak"
+            case .scorch: return "scorch"
+            }
+        }
+
+    var text: String {
+        switch archetype {
+        case .lock:
+            return "Locked: Cannot be used in spell for \(value) turns"
+        case .rot:
+            return "Rot: unused rune deals you \(value) damage at turns end increasing by 1 every round"
+        case .weak:
+            return "Weaken: has no spell power for \(value) turns"
+        case .scorch:
+            return "Scorch: unused rune is destroyed at turns end and deals you \(value) damage"
+        }
+    }
+    init(archetype: Archetype, value: Int) {
+        self.archetype = archetype
         self.value = value
-        if(self.type == .lock){
-            image = "chain"
-            text = "🔒 Locked: Cannot be used in spell for \(self.value) turns"
-        }
-        else if(self.type == .rot){
-            image = "rot"
-            text = "💀 Rot: unused rune deals you \(self.value) damage at turns end increasing by 1 every round"
-        }
-        else if(self.type == .weak){
-            image = "weak"
-            text = "🌀 Weaken: has no spell power for \(self.value) turns"
-        }
-        else{
-            image = "fire"
-            text = "🔥 Scorch: unused rune is destroyed at turns end and deals you \(self.value) damage"
-        }
     }
 }
 class Rune: Identifiable, Equatable{
-    var letter: Character
+    var letter: String
     var power: Int
     let id: UUID
     var enchant: Enchantment?
-    var debuff: Debuff?
-    init(l: Character, p: Int, e: Enchantment?){
+    var debuff: RuneDebuff?
+    init(l: String, p: Int, e: Enchantment?){
         letter = l
         power = p
         id = UUID()
         enchant = e
     }
+    init(data: RuneData){
+        letter = data.letter
+        power = data.power
+        id = data.id
+        enchant = (data.enchant != nil) ? makeEnchantment(from: data.enchant!) : nil
+        debuff = data.debuff
+    }
     static func ==(lhs: Rune, rhs: Rune) -> Bool {
         return lhs.id == rhs.id
     }
 }
-
+extension Rune { //Converts class into codable struct for storage
+    func toData() -> RuneData {
+        RuneData(
+            letter: letter,
+            power: power,
+            id: id,
+            enchant: (enchant != nil) ? enchant!.toData() : nil,
+            debuff: debuff
+        )
+    }
+}
