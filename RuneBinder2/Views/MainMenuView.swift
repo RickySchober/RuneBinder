@@ -23,7 +23,7 @@ struct MainMenuView: View {
                     .font(.system(size: 60.0))
                     .onTapGesture {
                         viewRouter.currentScreen = viewModel.loadSave()
-                        SoundManager.shared.playBackgroundMusic(named: "soundtrack")
+                        //SoundManager.shared.playBackgroundMusic(named: "soundtrack.nosync")
                     }
             })
             .padding(10)

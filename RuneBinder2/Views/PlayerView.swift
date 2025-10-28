@@ -27,6 +27,7 @@ struct PlayerView: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(width: screenWidth*0.18, height: screenWidth*0.27)
             }
+            .idleAnimation(hoverAmplitude: 0.0, scaleAmplitude: 0.03, rotationAmplitude: -1, duration: 1.0)
             .offset(x: lunge)
         }
         .anchorPreference(key: RunePositionPreferenceKey.self, value: .center) { anchor in

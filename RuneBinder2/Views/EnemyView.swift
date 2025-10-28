@@ -38,6 +38,7 @@ struct EnemyView: View{
                         }
                     StatusApplied(entity: enemy)
                 }
+                .idleAnimation(hoverAmplitude: 0.0, scaleAmplitude: 0.03, rotationAmplitude: -1, duration: 1.0)
             }
             .frame(width: screenWidth*0.18, height: screenWidth*0.27)
             .offset(x: lunge + recoil)
@@ -150,8 +151,8 @@ struct EnemyActionView: View{
                     }
                 }
             }
-            .onChange(of: viewModel.lungeTrigger) { newValue in
-                if(viewModel.lunge == enemy.id){
+            .onChange(of: viewModel.actionTrigger) { newValue in
+                if(viewModel.action == enemy.id){
                    echo += 1 // If enemy is attacking trigger animation on icon
                 }
             }

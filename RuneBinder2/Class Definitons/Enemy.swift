@@ -112,7 +112,7 @@ class GoblinImp: Enemy{
         currentHealth = maxHealth
         actions = [
             Action(nm: "Pathetic Punch", dmg: 2),
-            Action(nm: "Pyromanic", deb: [RuneDebuff(archetype: .scorch, value: 2), RuneDebuff(archetype: .scorch, value: 2)]),
+            Action(nm: "Pyromanic", runeDeb: [RuneDebuff(archetype: .scorch, value: 2), RuneDebuff(archetype: .scorch, value: 2)]),
             Action(nm: "Cower", grd: 3 ),
         ]
     }
@@ -126,7 +126,7 @@ class GoblinShaman: Enemy{
         actions = [
             Action(nm: "Staff Bonk", dmg: 4),
             Action(nm: "Block", grd: 4 ),
-            Action(nm: "Weakening Curse", deb: [RuneDebuff(archetype: .weak, value: 2),RuneDebuff(archetype: .weak, value: 2)]),
+            Action(nm: "Weakening Curse", runeDeb: [RuneDebuff(archetype: .weak, value: 2),RuneDebuff(archetype: .weak, value: 2)]),
         ]
     }
 }
@@ -139,7 +139,7 @@ class GoblinBrawler: Enemy{
         actions = [
             Action(nm: "Right Hook", dmg: 6),
             Action(nm: "Defensive Stance", grd: 8 ),
-            Action(nm: "Grapple", dmg: 4, deb: [RuneDebuff(archetype: .lock, value: 3)]),
+            Action(nm: "Grapple", dmg: 4, runeDeb: [RuneDebuff(archetype: .lock, value: 3)]),
         ]
     }
 }
@@ -173,7 +173,7 @@ class PoisonShroom: Enemy{
         image = "shroom"
         actions = [
             Action(dmg: 5),
-            Action(dmg: 1, deb: [RuneDebuff(archetype: .rot, value: 1),RuneDebuff(archetype: .rot, value: 1)]),
+            Action(dmg: 1, runeDeb: [RuneDebuff(archetype: .rot, value: 1),RuneDebuff(archetype: .rot, value: 1)]),
         ]
     }
 }
@@ -183,7 +183,7 @@ class MultiplyingMycospawn: Enemy{
         image = "goblintrans"
         actions = [
             Action(dmg: 3),
-            Action(dmg: 1, deb: [RuneDebuff(archetype: .rot, value: 1)]),
+            Action(dmg: 1, runeDeb: [RuneDebuff(archetype: .rot, value: 1)]),
             SummonAction(nm:"Rapid Reproduction", summons: ["MultiplyingMycospawn"])
         ]
     }
@@ -244,7 +244,7 @@ class TorchBearer: Enemy{
         image = "torchbearer"
         actions = [
             Action(dmg: 7),
-            Action(dmg: 0, deb: [RuneDebuff(archetype: .scorch, value: 1),RuneDebuff(archetype: .scorch, value: 1)]),
+            Action(dmg: 0, runeDeb: [RuneDebuff(archetype: .scorch, value: 1),RuneDebuff(archetype: .scorch, value: 1)]),
         ]
     }
 }
@@ -254,7 +254,7 @@ class Tree: Enemy{
         image = "tree"
         actions = [
             Action(dmg: 8),
-            Action(dmg: 0, deb: [RuneDebuff(archetype: .rot, value: 5),RuneDebuff(archetype: .scorch, value: 5)]),
+            Action(dmg: 0, runeDeb: [RuneDebuff(archetype: .rot, value: 5),RuneDebuff(archetype: .scorch, value: 5)]),
         ]
     }
 }
@@ -262,7 +262,7 @@ class ChainBearer: Enemy{
     override init() {
         super.init()
         image = "chainbearer"
-        actions = [Action(dmg: 5, deb: [RuneDebuff(archetype: .lock, value: 1), RuneDebuff(archetype: .lock, value: 1), RuneDebuff(archetype: .weak, value: 1)])]
+        actions = [Action(dmg: 5, runeDeb: [RuneDebuff(archetype: .lock, value: 1), RuneDebuff(archetype: .lock, value: 1), RuneDebuff(archetype: .weak, value: 1)])]
     }
 }
 //Biome ideas Phonetic Forest, Glyph Mines, Ancient Archive, Citadel

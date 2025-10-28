@@ -53,35 +53,45 @@ struct StatusApplied: View{
     @EnvironmentObject var viewModel: RuneBinderViewModel
     var entity: Entity
     @State var prevWard: Int = 0
+    @State var showWard = false
     init(entity: Entity){
         self.entity = entity
         prevWard = entity.ward
     }
     var body: some View{
-        ForEach(entity.debuffs){ debuff in
-            Image(debuff.image)
-                .resizable()
-                .scaledToFit()
-                .opacity(0.5)
-                .echoEffect(scale: 2.0, opacity: 0.4, duration: 0.8, repeats: 3)
-                .autoDisappear(after: 1.6)
-        }
-        ForEach(entity.buffs){ buff in
-            Image(buff.image)
-                .resizable()
-                .scaledToFit()
-                .opacity(0.5)
-                .echoEffect(scale: 2.0, opacity: 0.4, duration: 0.8, repeats: 3)
-                .autoDisappear(after: 1.6)
-        }
-        .onChange(of: entity.ward){ newValue in
-            if(newValue > prevWard){
-                Image("ward")
+        ZStack{
+            ForEach(entity.debuffs){ debuff in
+                Image(debuff.image)
                     .resizable()
                     .scaledToFit()
                     .opacity(0.5)
                     .echoEffect(scale: 2.0, opacity: 0.4, duration: 0.8, repeats: 3)
                     .autoDisappear(after: 1.6)
+            }
+            ForEach(entity.buffs){ buff in
+                Image(buff.image)
+                    .resizable()
+                    .scaledToFit()
+                    .opacity(0.5)
+                    .echoEffect(scale: 2.0, opacity: 0.4, duration: 0.8, repeats: 3)
+                    .autoDisappear(after: 1.6)
+            }
+            if(showWard){
+                BobbingView(amplitude: screenWidth*0.05, speed: 1.0){
+                    Image("ward")
+                        .resizable()
+                        .scaledToFit()
+                        .opacity(0.5)
+                        .autoDisappear(after: 1.6)
+                }
+            }
+        }
+        .onChange(of: entity.ward){ newValue in
+            if(newValue > prevWard){
+                showWard = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0){
+                    showWard = false
+                }
             }
             print("\(prevWard) new ward: \(newValue)")
             prevWard = newValue
@@ -239,5 +249,61 @@ struct AutoDisappearModifier: ViewModifier {
 extension View {
     func autoDisappear(after delay: Double = 1.0) -> some View {
         self.modifier(AutoDisappearModifier(delay: delay))
+    }
+}
+
+struct IdleAnimationModifier: ViewModifier {
+    var hoverAmplitude: CGFloat = 8       // how far it moves up/down
+    var scaleAmplitude: CGFloat = 0.02    // how much it "breathes"
+    var rotationAmplitude: Double = 2     // how far it tilts (degrees)
+    var baseDuration: Double = 2.5        // duration of a full cycle
+
+    @State private var offsetY: CGFloat = 0
+    @State private var scaleX: CGFloat = 1.0
+    @State private var scaleY: CGFloat = 1.0
+    @State private var rotation: Double = 0
+
+    func body(content: Content) -> some View {
+        content
+            .offset(y: offsetY)
+            .scaleEffect(x: scaleX, y: scaleY)
+            .rotationEffect(.degrees(rotation))
+            .onAppear {
+                scaleX -= scaleAmplitude
+                scaleY += scaleAmplitude
+                rotation -= rotationAmplitude
+                offsetY -= hoverAmplitude
+                // Random phase offset so all instances don't move in sync
+                let delay = Double.random(in: 0...1.5)
+                let animation = Animation.easeInOut(duration: baseDuration)
+                    .repeatForever(autoreverses: true)
+                    .delay(delay)
+
+                withAnimation(animation) { offsetY += 2*hoverAmplitude }
+                withAnimation(animation.delay(0.3)) {
+                    scaleX += 2*scaleAmplitude
+                    scaleY -= 2*scaleAmplitude
+                }
+                withAnimation(animation.delay(0.6)) { rotation += 2*rotationAmplitude }
+            }
+    }
+}
+
+extension View {
+    /// Makes any view subtly move, breathe, and tilt as if "alive"
+    func idleAnimation(
+        hoverAmplitude: CGFloat = 8,
+        scaleAmplitude: CGFloat = 0.02,
+        rotationAmplitude: Double = 2,
+        duration: Double = 2.5
+    ) -> some View {
+        self.modifier(
+            IdleAnimationModifier(
+                hoverAmplitude: hoverAmplitude,
+                scaleAmplitude: scaleAmplitude,
+                rotationAmplitude: rotationAmplitude,
+                baseDuration: duration
+            )
+        )
     }
 }

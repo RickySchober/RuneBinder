@@ -23,6 +23,8 @@ class RuneBinderViewModel: ObservableObject {
     @Published var isAnimatingTurn: Bool = false
     @Published var lunge: UUID = UUID()
     @Published var lungeTrigger = false
+    @Published var action: UUID = UUID()
+    @Published var actionTrigger = false
 
     
     init(){
@@ -197,6 +199,9 @@ class RuneBinderViewModel: ObservableObject {
             }
         }
     }
+    /* Go through all the enemy turns using their actions. For each action resolve each part of the effect
+       in order: unique effects, damage, ward, debuffs, runedebuffs.
+     */
     @MainActor
     func enemyTurns(){
         for enemy in enemies {
@@ -205,19 +210,54 @@ class RuneBinderViewModel: ObservableObject {
         Task{
             for enemy in enemies {
                 if(enemy.chosenAction != nil){
-                    enemy.chosenAction!.utilizeEffect(game: model) // Any special effects related to action
+                    let action: Action = enemy.chosenAction!
+                    action.utilizeEffect(game: model) // Any special effects related to action
+                    await playCombatEvents(from: model)
+
+                    model.addAnimation(event: .action(id: enemy.id, delay: 1.0))
+                    await playCombatEvents(from: model)
                     
-                    if(enemy.chosenAction!.damage > 0){ //Hit portion of action
+                    if(action.damage > 0){ //Hit portion of action
                         model.addAnimation(event: .lunge(id: enemy.id, delay: 0.5))
                         await playCombatEvents(from: model)
-                        let damage: Int = model.player.takeDamage(hit: enemy.chosenAction!.damage)
+                        let damage: Int = model.player.takeDamage(hit: action.damage)
                         model.addAnimation(event: .damage(id: player.id, amount: damage, delay: 0.5))
                         await playCombatEvents(from: model)
                     }
-                    if(enemy.chosenAction!.gaurd > 0){
-                        enemy.ward += enemy.chosenAction!.gaurd
+                    if(action.gaurd > 0){
+                        enemy.ward += action.gaurd
+                        model.addAnimation(event: .implicit(delay: 0.5))
+                        await playCombatEvents(from: model)
                     }
-                    model.applyRuneDebuffs(atk: enemy.chosenAction!) // Apply player and rune debuffs
+                    for debuff in action.debuffs{
+                        player.applyDebuff(debuff: debuff)
+                        model.addAnimation(event: .implicit(delay: 0.5))
+                        await playCombatEvents(from: model)
+                    }
+                    if(player.buffs.contains { $0.archetype == .nullify}) { //Negates debuffs from an attack
+                        return
+                    }
+                    var debuffable: Int = 0
+                    for rune in grid{
+                        if(rune.debuff == nil){
+                            debuffable += 1
+                        }
+                    }
+                    for i in 0..<action.runeDebuffs.count{
+                        var rand = model.shufflingRng.nextInt(in: 0..<debuffable) //assign the randth valid rune to be debuffed
+                        for rune in grid{
+                            if(rune.debuff == nil && rand > 0){
+                                rand -= 1
+                            }
+                            if(rand == 0){
+                                rune.debuff = action.runeDebuffs[i]
+                                debuffable -= 1
+                                model.addAnimation(event: .implicit(delay: 0.5))
+                                await playCombatEvents(from: model)
+                                break
+                            }
+                        }
+                    }
                     enemy.chosenAction = nil
                 }
             }
@@ -263,8 +303,14 @@ class RuneBinderViewModel: ObservableObject {
                     lunge = id
                     lungeTrigger.toggle()
                     animationDelay = delay
+                case .action(let id, let delay):
+                    action = id
+                    actionTrigger.toggle()
+                    animationDelay = delay
                 case .debuff(let id, let debuff, let delay):
                     print("")
+                case .implicit(let delay):
+                    animationDelay = delay
                 }
             try? await Task.sleep(for: .seconds(animationDelay))
         }

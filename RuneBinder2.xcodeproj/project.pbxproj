@@ -15,7 +15,6 @@
 		B6654CBF2DD3F3B500B33E2C /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6654CBE2DD3F3B500B33E2C /* RootView.swift */; };
 		B6654CC52DD53ACA00B33E2C /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6654CC42DD53ACA00B33E2C /* SoundManager.swift */; };
 		B6654CC82DD53B4000B33E2C /* click.wav in Resources */ = {isa = PBXBuildFile; fileRef = B6654CC72DD53B4000B33E2C /* click.wav */; };
-		B6654CCA2DD53D5D00B33E2C /* soundtrack.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = B6654CC92DD53D5D00B33E2C /* soundtrack.mp3 */; };
 		B6654CCF2DD53F4E00B33E2C /* goblindeath.wav in Resources */ = {isa = PBXBuildFile; fileRef = B6654CCB2DD53F4D00B33E2C /* goblindeath.wav */; };
 		B6654CD02DD53F4E00B33E2C /* humanoidhit.wav in Resources */ = {isa = PBXBuildFile; fileRef = B6654CCC2DD53F4D00B33E2C /* humanoidhit.wav */; };
 		B6654CD12DD53F4E00B33E2C /* goblinhit.wav in Resources */ = {isa = PBXBuildFile; fileRef = B6654CCD2DD53F4D00B33E2C /* goblinhit.wav */; };
@@ -50,6 +49,7 @@
 		B6C7DE762EA3177700333526 /* sword_sheath.wav in Resources */ = {isa = PBXBuildFile; fileRef = B6C7DE732EA3177700333526 /* sword_sheath.wav */; };
 		B6C7DE7A2EA5C1BE00333526 /* impact.gif in Resources */ = {isa = PBXBuildFile; fileRef = B6C7DE792EA5C1BE00333526 /* impact.gif */; };
 		B6C7DE7C2EAAFA0800333526 /* EntityViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6C7DE7B2EAAFA0800333526 /* EntityViews.swift */; };
+		B6C7DE802EB0291100333526 /* soundtrack.nosync.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = B6C7DE7F2EB0291100333526 /* soundtrack.nosync.mp3 */; };
 		B6D1D24D2A1B0B24001A16BD /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6D1D24C2A1B0B24001A16BD /* Player.swift */; };
 		B6D1D24F2A1B0B6A001A16BD /* Enchantment.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6D1D24E2A1B0B6A001A16BD /* Enchantment.swift */; };
 /* End PBXBuildFile section */
@@ -63,7 +63,6 @@
 		B6654CBE2DD3F3B500B33E2C /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		B6654CC42DD53ACA00B33E2C /* SoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundManager.swift; sourceTree = "<group>"; };
 		B6654CC72DD53B4000B33E2C /* click.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = click.wav; sourceTree = "<group>"; };
-		B6654CC92DD53D5D00B33E2C /* soundtrack.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = soundtrack.mp3; sourceTree = "<group>"; };
 		B6654CCB2DD53F4D00B33E2C /* goblindeath.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = goblindeath.wav; sourceTree = "<group>"; };
 		B6654CCC2DD53F4D00B33E2C /* humanoidhit.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = humanoidhit.wav; sourceTree = "<group>"; };
 		B6654CCD2DD53F4D00B33E2C /* goblinhit.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = goblinhit.wav; sourceTree = "<group>"; };
@@ -99,6 +98,7 @@
 		B6C7DE732EA3177700333526 /* sword_sheath.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = sword_sheath.wav; sourceTree = "<group>"; };
 		B6C7DE792EA5C1BE00333526 /* impact.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; name = impact.gif; path = "../../../../Downloads/Pixel Art VFX Impacts - FREE Version/VFX4/COLOR/impact.gif"; sourceTree = "<group>"; };
 		B6C7DE7B2EAAFA0800333526 /* EntityViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntityViews.swift; sourceTree = "<group>"; };
+		B6C7DE7F2EB0291100333526 /* soundtrack.nosync.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = soundtrack.nosync.mp3; sourceTree = "<group>"; };
 		B6D1D24C2A1B0B24001A16BD /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		B6D1D24E2A1B0B6A001A16BD /* Enchantment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Enchantment.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -117,6 +117,7 @@
 		B6654CC22DD5392400B33E2C /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				B6C7DE7B2EAAFA0800333526 /* EntityViews.swift */,
 				B689C67B2E8C910700AA786E /* RestView.swift */,
 				B643D25A2A9C295900D99896 /* MainMenuView.swift */,
 				B6654CBE2DD3F3B500B33E2C /* RootView.swift */,
@@ -163,7 +164,6 @@
 		B6A92FE82A147B8E00AEF4E7 = {
 			isa = PBXGroup;
 			children = (
-				B6C7DE7B2EAAFA0800333526 /* EntityViews.swift */,
 				B6A92FF32A147B8E00AEF4E7 /* RuneBinder2 */,
 				B6A92FF22A147B8E00AEF4E7 /* Products */,
 			);
@@ -209,7 +209,7 @@
 		B6AFAFDD2DE906E800F06F34 /* Sound Effects */ = {
 			isa = PBXGroup;
 			children = (
-				B6654CC92DD53D5D00B33E2C /* soundtrack.mp3 */,
+				B6C7DE7F2EB0291100333526 /* soundtrack.nosync.mp3 */,
 				B6654CC72DD53B4000B33E2C /* click.wav */,
 				B6654CCB2DD53F4D00B33E2C /* goblindeath.wav */,
 				B6654CCD2DD53F4D00B33E2C /* goblinhit.wav */,
@@ -291,10 +291,10 @@
 				B689C67E2E9741D600AA786E /* EnchantmentIcons.xcassets in Resources */,
 				B6654CD22DD53F4E00B33E2C /* humanoiddeath.wav in Resources */,
 				B6654CC82DD53B4000B33E2C /* click.wav in Resources */,
+				B6C7DE802EB0291100333526 /* soundtrack.nosync.mp3 in Resources */,
 				B6654CD12DD53F4E00B33E2C /* goblinhit.wav in Resources */,
 				B6C7DE742EA3177700333526 /* sword_stab.wav in Resources */,
 				B6A92FFC2A147B9200AEF4E7 /* Preview Assets.xcassets in Resources */,
-				B6654CCA2DD53D5D00B33E2C /* soundtrack.mp3 in Resources */,
 				B6C7DE762EA3177700333526 /* sword_sheath.wav in Resources */,
 				B6654CD02DD53F4E00B33E2C /* humanoidhit.wav in Resources */,
 				B6C7DE752EA3177700333526 /* sword_clash.wav in Resources */,

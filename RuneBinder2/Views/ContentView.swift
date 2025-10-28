@@ -83,7 +83,7 @@ struct ContentView: View {
                                 .transition(.opacity)
                         }
                     }
-                    ForEach(viewModel.spell){ rune in
+                    ForEach(viewModel.grid){ rune in
                         if let anchor = preferences[rune.id], text.entityId == rune.id {
                             let point = geo[anchor]
                             FloatingTextView(text: text.text, color: text.color)

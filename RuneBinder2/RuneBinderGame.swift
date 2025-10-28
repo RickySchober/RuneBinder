@@ -12,10 +12,12 @@ import SwiftUI
 enum CombatEvent { //Store information for animations to be resolved in queue
     case runeActivated(rune: Rune, text: String, delay: Double) //
     case damage(id: UUID, amount: Int, delay: Double) //Hit damage
+    case action(id: UUID, delay: Double) //Attack start animation
     case lunge(id: UUID, delay: Double) //Attack start animation
     case death(enemyIndex: Int, delay: Double)
     case sound(name: String, delay: Double)
     case debuff(id: UUID, debuff: Debuff, delay: Double) //Debuff applied
+    case implicit(delay: Double) //For animations implicitly defined to model changes just add delay to let them playout
 }
 struct Hit{
     let enemy: Enemy
@@ -24,9 +26,9 @@ struct Hit{
 }
 class RuneBinderGame: ObservableObject{
     //Seed
-    private (set) var encounterRng: SeededGenerator
-    private (set) var rewardRng: SeededGenerator
-    private (set) var shufflingRng: SeededGenerator
+    var encounterRng: SeededGenerator
+    var rewardRng: SeededGenerator
+    var shufflingRng: SeededGenerator
     private (set) var seed: [UInt64]
     //Spell data
     private (set) var grid: Array<Rune> = []
@@ -397,14 +399,14 @@ class RuneBinderGame: ObservableObject{
                 debuffable += 1
             }
         }
-        for i in 0..<atk.debuffs.count{
+        for i in 0..<atk.runeDebuffs.count{
             var rand = shufflingRng.nextInt(in: 0..<debuffable-1) //assign the randth valid rune to be debuffed
             for rune in grid{
                 if(rune.debuff == nil && rand > 0){
                     rand -= 1
                 }
                 if(rand == 0){
-                    rune.debuff = atk.debuffs[i]
+                    rune.debuff = atk.runeDebuffs[i]
                     debuffable -= 1
                     break
                 }
