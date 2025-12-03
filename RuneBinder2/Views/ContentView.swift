@@ -3,7 +3,7 @@
 //  RuneBinder
 //
 //  Created by Ricky Schober on 11/11/22.
-//
+//  Always explicit typing in views to avoid large compile times
 
 import SwiftUI
 
@@ -19,6 +19,8 @@ struct ContentView: View {
     @EnvironmentObject var viewRouter: ViewRouter
     @Namespace private var runesNamespace //Used to animate between views
     @State private var deckViewer: Bool = false
+    @State private var entityTooltipSize: CGSize = .zero
+    @State private var runeTooltipSize: CGSize = .zero
     var body: some View {
         ZStack(){
             VStack(spacing:0){
@@ -59,9 +61,7 @@ struct ContentView: View {
             }
             .allowsHitTesting(!viewModel.isAnimatingTurn)
             .edgesIgnoringSafeArea(.top)
-            //.frame(width: screenWidth, height: screenHeight)
             .background(Color.red.opacity(0.3))
-            //.animation(.easeOut)
             VictoryOverlay() {
                 viewModel.returnToMap()
                 viewRouter.currentScreen = .map
@@ -72,27 +72,56 @@ struct ContentView: View {
             .offset(y: deckViewer ? 0 : UIScreen.main.bounds.height)
             .animation(.easeOut(duration: 0.5), value: deckViewer)
         }
+        //Entity Description overlay
+        .overlayPreferenceValue(RunePositionPreferenceKey.self) { preferences in
+            GeometryReader { geo in
+                ForEach(viewModel.enemies) { enemy in
+                    if let anchor: Anchor<CGPoint> = preferences[enemy.id], viewModel.hoveredEntity?.id == enemy.id {
+                        let point: CGPoint = geo[anchor]
+                        EntityTooltipView(entity: enemy)
+                            .sizeReader(size: $entityTooltipSize)
+                            .position(entityTooltipPosition(from: point, tooltipSize: entityTooltipSize, in: CGSize(width: screenWidth, height: screenHeight)))
+                            .transition(.opacity)
+                    }
+                }
+            }
+        }
+        //Rune Description Overlay
+        .overlayPreferenceValue(RunePositionPreferenceKey.self) { preferences in
+            GeometryReader { geo in
+                ForEach(viewModel.grid) { rune in
+                    if let anchor: Anchor<CGPoint> = preferences[rune.id], rune.id == viewModel.hoveredRune?.id {
+                        let point: CGPoint = geo[anchor]
+                        RuneTooltipView(rune: rune)
+                            .sizeReader(size: $runeTooltipSize)
+                            .position(runeTooltipPosition(from: point, tooltipSize: runeTooltipSize, in: CGSize(width: screenWidth, height: screenHeight)))
+                            .transition(.opacity)
+                    }
+                }
+            }
+        }
+        //Floating Text Overlay
         .overlayPreferenceValue(RunePositionPreferenceKey.self) { preferences in
             GeometryReader { geo in
                 ForEach(viewModel.floatingTexts) { text in
                     ForEach(viewModel.enemies) { enemy in
-                        if let anchor = preferences[enemy.id], text.entityId == enemy.id {
-                            let point = geo[anchor]
+                        if let anchor: Anchor<CGPoint> = preferences[enemy.id], text.entityId == enemy.id {
+                            let point: CGPoint = geo[anchor]
                             FloatingTextView(text: text.text, color: text.color)
                                 .position(point)
                                 .transition(.opacity)
                         }
                     }
                     ForEach(viewModel.grid){ rune in
-                        if let anchor = preferences[rune.id], text.entityId == rune.id {
-                            let point = geo[anchor]
+                        if let anchor: Anchor<CGPoint> = preferences[rune.id], text.entityId == rune.id {
+                            let point: CGPoint = geo[anchor]
                             FloatingTextView(text: text.text, color: text.color)
                                 .position(point)
                                 .transition(.opacity)
                         }
                     }
-                    if let anchor = preferences[viewModel.player.id], text.entityId == viewModel.player.id {
-                        let point = geo[anchor]
+                    if let anchor: Anchor<CGPoint> = preferences[viewModel.player.id], text.entityId == viewModel.player.id {
+                        let point: CGPoint = geo[anchor]
                         FloatingTextView(text: text.text, color: text.color)
                             .position(point)
                             .transition(.opacity)
@@ -105,107 +134,12 @@ struct ContentView: View {
         }
     }
 }
-struct ImageBorderView<Content: View>: View {
-    let content: Content
-    let cornerImage: String
-    let edgeVert: String
-    let edgeHori: String
-    let cornerSize: CGFloat
-    let edgeThickness: CGFloat
-
-    init(
-        cornerImage: String,
-        edgeVert: String,
-        edgeHori: String,
-        cornerSize: CGFloat = 24,
-        edgeThickness: CGFloat = 16,
-        @ViewBuilder content: () -> Content
-    ) {
-        self.cornerImage = cornerImage
-        self.edgeHori = edgeHori
-        self.edgeVert = edgeVert
-        self.cornerSize = cornerSize
-        self.edgeThickness = edgeThickness
-        self.content = content()
-    }
-
-    var body: some View {
-        ZStack {
-            // Content centered inside
-            content
-                .padding(edgeThickness + (cornerSize-edgeThickness)/2)
-                .background(Color(red: 0.89, green: 0.66, blue: 0.43))
-                .overlay(
-            GeometryReader { geo in
-                ZStack {
-                    // Top & Bottom edges
-                    VStack {
-                        Image(edgeHori)
-                            .resizable(resizingMode: .stretch)
-                            .frame(height: edgeThickness)
-                            .padding(.top, (cornerSize-edgeThickness)/2)
-                            .shadow(color: .black.opacity(0.5), radius: edgeThickness/2)
-                        Spacer()
-                        Image(edgeHori)
-                            .resizable(capInsets: EdgeInsets(.zero), resizingMode: .stretch)
-                            .frame(height: edgeThickness)
-                            .padding(.bottom, (cornerSize-edgeThickness)/2)
-                            .shadow(color: .black.opacity(1.0), radius: edgeThickness/2)
-                    }
-
-                    // Left & Right edges
-                    HStack {
-                        Image(edgeVert)
-                            .resizable(resizingMode: .stretch)
-                            .frame(width: edgeThickness)
-                            .padding(.leading, (cornerSize-edgeThickness)/2)
-                            .shadow(color: .black.opacity(0.5), radius: edgeThickness/2)
-                        Spacer()
-                        Image(edgeVert)
-                            .resizable(resizingMode: .stretch)
-                            .rotationEffect(.degrees(180))
-                            .frame(width: edgeThickness)
-                            .padding(.trailing, (cornerSize-edgeThickness)/2)
-                            .shadow(color: .black.opacity(0.5), radius: edgeThickness/2)
-                    }
-
-                    // --- Corners ---
-                    VStack {
-                        HStack {
-                            Image(cornerImage)
-                                .resizable()
-                                .frame(width: cornerSize, height: cornerSize)
-                            Spacer()
-                            Image(cornerImage)
-                                .resizable()
-                                .rotationEffect(.degrees(180))
-                                .frame(width: cornerSize, height: cornerSize)
-                        }
-                        Spacer()
-                        HStack {
-                            Image(cornerImage)
-                                .resizable()
-                                .frame(width: cornerSize, height: cornerSize)
-                            Spacer()
-                            Image(cornerImage)
-                                .resizable()
-                                .rotationEffect(.degrees(180))
-                                .frame(width: cornerSize, height: cornerSize)
-                        }
-                    }
-                }
-            }
-            )
-        }
-    }
-}
 
 struct RuneGrid: View{
     @EnvironmentObject var viewModel: RuneBinderViewModel
     @State private var showTooltip: Bool = false
     @State private var tooltipRune: Rune? = nil
     @State private var tooltipPosition: CGPoint = .zero
-    @State private var tooltipSize: CGSize = .zero
     var namespace: Namespace.ID
     var body: some View {
         ZStack{
@@ -227,10 +161,7 @@ struct RuneGrid: View{
                         if(!viewModel.spell.contains(runes)){
                             RuneView(rune: runes, namespace: namespace)
                                 .aspectRatio(contentMode: .fit)
-                                .zIndex(viewModel.selectedRune == runes ? 999 : 0)
-                                .anchorPreference(key: RunePositionPreferenceKey.self, value: .center) {
-                                    [runes.id: $0]
-                                }
+                                .zIndex(viewModel.hoveredRune == runes ? 999 : 0)
                         }
                         else{
                             Color.clear
@@ -241,43 +172,63 @@ struct RuneGrid: View{
                 }
                 .frame(width: screenWidth*0.8, height: screenWidth*0.8)
             }
-            .overlayPreferenceValue(RunePositionPreferenceKey.self) { preferences in
-                GeometryReader { geo in
-                    ForEach(viewModel.grid) { rune in
-                        if let anchor = preferences[rune.id], rune.id == viewModel.selectedRune?.id {
-                            let point = geo[anchor]
-                            RuneTooltipView(rune: rune)
-                                .onPreferenceChange(TooltipSizePreferenceKey.self) { size in
-                                    tooltipSize = size
-                                }
-                                .position(smartTooltipPosition(from: point, tooltipSize: tooltipSize, in: CGSize(width: screenWidth, height: screenHeight)))
-                                .transition(.opacity)
-                        }
-                    }
-                }
-            }
         }
     }
 }
-
-func smartTooltipPosition(from point: CGPoint, tooltipSize: CGSize, in containerSize: CGSize) -> CGPoint {
+func entityTooltipPosition(from point: CGPoint, tooltipSize: CGSize, in containerSize: CGSize) -> CGPoint {
     let tooltipWidth: CGFloat = tooltipSize.width
     let tooltipHeight: CGFloat = tooltipSize.height
-    let padding: CGFloat = 10
+    let padding: CGFloat = screenWidth*0.09 //padding based on enemy image size
 
     var x = point.x
     var y = point.y
 
-    if x + tooltipWidth / 2 > containerSize.width {
-        x = point.x - tooltipWidth / 2 - padding
-    } else if x - tooltipWidth / 2 < 0 {
-        x = point.x + tooltipWidth / 2 + padding
+    if x + tooltipWidth + padding > containerSize.width { //If tooltip on right goes offscreen try on left
+        if !(x - tooltipWidth - padding < 0) { //If tooltip on left doesn't go offscreen put there
+            x -= tooltipWidth / 2 + padding
+        }
+        else{
+            x = tooltipWidth/2 + padding
+        }
     }
+    else{
+        x = point.x + tooltipWidth / 2 + padding //place right by default
+    }
+    
+    if y - tooltipHeight/2 < 0{ //If offscreen on top move down
+        y += tooltipHeight/2-y
+    }
+            
+    return CGPoint(x: x, y: y)
+}
+/* Function for positioning runeTooltip based on parameters:
+    point: center coordinate of rune
+    tooltipSize: full size of tooltip
+    container: area that the tooltip must fit inside usually just the screen
+ */
+func runeTooltipPosition(from point: CGPoint, tooltipSize: CGSize, in containerSize: CGSize) -> CGPoint {
+    let tooltipWidth: CGFloat = tooltipSize.width
+    let tooltipHeight: CGFloat = tooltipSize.height
+    let padding: CGFloat = screenWidth*0.1 //padding based one runeSize
 
-    if y + tooltipHeight / 2 > containerSize.height {
-        y = containerSize.height - tooltipHeight / 2 - padding
-    } else if y - tooltipHeight / 2 < 0 {
-        y = tooltipHeight / 2 + padding
+    var x = point.x
+    var y = point.y
+
+    if x + tooltipWidth + padding > containerSize.width { //If tooltip on right goes offscreen try on left
+        if !(x - tooltipWidth - padding < 0) { //If tooltip on left doesn't go offscreen put there
+            x -= tooltipWidth / 2 + padding
+        }
+        else{
+            x = tooltipWidth/2 + padding
+        }
+    }
+    else{
+        x = point.x + tooltipWidth / 2 + padding //place right by default
+    }
+    
+    if y + tooltipHeight/2 > containerSize.height{ //If offscreen on bottom move up
+        y -= tooltipHeight/2+y - containerSize.height
+        print("offscreen on bottom")
     }
 
     return CGPoint(x: x, y: y)
@@ -292,16 +243,9 @@ struct RunePositionPreferenceKey: PreferenceKey {
     }
 }
 
-struct TooltipSizePreferenceKey: PreferenceKey {
-    static var defaultValue: CGSize = .zero
-    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
-        value = nextValue()
-    }
-}
-
 struct RuneTooltipView: View {
     var rune: Rune
-    let widthRatio = 0.55
+    let widthRatio = 0.45
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             if let enchant = rune.enchant {
@@ -310,18 +254,16 @@ struct RuneTooltipView: View {
                         .resizable()
                         .frame(width: 0.18*screenWidth, height: 0.18*screenWidth)
                     Text(enchant.description)
-                        .font(.custom("Trattatello", size: 0.05*screenWidth))
                         .fixedSize(horizontal: false, vertical: true)
                         .lineLimit(nil)
                 }
                 .frame(width: screenWidth*widthRatio)
-                .runeBinderButtonStyle()
+                .tooltipStyle()
             }
             else if(rune.debuff == nil){
                 Text("Basic \(String(rune.letter)) rune")
-                    .font(.custom("Trattatello", size: 0.05*screenWidth))
                     .frame(width: screenWidth*widthRatio)
-                    .runeBinderButtonStyle()
+                    .tooltipStyle()
             }
             if(rune.debuff != nil){
                 VStack{
@@ -329,32 +271,85 @@ struct RuneTooltipView: View {
                         .resizable()
                         .frame(width: 0.18*screenWidth, height: 0.18*screenWidth)
                     Text(rune.debuff!.text)
-                        .font(.custom("Trattatello", size: 0.05*screenWidth))
                         .fixedSize(horizontal: false, vertical: true)
                         .lineLimit(nil)
                 }
                 .frame(width: screenWidth*widthRatio)
-                .runeBinderButtonStyle()
+                .tooltipStyle()
             }
         }
+        .frame(width: screenWidth*widthRatio)
+        .fixedSize(horizontal: false, vertical: true)
         .shadow(radius: 5)
-        .overlay(
-            GeometryReader { geo in
-                Color.clear
-                    .preference(key: TooltipSizePreferenceKey.self, value: geo.size)
-            }
-        )
     }
 }
 
+struct EntityTooltipView: View {
+    var entity: Entity
+    let widthRatio = 0.45
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if(entity is Enemy){
+                let enemy: Enemy = entity as! Enemy
+                VStack{
+                    HStack(){
+                        Text("Attack")
+                            .bold()
+                            .foregroundStyle(.yellow)
+                        Image("attack")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 0.05*screenWidth, height: 0.05*screenWidth)
+                        Spacer()
+                    }
+                    Text("Attacking for \(enemy.chosenAction!.damage)")
+                        .frame(width: screenWidth*widthRatio)
+                }
+                .tooltipStyle()
+                .frame(width: screenWidth*widthRatio)
+                
+            }
+            ForEach(entity.debuffs){ debuff in
+                VStack{
+                    HStack{
+                        Text(debuff.image)
+                        Image(debuff.image)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 0.05*screenWidth, height: 0.05*screenWidth)
+                    }
+                    Text(debuff.text)
+                }
+                .tooltipStyle()
+                .frame(width: screenWidth*widthRatio)
+            }
+            ForEach(entity.buffs){ buff in
+                VStack{
+                    HStack{
+                        Text(buff.image)
+                        Image(buff.image)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 0.05*screenWidth, height: 0.05*screenWidth)
+                    }
+                    Text(buff.text)
+                }
+                .tooltipStyle()
+                .frame(width: screenWidth*widthRatio)
+            }
+        }
+        .frame(width: screenWidth*widthRatio)
+        .fixedSize(horizontal: false, vertical: true)
+        .shadow(radius: 5)
+    }
+}
 struct SpellView: View{
     @EnvironmentObject var viewModel: RuneBinderViewModel
     var namespace: Namespace.ID
     var body: some View {
-        HStack(alignment: .top){
+        HStack(alignment: .top, spacing: 0){
             ForEach(self.viewModel.spell, id: \.id){ runes in
                 RuneView(rune: runes, namespace: namespace)
-                    .padding(-3)
             }
         }
         .frame(width: min(screenWidth,(screenWidth/4.0*(CGFloat)(viewModel.spell.count))), height: screenWidth*CGFloat(viewModel.spellRuneSize)) //adjust allocated width with spell length

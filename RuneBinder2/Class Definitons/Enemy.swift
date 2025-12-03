@@ -7,57 +7,6 @@
 
 import Foundation
 
-
-struct Buff: Codable, Identifiable{
-    enum Archetype: String, Codable{
-        case outlast, deflect, nullify
-    }
-    let archetype: Archetype
-    var value: Int
-    var image: String {
-            switch archetype {
-            case .outlast: return "outlast"
-            case .deflect: return "deflect"
-            case .nullify: return "nullify"
-            }
-        }
-
-    var text: String {
-        return "gotem"
-    }
-    var id: UUID
-    init(archetype: Archetype, value: Int) {
-        self.archetype = archetype
-        self.value = value
-        id = UUID()
-    }
-}
-
-struct Debuff: Codable, Identifiable{
-    enum Archetype: String, Codable{
-        case bleed, stun, frail
-    }
-    let archetype: Archetype
-    var value: Int
-    var image: String {
-            switch archetype {
-            case .bleed: return "bleed"
-            case .stun: return "stun"
-            case .frail: return "weak"
-            }
-        }
-
-    var text: String {
-        return "gotem"
-    }
-    var id: UUID
-    init(archetype: Archetype, value: Int) {
-        self.archetype = archetype
-        self.value = value
-        id = UUID()
-    }
-}
-
 class Enemy: Entity, Equatable{
     static func == (lhs: Enemy, rhs: Enemy) -> Bool {
         if(lhs.id==rhs.id){

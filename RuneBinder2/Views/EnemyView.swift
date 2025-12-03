@@ -12,6 +12,7 @@ struct EnemyView: View{
     @State var lunge: CGFloat = 0
     @State var recoil: CGFloat = 0
     @State private var previousFloatingTexts: [FloatingTextData] = []
+    @State private var hoverWorkItem: DispatchWorkItem? = nil //Adds delay to turn drag gesture into a psuedo long press
     var enemy: Enemy
     var healthRatio: CGFloat {
         CGFloat(enemy.currentHealth) / CGFloat(enemy.maxHealth)
@@ -33,15 +34,38 @@ struct EnemyView: View{
                     Image(enemy.image)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .onTapGesture{
-                            viewModel.selectEnemy(enemy: enemy)
-                        }
+                        
                     StatusApplied(entity: enemy)
                 }
                 .idleAnimation(hoverAmplitude: 0.0, scaleAmplitude: 0.03, rotationAmplitude: -1, duration: 1.0)
             }
             .frame(width: screenWidth*0.18, height: screenWidth*0.27)
             .offset(x: lunge + recoil)
+            .gesture( //Must have tapgesture first or it doesn't animate?!?!
+                TapGesture()
+                    .onEnded {
+                        hoverWorkItem?.cancel()
+                        hoverWorkItem = nil
+                        viewModel.selectEnemy(enemy: enemy)
+                    }
+            )
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in
+                        if hoverWorkItem == nil {
+                            let workItem = DispatchWorkItem {
+                                viewModel.hoverEntity(entity: enemy)
+                            }
+                            hoverWorkItem = workItem
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: workItem)
+                        }
+                    }
+                    .onEnded { _ in
+                        hoverWorkItem?.cancel()
+                        hoverWorkItem = nil
+                        viewModel.hoverEntity(entity: nil)
+                    }
+            )
         }
         .overlay{
                 ForEach(viewModel.floatingTexts){ text in
@@ -83,7 +107,6 @@ struct EnemyView: View{
             // Update for next comparison
             previousFloatingTexts = newValue
         }
-
         .anchorPreference(key: RunePositionPreferenceKey.self, value: .center) { anchor in
             [enemy.id: anchor]
         }

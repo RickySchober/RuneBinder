@@ -14,6 +14,40 @@ struct RuneView: View{
     @State private var hoverWorkItem: DispatchWorkItem? = nil //Adds delay to turn drag gesture into a psuedo long press
     var rune: Rune
     var namespace: Namespace.ID
+    private var tapGesture: some Gesture {
+        TapGesture()
+            .onEnded {
+                hoverWorkItem?.cancel()
+                hoverWorkItem = nil
+                if rune.debuff?.archetype == .lock  {
+                    SoundManager.shared.playSoundEffect(named: "click")
+                    withAnimation { locked += 1 }
+                } else {
+                    SoundManager.shared.playSoundEffect(named: "click")
+                    withAnimation(.easeInOut(duration: 0.4)) {
+                        viewModel.selectRune(rune: rune)
+                    }
+                }
+            }
+    }
+
+    private var dragGesture: some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { _ in
+                if hoverWorkItem == nil {
+                    let workItem = DispatchWorkItem {
+                        viewModel.hoverRune(rune: rune)
+                    }
+                    hoverWorkItem = workItem
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: workItem)
+                }
+            }
+            .onEnded { _ in
+                hoverWorkItem?.cancel()
+                hoverWorkItem = nil
+                viewModel.hoverRune(rune: nil)
+            }
+    }
     var body: some View {
         GeometryReader(content: { geometry in
             ZStack{
@@ -34,7 +68,7 @@ struct RuneView: View{
                             .bold()                    }
                 }
                 Text(String(rune.letter))
-                    .font(.custom("Trattatello", size:(CGFloat)(0.5*min(geometry.size.width,geometry.size.height))))
+                    .font(.custom("IM_FELL_English_Roman", size:(CGFloat)(0.55*min(geometry.size.width,geometry.size.height))))
                     .multilineTextAlignment(.center)
                     .shadow(color: .black.opacity(0.8), radius: 2, x: 3, y: 3)
                     .foregroundColor(.white)
@@ -62,45 +96,26 @@ struct RuneView: View{
                         .shadow(color: .black.opacity(0.8), radius: 2, x: 3, y: 3)
                         .bold()
                 }
-               /* LinearGradient(colors: [.white.opacity(0.6), .clear],
-                               startPoint: .topLeading,
-                               endPoint: .bottomTrailing)
-                    .blendMode(.screen)*/
-/*
-                case .weak:
-                    Color.blue.opacity(0.3)
-                        .blendMode(.multiply)*/
-/*
-                RadialGradient(colors: [.black.opacity(0.6), .clear],
-                               center: .center, startRadius: 0, endRadius: 60)
-                    .blendMode(.multiply)*/
             }
         })
-        .frame(minWidth: screenWidth*0.05, maxWidth: screenWidth*0.20,minHeight: screenWidth*0.05, maxHeight: screenWidth*0.20)
+        .overlay(
+                TouchHoldView(minimumPressDuration: 0.6,
+                              onTouchDown: { viewModel.hoverRune(rune: rune) },
+                              onTouchUp: { viewModel.hoverRune(rune: nil) })
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .contentShape(Rectangle())
+            )
         .runeTileStyle(shadowDepth: 0.09)
         .modifier(Shake(animatableData: CGFloat(locked)))
-        /*.scaleEffect(scale)
-        .onChange(of: viewModel.floatingTexts) { newValue in
-            ForEach(viewModel.floatingTexts){ text in
-                if(text.id == rune.id){
-                    withAnimation(.easeOut(duration: 0.15)) {
-                        scale = 1.5
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        withAnimation(.easeIn(duration: 0.3)) {
-                            scale = 1
-                        }
-                    }
-                }
-            }
-        }*/
         .anchorPreference(key: RunePositionPreferenceKey.self, value: .center) { anchor in
             [rune.id: anchor]
         }
-        .matchedGeometryEffect(id: rune.id, in: namespace) //Only gestures can be below matched geometry
+        .frame(minWidth: screenWidth*0.05, maxWidth: screenWidth*0.20,minHeight: screenWidth*0.05, maxHeight: screenWidth*0.20)
+        .matchedGeometryEffect(id: rune.id, in: namespace, properties: .position)
         .gesture( //Must have tapgesture first or it doesn't animate?!?!
             TapGesture()
                 .onEnded {
+                    print("Tap over")
                     hoverWorkItem?.cancel()
                     hoverWorkItem = nil
                     if rune.debuff?.archetype == .lock  {
@@ -120,23 +135,6 @@ struct RuneView: View{
                     }
                 }
         )
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in
-                    if hoverWorkItem == nil {
-                        let workItem = DispatchWorkItem {
-                            viewModel.hoverRune(rune: rune)
-                        }
-                        hoverWorkItem = workItem
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: workItem)
-                    }
-                }
-                .onEnded { _ in
-                    hoverWorkItem?.cancel()
-                    hoverWorkItem = nil
-                    viewModel.hoverRune(rune: nil)
-                }
-        )
     }
 }
 
@@ -151,83 +149,52 @@ struct Shake: GeometryEffect {
             y: 0))
     }
 }
-// Must define as a shape to conform to VectorArithmetic allowing proper animation
-struct TrapezoidEdge: Shape {
-    enum Edge {
-        case top, bottom, left, right
+
+import UIKit
+/* Because the draggesture breaks animation and swift has no other way to get touchUp gesture
+   must use a UIKit view as helper for long presses that trigger a closure on touchUp.
+ */
+struct TouchHoldView: UIViewRepresentable {
+    var minimumPressDuration: TimeInterval = 0.6
+    var onTouchDown: () -> Void
+    var onTouchUp: () -> Void
+
+    func makeUIView(context: Context) -> UIView {
+        let v = UIView(frame: .zero)
+        v.backgroundColor = .clear
+        // Use UILongPressGestureRecognizer to get began/ended states
+        let gr = UILongPressGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handle(_:)))
+        gr.minimumPressDuration = minimumPressDuration
+        gr.cancelsTouchesInView = false
+        v.addGestureRecognizer(gr)
+        // Also detect immediate touches (touchesBegan/Ended) via a subclass if you want immediate down:
+        return v
     }
-    
-    var edge: Edge
-    var depth: CGFloat
-    
-    var animatableData: CGFloat { //Define variable to be interpolated for animation
-        get { depth }
-        set { depth = newValue }
+
+    func updateUIView(_ uiView: UIView, context: Context) { }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onDown: onTouchDown, onUp: onTouchUp)
     }
-    
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        switch edge {
-        case .top:
-            path.move(to: .zero)
-            path.addLine(to: CGPoint(x: rect.width, y: 0))
-            path.addLine(to: CGPoint(x: rect.width - depth, y: depth))
-            path.addLine(to: CGPoint(x: depth, y: depth))
-        case .bottom:
-            path.move(to: CGPoint(x: 0, y: rect.height))
-            path.addLine(to: CGPoint(x: rect.width, y: rect.height))
-            path.addLine(to: CGPoint(x: rect.width - depth, y: rect.height - depth))
-            path.addLine(to: CGPoint(x: depth, y: rect.height - depth))
-        case .left:
-            path.move(to: .zero)
-            path.addLine(to: CGPoint(x: 0, y: rect.height))
-            path.addLine(to: CGPoint(x: depth, y: rect.height - depth))
-            path.addLine(to: CGPoint(x: depth, y: depth))
-        case .right:
-            path.move(to: CGPoint(x: rect.width, y: 0))
-            path.addLine(to: CGPoint(x: rect.width, y: rect.height))
-            path.addLine(to: CGPoint(x: rect.width - depth, y: rect.height - depth))
-            path.addLine(to: CGPoint(x: rect.width - depth, y: depth))
+
+    class Coordinator: NSObject {
+        let onDown: () -> Void
+        let onUp: () -> Void
+
+        init(onDown: @escaping () -> Void, onUp: @escaping () -> Void) {
+            self.onDown = onDown
+            self.onUp = onUp
         }
-        path.closeSubpath()
-        return path
+
+        @objc func handle(_ gr: UILongPressGestureRecognizer) {
+            switch gr.state {
+            case .began:
+                onDown()
+            case .ended, .cancelled, .failed:
+                onUp()
+            default:
+                break
+            }
+        }
     }
 }
-
-
-struct RuneTileStyle: ViewModifier {
-    var baseColor: Color = Color(red: 0.95, green: 0.90, blue: 0.70)
-    var shadowDepth: CGFloat = 0.05
-    func body(content: Content) -> some View {
-        content
-            .background(
-                GeometryReader { geo in
-                    let depth = min(geo.size.width, geo.size.height) * shadowDepth
-                    ZStack {
-                        baseColor
-                        TrapezoidEdge(edge: .top, depth: depth)
-                            .fill(Color.white.opacity(0.4))
-                        TrapezoidEdge(edge: .left, depth: depth)
-                            .fill(Color.black.opacity(0.2))
-                        TrapezoidEdge(edge: .right, depth: depth)
-                            .fill(Color.black.opacity(0.2))
-                        TrapezoidEdge(edge: .bottom, depth: depth)
-                            .fill(Color.black.opacity(0.5))
-                        RoundedRectangle(cornerRadius: 1)
-                            .stroke(Color.black.opacity(0.4), lineWidth: 1)
-                            .padding(depth*2/3)
-                    }
-                })
-    }
-}
-extension View {
-    func runeTileStyle(
-        baseColor: Color = Color(red: 0.95, green: 0.90, blue: 0.70),
-        lightEdge: Color = Color.white.opacity(0.8),
-        darkEdge: Color = Color.black.opacity(0.35),
-        shadowDepth: CGFloat = 0.1
-    ) -> some View {
-        self.modifier(RuneTileStyle(baseColor: baseColor, shadowDepth: shadowDepth))
-    }
-}
-

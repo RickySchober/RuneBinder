@@ -83,3 +83,61 @@ class Entity: Identifiable{
             }
     }
 }
+
+struct Buff: Codable, Identifiable{
+    enum Archetype: String, Codable{
+        case outlast, deflect, nullify
+    }
+    let archetype: Archetype
+    var value: Int
+    var image: String {
+            switch archetype {
+            case .outlast: return "outlast"
+            case .deflect: return "deflect"
+            case .nullify: return "nullify"
+            }
+        }
+
+    var text: String {
+        switch archetype {
+        case .outlast: return "Ward is not removed at the start of turn for \(value) turns."
+        case .deflect: return "Damage dealt to ward is reflected for \(value) turns."
+        case .nullify: return "Prevent the next \(value) debuffs applied to you."
+        }
+    }
+    var id: UUID
+    init(archetype: Archetype, value: Int) {
+        self.archetype = archetype
+        self.value = value
+        id = UUID()
+    }
+}
+
+struct Debuff: Codable, Identifiable{
+    enum Archetype: String, Codable{
+        case bleed, stun, frail
+    }
+    let archetype: Archetype
+    var value: Int
+    var image: String {
+            switch archetype {
+            case .bleed: return "bleed"
+            case .stun: return "stun"
+            case .frail: return "weak"
+            }
+        }
+
+    var text: String {
+        switch archetype {
+        case .bleed: return "Take \(value) damage at the end of turn, reduce bleed by 1."
+        case .stun: return "Next action is skipped."
+        case .frail: return "Deal 25% less damage with attacks."
+        }
+    }
+    var id: UUID
+    init(archetype: Archetype, value: Int) {
+        self.archetype = archetype
+        self.value = value
+        id = UUID()
+    }
+}

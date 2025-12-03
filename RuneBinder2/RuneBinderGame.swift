@@ -29,37 +29,39 @@ class RuneBinderGame: ObservableObject{
     var encounterRng: SeededGenerator
     var rewardRng: SeededGenerator
     var shufflingRng: SeededGenerator
-    private (set) var seed: [UInt64]
+    private(set) var seed: [UInt64]
     //Spell data
-    private (set) var grid: Array<Rune> = []
-    private (set) var enchantQueue: Array<Rune> = []
-    private (set) var gridSize: Int = 16
-    private (set) var spell: Array<Rune> = []
-    private (set) var spellPower: Int = 0
-    private (set) var damageMultiplier: Double = 0.0
-    private (set) var validSpell: Bool = false
-    private (set) var selectedRune: Rune? = nil
+    private(set) var grid: Array<Rune> = []
+    private(set) var enchantQueue: Array<Rune> = []
+    private(set) var gridSize: Int = 16
+    private(set) var spell: Array<Rune> = []
+    private(set) var spellPower: Int = 0
+    private(set) var damageMultiplier: Double = 0.0
+    private(set) var validSpell: Bool = false
+    private(set) var hoveredRune: Rune? = nil
     
-    private (set) var spellLibrary: Array<Enchantment.Type> //List of possible enchants to encounter during run
-    private (set) var rewardEnchants: Array<Enchantment.Type> = [] //List of known enchantments
-    private (set) var spellBook: [Enchantment]
-    private (set) var spellDeck: [Enchantment]//List of undrawn enchants
-    private (set) var maxEnchants: Int = 5
+    private(set) var spellLibrary: Array<Enchantment.Type> //List of possible enchants to encounter during run
+    private(set) var rewardEnchants: Array<Enchantment.Type> = [] //List of known enchantments
+    private(set) var spellBook: [Enchantment]
+    private(set) var spellDeck: [Enchantment]//List of undrawn enchants
+    private(set) var maxEnchants: Int = 5
     private var encounterCount: Int = 0
 
+    //Player
+    private(set) var hoveredEntity: Entity? = nil
     var character: Characters = hermit
     var player: Player = Player(currentHealth: 50, maxHealth: 80)
     //Enemy data
-    private (set) var enemies: [Enemy] = [] //Array containing the enemies in the current encounter will be in index 0-3 based on position
-    private (set) var primaryTarget: Int? = nil //Each spell cast requires selecting an enemy as a target
-    private (set) var primaryModifer: Double = 0.0 //The damage modifier to the primary target before additional targets
-    private (set) var targets: [Hit] = [] //Runes that modify targeting deal a portion of damage to other enemies
-    private (set) var enemyLimit: Int = 4 //Maximum number of enemies in a given encounter
+    private(set) var enemies: [Enemy] = [] //Array containing the enemies in the current encounter will be in index 0-3 based on position
+    private(set) var primaryTarget: Int? = nil //Each spell cast requires selecting an enemy as a target
+    private(set) var primaryModifer: Double = 0.0 //The damage modifier to the primary target before additional targets
+    private(set) var targets: [Hit] = [] //Runes that modify targeting deal a portion of damage to other enemies
+    private(set) var enemyLimit: Int = 4 //Maximum number of enemies in a given encounter
     //Map
-    private (set) var map: [[MapNode]] = [[]]
+    private(set) var map: [[MapNode]] = [[]]
     
     var encounterOver: Bool = false
-    private (set) var defeat: Bool = false
+    private(set) var defeat: Bool = false
 
     //Array represents the relative occurence of letters in words in the dictionary
     //numbers represent the % of its occurence and correlate with A-Z
@@ -111,6 +113,9 @@ class RuneBinderGame: ObservableObject{
         spellBook = [Ricochet(),Ricochet(),Ricochet(),Ricochet(),Ricochet(),SerratedStrike(),SerratedStrike(),SerratedStrike()]
         spellDeck = spellBook
     }
+    func hoverEntity(entity: Entity?){
+        hoveredEntity = entity
+    }
     func addEnemies(newEnemies: [Enemy], pos: Int){
         enemies.insert(contentsOf: newEnemies[..<min(newEnemies.count, enemyLimit-enemies.count)], at: pos)
     }
@@ -122,7 +127,7 @@ class RuneBinderGame: ObservableObject{
         spellPower += num
     }
     func hoverRune(rune: Rune?){
-        selectedRune = rune
+        hoveredRune = rune
     }
     func addAnimation(event: CombatEvent){
         eventLog.append(event)
@@ -509,7 +514,6 @@ class RuneBinderGame: ObservableObject{
         else{
             spell.removeSubrange(spell.firstIndex(of: rune)!..<spell.count) //removes the element and all following
         }
-        selectedRune = rune
     }
     func selectNode(node: MapNode){
         //Change selectable

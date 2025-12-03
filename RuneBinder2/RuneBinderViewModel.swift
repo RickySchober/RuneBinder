@@ -103,8 +103,11 @@ class RuneBinderViewModel: ObservableObject {
     var encounterOver: Bool{
         model.encounterOver
     }
-    var selectedRune: Rune?{
-        model.selectedRune
+    var hoveredRune: Rune?{
+        model.hoveredRune
+    }
+    var hoveredEntity: Entity?{
+        model.hoveredEntity
     }
     var spellDeck: [Enchantment]{
         model.spellDeck
@@ -114,6 +117,10 @@ class RuneBinderViewModel: ObservableObject {
     }
     func hoverRune(rune: Rune?){
         model.hoverRune(rune: rune)
+        objectWillChange.send()
+    }
+    func hoverEntity(entity: Entity?){
+        model.hoverEntity(entity: entity)
         objectWillChange.send()
     }
     func selectCharacter(character: Characters){

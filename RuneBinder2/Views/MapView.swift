@@ -9,7 +9,7 @@ struct MapNodeView: View {
         Image(node.type?.rawValue ?? "combat")
             .resizable()
             .frame(width: screenWidth*0.1, height: screenWidth*0.1)
-            .scaleEffect(node.selectable ? (pulse ? 1.3 : 1.0) : 1.0)
+            .scaleEffect(node.selectable ? (pulse ? 1.6 : 1.0) : 1.0)
             .onAppear {
                 if node.selectable {
                     withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
